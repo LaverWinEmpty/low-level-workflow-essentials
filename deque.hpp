@@ -204,7 +204,9 @@ private:
 };
 
 LWE_END
-
 } // namespace stl
+
+REGISTER_CONTAINER(Deque, STL_DEQUE);
+
 #include "deque.ipp"
 #endif

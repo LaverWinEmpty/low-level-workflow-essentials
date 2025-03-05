@@ -88,6 +88,7 @@
         "valarray": "cpp",
         "memory_resource": "cpp",
         "queue": "cpp",
-        "stack": "cpp"
+        "stack": "cpp",
+        "unordered_set": "cpp"
     }
 }

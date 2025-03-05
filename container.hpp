@@ -3,9 +3,13 @@
 
 #include "hal.hpp"
 
-#define DECLARE_CONTAINER_TESTER(CONTAINER)                                                                            \
+#define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
+    template<typename T> struct ContainerCode<LWE::stl::CONTAINER<T>> {                                                \
+        using enum MetaType;                                                                                           \
+        static constexpr MetaType VALUE = ENUM;                                                                        \
+    };                                                                                                                 \
     template<typename, typename = std::void_t<>> struct Is##CONTAINER: std::false_type {};                             \
-    template<typename T> struct Is##CONTAINER<T, std::void_t<typename T::CONTAINER##Element>>: std::true_type {};
+    template<typename T> struct Is##CONTAINER<T, std::void_t<typename T::CONTAINER##Element>>: std::true_type {}
 
 #define DECLARE_CONTAINER(CONTAINER, ELEMENT)                                                                          \
     virtual const char* typestring() const override {                                                                  \
@@ -40,14 +44,7 @@ static constexpr size_t DEF_SVO = 8; //!< default small vector optimization size
 using namespace config;
 
 struct Container {
-    Container() noexcept {}
-    Container(const Container& in) noexcept {}
-    Container(Container&& in) noexcept {}
-    Container& operator=(const Container& in) noexcept { return *this; }
-    Container& operator=(Container&& in) noexcept { return *this; }
     virtual ~Container() noexcept {}
-
-public:
     virtual string      tostring() const = 0;
     virtual void        append(const std::string&) const {};
     virtual void        set(const std::string&) const {};

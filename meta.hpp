@@ -1,5 +1,8 @@
 #pragma once
 
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>
 #include "std.hpp"
 #include "macro.h"
 #include "container.hpp"
@@ -7,7 +10,10 @@
 using int8 = signed char;
 using std::string;
 
+// clang-format off
+
 enum class MetaType : int8 {
+    UNREGISTERED,
     VOID,
     SIGNED_INT,
     SIGNED_CHAR,
@@ -32,7 +38,6 @@ enum class MetaType : int8 {
     FUNCTION,
     STD_STRING,
     STL_DEQUE,
-    UNREGISTERED,
 };
 
 enum class MetaAccess : int8 {
@@ -42,76 +47,45 @@ enum class MetaAccess : int8 {
     NONE,
 };
 
+template<typename T> struct ContainerCode {
+    static constexpr MetaType VALUE = MetaType::UNREGISTERED;
+};
+
 // get type
 template<typename T> constexpr MetaType typecode() {
-    if constexpr(std::is_pointer_v<T>) return MetaType::POINTER;
+    if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
+    if constexpr(std::is_pointer_v<T>)   return MetaType::POINTER;
     if constexpr(std::is_reference_v<T>) return MetaType::REFERENCE;
-    if constexpr(std::is_union_v<T>) return MetaType::UNION;
-    if constexpr(std::is_base_of_v<LWE::stl::Container, T>) {
-        return MetaType::STL_DEQUE;
-    }
-    if constexpr(std::is_class_v<T>) return MetaType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
+    if constexpr(std::is_union_v<T>)     return MetaType::UNION;
+    if constexpr(std::is_class_v<T>)     return MetaType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
     return MetaType::UNREGISTERED;
 }
-template<> constexpr MetaType typecode<void>() {
-    return MetaType::VOID;
-}
-template<> constexpr MetaType typecode<signed int>() {
-    return MetaType::SIGNED_INT;
-}
-template<> constexpr MetaType typecode<signed char>() {
-    return MetaType::SIGNED_CHAR;
-}
-template<> constexpr MetaType typecode<signed short>() {
-    return MetaType::SIGNED_SHORT;
-}
-template<> constexpr MetaType typecode<signed long>() {
-    return MetaType::SIGNED_LONG;
-}
-template<> constexpr MetaType typecode<signed long long>() {
-    return MetaType::SIGNED_LONG_LONG;
-}
-template<> constexpr MetaType typecode<unsigned int>() {
-    return MetaType::UNSIGNED_INT;
-}
-template<> constexpr MetaType typecode<unsigned char>() {
-    return MetaType::UNSIGNED_CHAR;
-}
-template<> constexpr MetaType typecode<unsigned short>() {
-    return MetaType::UNSIGNED_SHORT;
-}
-template<> constexpr MetaType typecode<unsigned long>() {
-    return MetaType::UNSIGNED_LONG;
-}
-template<> constexpr MetaType typecode<unsigned long long>() {
-    return MetaType::UNSIGNED_LONG_LONG;
-}
-template<> constexpr MetaType typecode<bool>() {
-    return MetaType::BOOL;
-}
-template<> constexpr MetaType typecode<char>() {
-    return MetaType::CHAR;
-}
-template<> constexpr MetaType typecode<wchar_t>() {
-    return MetaType::WCHAR;
-}
-template<> constexpr MetaType typecode<float>() {
-    return MetaType::FLOAT;
-}
-template<> constexpr MetaType typecode<double>() {
-    return MetaType::DOUBLE;
-}
-template<> constexpr MetaType typecode<long double>() {
-    return MetaType::LONG_DOUBLE;
-}
-template<> constexpr MetaType typecode<string>() {
-    return MetaType::STD_STRING;
-}
+template<> constexpr MetaType typecode<void>()               { return MetaType::VOID; }
+template<> constexpr MetaType typecode<signed int>()         { return MetaType::SIGNED_INT; }
+template<> constexpr MetaType typecode<signed char>()        { return MetaType::SIGNED_CHAR; }
+template<> constexpr MetaType typecode<signed short>()       { return MetaType::SIGNED_SHORT; }
+template<> constexpr MetaType typecode<signed long>()        { return MetaType::SIGNED_LONG; }
+template<> constexpr MetaType typecode<signed long long>()   { return MetaType::SIGNED_LONG_LONG; }
+template<> constexpr MetaType typecode<unsigned int>()       { return MetaType::UNSIGNED_INT; }
+template<> constexpr MetaType typecode<unsigned char>()      { return MetaType::UNSIGNED_CHAR; }
+template<> constexpr MetaType typecode<unsigned short>()     { return MetaType::UNSIGNED_SHORT; }
+template<> constexpr MetaType typecode<unsigned long>()      { return MetaType::UNSIGNED_LONG; }
+template<> constexpr MetaType typecode<unsigned long long>() { return MetaType::UNSIGNED_LONG_LONG; }
+template<> constexpr MetaType typecode<bool>()               { return MetaType::BOOL; }
+template<> constexpr MetaType typecode<char>()               { return MetaType::CHAR; }
+template<> constexpr MetaType typecode<wchar_t>()            { return MetaType::WCHAR; }
+template<> constexpr MetaType typecode<float>()              { return MetaType::FLOAT; }
+template<> constexpr MetaType typecode<double>()             { return MetaType::DOUBLE; }
+template<> constexpr MetaType typecode<long double>()        { return MetaType::LONG_DOUBLE; }
+template<> constexpr MetaType typecode<string>()             { return MetaType::STD_STRING; }
 
+// TODO: 전용 타입으로 수정할 예정
 using Types = std::vector<MetaType>;
 
-template<typename E> E evalue(size_t); //!< index to enum
-template<typename E> E evalue(string); //!< string to enum
+template<typename E> E evalue(size_t);   //!< declare index to enum
+template<typename E> E evalue(string);   //!< declare string to enum
+constexpr const char* estring(MetaType); //!< declare
+constexpr const char* evalue(MetaType);  //!< declare
 
 /*
  * @breif metadata field
@@ -161,77 +135,63 @@ public:
     virtual MetaClass*   base() const       = 0;
 };
 
+bool isSTL(MetaType code) {
+    const char* name = estring(code);
+    if (name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
+        return true;
+    }
+    return false;
+}
+
 constexpr const char* typestring(MetaType code) {
     switch(code) {
-        case MetaType::VOID:
-            return "void";
-        case MetaType::SIGNED_INT:
-            return "int";
-        case MetaType::SIGNED_CHAR:
-            return "char";
-        case MetaType::SIGNED_SHORT:
-            return "short";
-        case MetaType::SIGNED_LONG:
-            return "long";
-        case MetaType::SIGNED_LONG_LONG:
-            return "long long";
-        case MetaType::UNSIGNED_SHORT:
-            return "unsigned short";
-        case MetaType::UNSIGNED_INT:
-            return "unsigned int";
-        case MetaType::UNSIGNED_CHAR:
-            return "unsigned char";
-        case MetaType::UNSIGNED_LONG:
-            return "unsigned long";
-        case MetaType::UNSIGNED_LONG_LONG:
-            return "unsigned long long";
-        case MetaType::BOOL:
-            return "bool";
-        case MetaType::CHAR:
-            return "char";
-        case MetaType::WCHAR:
-            return "wchar";
-        case MetaType::FLOAT:
-            return "float";
-        case MetaType::DOUBLE:
-            return "double";
-        case MetaType::LONG_DOUBLE:
-            return "long double";
-        case MetaType::CLASS:
-            return "class";
-        case MetaType::UNION:
-            return "union";
-        case MetaType::POINTER:
-            return "pointer";
-        case MetaType::REFERENCE:
-            return "reference";
-        case MetaType::FUNCTION:
-            return "function";
-        case MetaType::STD_STRING:
-            return "string";
-        case MetaType::STL_DEQUE:
-            return "deque";
-        case MetaType::UNREGISTERED:
-            return "";
+        case MetaType::UNREGISTERED:       return "";
+        case MetaType::VOID:               return "void";
+        case MetaType::SIGNED_INT:         return "int";
+        case MetaType::SIGNED_CHAR:        return "char";
+        case MetaType::SIGNED_SHORT:       return "short";
+        case MetaType::SIGNED_LONG:        return "long";
+        case MetaType::SIGNED_LONG_LONG:   return "long long";
+        case MetaType::UNSIGNED_SHORT:     return "unsigned short";
+        case MetaType::UNSIGNED_INT:       return "unsigned int";
+        case MetaType::UNSIGNED_CHAR:      return "unsigned char";
+        case MetaType::UNSIGNED_LONG:      return "unsigned long";
+        case MetaType::UNSIGNED_LONG_LONG: return "unsigned long long";
+        case MetaType::BOOL:               return "bool";
+        case MetaType::CHAR:               return "char";
+        case MetaType::WCHAR:              return "wchar_t";
+        case MetaType::FLOAT:              return "float";
+        case MetaType::DOUBLE:             return "double";
+        case MetaType::LONG_DOUBLE:        return "long double";
+        case MetaType::CLASS:              return "class";
+        case MetaType::UNION:              return "union";
+        case MetaType::POINTER:            return "pointer";
+        case MetaType::REFERENCE:          return "reference";
+        case MetaType::FUNCTION:           return "function";
+        case MetaType::STD_STRING:         return "string";
+        case MetaType::STL_DEQUE:          return "Deque";
     }
 
     // error
     return "";
 }
 
-size_t typestring(string* out, const std::vector<MetaType>& in, size_t idx) {
+size_t typestring(string* out, const Types& in, size_t idx) {
     out->append(typestring(in[idx]));
 
-    // if(isSTL(in)) {
-    //     out->append("<");
-    //     tempreq(out, in, idx + 1);
-    //     out->append(">");
-    // }
+    if(isSTL(in[idx])) {
+        out->append("<");
+        typestring(out, in, idx + 1);
+        
+        // TODO: map 처리
+
+        out->append(">");
+    }
 
     return idx + 1;
 }
 
-string typestring(const std::vector<MetaType>& in) {
+string typestring(const Types& in) {
     string out;
     typestring(&out, in, 0);
     return out;
@@ -245,11 +205,10 @@ template<typename E> size_t emax(E = static_cast<E>(0)) {
     return static_cast<size_t>(eval<E>(-1));
 }
 
-// clang-format off
-
 
 // register estring type code
 REGISTER_ENUM_TO_STRING_BEGIN(MetaType) {
+    REGISTER_ENUM_TO_STRING(UNREGISTERED);
     REGISTER_ENUM_TO_STRING(VOID);
     REGISTER_ENUM_TO_STRING(SIGNED_INT);
     REGISTER_ENUM_TO_STRING(SIGNED_CHAR);
@@ -273,11 +232,12 @@ REGISTER_ENUM_TO_STRING_BEGIN(MetaType) {
     REGISTER_ENUM_TO_STRING(REFERENCE);
     REGISTER_ENUM_TO_STRING(FUNCTION);
     REGISTER_ENUM_TO_STRING(STD_STRING);
-    REGISTER_ENUM_TO_STRING(UNREGISTERED);
+    REGISTER_ENUM_TO_STRING(STL_DEQUE);
 } REGISTER_ENUM_TO_STRING_END;
 
 // register eval type code
 REGISTER_STRING_TO_ENUM_BEGIN(MetaType) {
+    REGISTER_STRING_TO_ENUM(UNREGISTERED);
     REGISTER_STRING_TO_ENUM(VOID);
     REGISTER_STRING_TO_ENUM(SIGNED_INT);
     REGISTER_STRING_TO_ENUM(SIGNED_CHAR);
@@ -301,7 +261,7 @@ REGISTER_STRING_TO_ENUM_BEGIN(MetaType) {
     REGISTER_STRING_TO_ENUM(REFERENCE);
     REGISTER_STRING_TO_ENUM(FUNCTION);
     REGISTER_STRING_TO_ENUM(STD_STRING);
-    REGISTER_STRING_TO_ENUM(UNREGISTERED);
+    REGISTER_STRING_TO_ENUM(STL_DEQUE);
 } REGISTER_STRING_TO_ENUM_END;
 
 // register estring access modifier

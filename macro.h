@@ -163,7 +163,7 @@
 #define REGISTER_ENUM_TO_STRING(VAL)                                                                                   \
         case VAL: return #VAL;
 #define REGISTER_ENUM_TO_STRING_END                                                                                    \
-    return "";                                                                                                         \
+        return "";                                                                                                     \
     }
 
 //! @brief delcare eval from index
