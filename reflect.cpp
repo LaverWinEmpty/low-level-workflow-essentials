@@ -1,7 +1,8 @@
 #include "meta.hpp"
 
-// 클래스 등록하는거
-// TODO: 몰라 수정하긴 해야됨
+// register class
+// TODO: it is old source
+// need reflect <-> metadata match
 
 //! @brief
 template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list) {

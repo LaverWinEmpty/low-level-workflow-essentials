@@ -73,6 +73,8 @@ public:
                 // find [",]
                 if(in[i] == '\"' && in[i + 1] == ',') {
                     T data;
+
+                    // len + 1: ignore '\"'
                     fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<T>());
                     i     += 2; // pass [, ]
                     begin  = i; // next position
@@ -94,6 +96,7 @@ public:
         // end " }" skip
         if constexpr(std::is_same_v<T, string>) {
             T data;
+            // len + 1: ignore '\"'
             fromstr(reinterpret_cast<void*>(&data), in.substr(begin + 1, len), typecode<T>());
             push(data);
         }
