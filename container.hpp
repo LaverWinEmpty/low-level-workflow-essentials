@@ -15,14 +15,14 @@
     virtual const char* typestring() const override {                                                                  \
         return #CONTAINER;                                                                                             \
     }                                                                                                                  \
-    virtual std::string tostring() const override {                                                                    \
+    virtual std::string serialize() const override {                                                                   \
         std::string out;                                                                                               \
         Iterator    curr = begin();                                                                                    \
         Iterator    last = end();                                                                                      \
         if(curr != last) {                                                                                             \
             out.append("{ ");                                                                                          \
             while(true) {                                                                                              \
-                serialize(&out, &*curr, typecode<ELEMENT>());                                                          \
+                tostr(&out, &*curr, typecode<ELEMENT>());                                                              \
                 ++curr;                                                                                                \
                 if(curr != last) {                                                                                     \
                     out.append(", ");                                                                                  \
@@ -45,10 +45,9 @@ using namespace config;
 
 struct Container {
     virtual ~Container() noexcept {}
-    virtual string      tostring() const = 0;
-    virtual void        append(const std::string&) const {};
-    virtual void        set(const std::string&) const {};
-    virtual const char* typestring() const = 0;
+    virtual string      serialize() const                        = 0;
+    virtual void        deserialize(const string&, bool = false) = 0;
+    virtual const char* typestring() const                       = 0;
 };
 
 } // namespace stl
