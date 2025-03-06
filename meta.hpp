@@ -1,3 +1,7 @@
+// TODO: tsreal function
+// need fix old version
+// removed from this file
+
 #pragma once
 
 #include <vector>
