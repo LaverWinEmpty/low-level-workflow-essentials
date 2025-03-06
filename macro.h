@@ -140,7 +140,8 @@
 #endif
 
 // clang-format off
-//! @brief declare  eval from string
+
+//! @brief declare  evalue from string
 #define REGISTER_STRING_TO_ENUM_BEGIN(TYPE)                                                                            \
     template<> TYPE evalue<TYPE>(std::string IN) {                                                                     \
         using enum TYPE;                                                                                               \
@@ -163,10 +164,10 @@
 #define REGISTER_ENUM_TO_STRING(VAL)                                                                                   \
         case VAL: return #VAL;
 #define REGISTER_ENUM_TO_STRING_END                                                                                    \
-        return "";                                                                                                     \
+    return "";                                                                                                         \
     }
 
-//! @brief delcare eval from index
+//! @brief delcare evalue from index
 #define REGISTER_INDEX_TO_ENUM_BEGIN(TYPE)                                                                             \
     template<> TYPE evalue<TYPE>(size_t IN) {                                                                          \
         using enum TYPE;                                                                                               \
@@ -229,26 +230,21 @@ public:                                                                         
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
     const std::vector<MetaField>& TYPE::TYPE##Meta::properties() const {                                               \
         static auto ACCESS_MODIFIER = [](const char* in) -> MetaAccess {                                               \
-            if(!std::strcmp(in, "public")) {                                                                           \
-                return MetaAccess::PUBLIC;                                                                             \
-            }                                                                                                          \
-            if(!std::strcmp(in, "private")) {                                                                          \
-                return MetaAccess::PRIVATE;                                                                            \
-            }                                                                                                          \
-            if(!std::strcmp(in, "protected")) {                                                                        \
-                return MetaAccess::PROTECTED;                                                                          \
-            }                                                                                                          \
+            if(!std::strcmp(in, "public")) { return MetaAccess::PUBLIC; }                                              \
+            if(!std::strcmp(in, "private")) { return MetaAccess::PRIVATE; }                                            \
+            if(!std::strcmp(in, "protected")) { return MetaAccess::PROTECTED; }                                        \
             return MetaAccess::NONE;                                                                                   \
         };                                                                                                             \
         static std::vector<MetaField> VECTOR = reflect<TYPE>( // {
 //! @brief field
-#define REGISTER_FIELD(ACCESS, TYPE, NAME) \
-            MetaField{ ACCESS_MODIFIER(#ACCESS), typecode<TYPE>(), #NAME, sizeof(TYPE) },
+#define REGISTER_FIELD(ACCESS, NAME, ...) \
+            MetaField{ ACCESS_MODIFIER(#ACCESS), tserial<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },
 //! @brief fiels end
 #define REGISTER_FIELD_END                                                                                             \
-    );                                                                                                                 \
-    return VECTOR;                                                                                                     \
+        );                                                                                                             \
+        return VECTOR;                                                                                                 \
     }
+
 // clang-format on
 
 // header guard end
