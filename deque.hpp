@@ -52,65 +52,12 @@ public:
     friend class Reverser;
 
 public:
+    virtual void onDeserialization(const void* in) override {
+        push(std::move(*const_cast<DequeElement*>(static_cast<const DequeElement*>(in))));
+    }
+
     virtual void deserialize(const string& in, bool append = false) override {
-        if(in == "{}") {
-            return; // empty
-        }
-
-        size_t stack = 1;
-        size_t begin = 2;             // "{ ", ignore 2
-        size_t end   = in.size() - 2; // " }", ignore 2 
-        size_t len   = 0;
-        size_t pair  = 0;
-
-        if(!append) {
-            clear();
-        }
-
-        // parsing
-        size_t i = begin;
-        for(; i < end; ++i, ++len) {
-            if constexpr(std::is_same_v<T, string>) {
-                // find [",]
-                if(in[i] == '\"' && in[i + 1] == ',') {
-                    T data;
-
-                    // len + 1: ignore '\"'
-                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<T>());
-                    i     += 3; // pass [", ]
-                    begin  = i; // next position
-                    len    = 0; // next length
-                    push(std::move(data));
-                }
-            }
-
-            else if constexpr (isSTL<T>()) {
-                // find [},]
-                if(in[i] == '}' && in[i + 1] == ',') {
-                    T data;
-
-                    // len + 1: ignore '{'
-                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<T>());
-                    i     += 3; // pass [}, ]
-                    begin  = i; // next position
-                    len    = 0; // next length
-                    push(std::move(data));
-                }
-            }
-
-            else if(in[i] == ',') {
-                T data;
-                fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<T>());
-                i     += 2; // pass [, ]
-                begin  = i; // next position
-                len    = 0; // next length
-                push(std::move(data));
-            }
-        }
-
-        T data;
-        fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<T>());
-        push(std::move(data));
+        deserialization<Deque<T, SVO>>(in, append);
     }
 
 public:

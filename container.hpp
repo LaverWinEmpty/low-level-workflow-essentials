@@ -35,8 +35,75 @@ using namespace config;
 
 struct Container {
     virtual ~Container() noexcept {}
-    virtual string      serialize() const                        = 0;
-    virtual void        deserialize(const string&, bool = false) = 0;
+    virtual string serialize() const                        = 0;
+    virtual void   deserialize(const string&, bool = false) = 0;
+
+protected:
+    virtual void onDeserialization(const void*) = 0;
+
+protected:
+    template<typename Container> void deserialization(const string& in, bool append) {
+        using Element = typename Container::value_type;
+
+        if (in == "{}") {
+            return; // empty    
+        }
+
+        size_t stack = 1;
+        size_t begin = 2;             // "{ ", ignore 2
+        size_t end = in.size() - 2; // " }", ignore 2
+        size_t len = 0;
+        size_t pair = 0;
+
+        if (!append) {
+            static_cast<Container*>(this)->clear();
+        }
+
+        // parsing
+        size_t i = begin;
+        for (; i < end; ++i, ++len) {
+            if constexpr (std::is_same_v<Element, string>) {
+                // find [",]
+                if (in[i] == '\"' && in[i + 1] == ',') {
+                    Element data;
+
+                    // len + 1: ignore '\"'
+                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                    i += 3; // pass [", ]
+                    begin = i; // next position
+                    len = 0; // next length
+                    onDeserialization(reinterpret_cast<const void*>(&data));
+                }
+            }
+
+            else if constexpr (isSTL<Element>()) {
+                // find [},]
+                if (in[i] == '}' && in[i + 1] == ',') {
+                    Element data;
+
+                    // len + 1: ignore '{'
+                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                    i += 3; // pass [}, ]
+                    begin = i; // next position
+                    len = 0; // next length
+                    onDeserialization(reinterpret_cast<const void*>(&data));
+                }
+            }
+
+            else if (in[i] == ',') {
+                Element data;
+                fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+                i += 2; // pass [, ]
+                begin = i; // next position
+                len = 0; // next length
+                onDeserialization(reinterpret_cast<const void*>(&data));
+            }
+        }
+
+        Element data;
+        fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+        onDeserialization(reinterpret_cast<const void*>(&data));
+    }
 };
 
 } // namespace stl
