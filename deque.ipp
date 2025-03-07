@@ -42,7 +42,7 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, SVO>::Deque(Deque<T
         }
 
         // move
-        for(size_t i = 0; i < in.counter; ++i) {
+        for(index_t i = 0; i < in.counter; ++i) {
             container[i] = std::move(in.container[i]);
         }
 

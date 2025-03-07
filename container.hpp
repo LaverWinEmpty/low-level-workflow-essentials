@@ -3,24 +3,7 @@
 
 #include "hal.hpp"
 
-#define DECLARE_CONTAINER(CONTAINER, ELEMENT)                                                                          \
-    virtual std::string serialize() const override {                                                                   \
-        std::string out;                                                                                               \
-        Iterator    curr = begin();                                                                                    \
-        Iterator    last = end();                                                                                      \
-        if(curr != last) {                                                                                             \
-            out.append("{ ");                                                                                          \
-            while(true) {                                                                                              \
-                tostr(&out, &*curr, typecode<ELEMENT>());                                                              \
-                ++curr;                                                                                                \
-                if(curr != last) {                                                                                     \
-                    out.append(", ");                                                                                  \
-                } else break;                                                                                          \
-            }                                                                                                          \
-            out.append(" }");                                                                                          \
-        } else return "{}";                                                                                            \
-        return out;                                                                                                    \
-    }                                                                                                                  \
+#define CONTAINER_ARRAY_BODY(CONTAINER, ELEMENT, SVO)                                                                  \
     using CONTAINER##Element = ELEMENT;                                                                                \
     using value_type         = ELEMENT
 
@@ -39,70 +22,95 @@ struct Container {
     virtual void   deserialize(const string&, bool = false) = 0;
 
 protected:
-    virtual void onDeserialization(const void*) = 0;
+    //! @brief deserialized data load
+    virtual void load(const void*) = 0;
 
 protected:
+    template<typename Container> string serialization() const {
+        using Element = typename Container::value_type;
+
+        std::string out;
+
+        typename Container::Iterator curr = static_cast<const Container*>(this)->begin();
+        typename Container::Iterator last = static_cast<const Container*>(this)->end();
+        if(curr != last) {
+
+            out.append("{ ");
+            while(true) {
+
+                tostr(&out, &*curr, typecode<Element>());
+                ++curr;
+                if(curr != last) {
+
+                    out.append(", ");
+                } else break;
+            }
+            out.append(" }");
+        } else return "{}";
+        return out;
+    }
+
     template<typename Container> void deserialization(const string& in, bool append) {
         using Element = typename Container::value_type;
 
-        if (in == "{}") {
-            return; // empty    
+        if(in == "{}") {
+            return; // empty
         }
 
         size_t stack = 1;
         size_t begin = 2;             // "{ ", ignore 2
-        size_t end = in.size() - 2; // " }", ignore 2
-        size_t len = 0;
-        size_t pair = 0;
+        size_t end   = in.size() - 2; // " }", ignore 2
+        size_t len   = 0;
+        size_t pair  = 0;
 
-        if (!append) {
+        if(!append) {
             static_cast<Container*>(this)->clear();
         }
 
         // parsing
         size_t i = begin;
-        for (; i < end; ++i, ++len) {
-            if constexpr (std::is_same_v<Element, string>) {
+        for(; i < end; ++i, ++len) {
+            if constexpr(std::is_same_v<Element, string>) {
                 // find [",]
-                if (in[i] == '\"' && in[i + 1] == ',') {
+                if(in[i] == '\"' && in[i + 1] == ',') {
                     Element data;
 
                     // len + 1: ignore '\"'
                     fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                    i += 3; // pass [", ]
-                    begin = i; // next position
-                    len = 0; // next length
-                    onDeserialization(reinterpret_cast<const void*>(&data));
+                    i     += 3; // pass [", ]
+                    begin  = i; // next position
+                    len    = 0; // next length
+                    load(reinterpret_cast<const void*>(&data));
                 }
             }
 
-            else if constexpr (isSTL<Element>()) {
+            else if constexpr(isSTL<Element>()) {
                 // find [},]
-                if (in[i] == '}' && in[i + 1] == ',') {
+                if(in[i] == '}' && in[i + 1] == ',') {
                     Element data;
 
                     // len + 1: ignore '{'
                     fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                    i += 3; // pass [}, ]
-                    begin = i; // next position
-                    len = 0; // next length
-                    onDeserialization(reinterpret_cast<const void*>(&data));
+                    i     += 3; // pass [}, ]
+                    begin  = i; // next position
+                    len    = 0; // next length
+                    load(reinterpret_cast<const void*>(&data));
                 }
             }
 
-            else if (in[i] == ',') {
+            else if(in[i] == ',') {
                 Element data;
                 fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-                i += 2; // pass [, ]
-                begin = i; // next position
-                len = 0; // next length
-                onDeserialization(reinterpret_cast<const void*>(&data));
+                i     += 2; // pass [, ]
+                begin  = i; // next position
+                len    = 0; // next length
+                load(reinterpret_cast<const void*>(&data));
             }
         }
 
         Element data;
         fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-        onDeserialization(reinterpret_cast<const void*>(&data));
+        load(reinterpret_cast<const void*>(&data));
     }
 };
 

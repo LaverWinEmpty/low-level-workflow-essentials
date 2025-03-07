@@ -37,7 +37,7 @@ LWE_BEGIN
 namespace stl {
 
 template<typename T, size_t SVO = DEF_SVO> struct Deque: Container {
-    DECLARE_CONTAINER(Deque, T);
+    CONTAINER_ARRAY_BODY(Deque, T, SVO);
 
 private:
     template<typename, size_t> friend struct Deque;
@@ -52,13 +52,17 @@ public:
     friend class Reverser;
 
 public:
-    virtual void onDeserialization(const void* in) override {
+    // TODO: this methods move to macro CONTAINER_BODY()
+
+    virtual void load(const void* in) override {
         push(std::move(*const_cast<DequeElement*>(static_cast<const DequeElement*>(in))));
     }
 
     virtual void deserialize(const string& in, bool append = false) override {
         deserialization<Deque<T, SVO>>(in, append);
     }
+
+    virtual std::string serialize() const override { return serialization<Deque<T, SVO>>(); }
 
 public:
     Deque();
