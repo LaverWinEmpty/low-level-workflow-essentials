@@ -156,7 +156,7 @@ void tostr(std::string* out, const void* in, const MetaType& type) {
         break;
 
     // wchar
-    case MetaType::WCHAR:
+    case MetaType::WCHAR_T:
         //TODO: fix
         // serialize<wchar_t>(out, in);
         break;
@@ -255,7 +255,7 @@ void fromstr(void* out, const std::string& in, const MetaType& type) {
         break;
 
     // wchar
-    case MetaType::WCHAR:
+    case MetaType::WCHAR_T:
     // TODO: fix
         // deserialize<wchar_t>(static_cast<wchar_t*>(out), in, inout);
         break;

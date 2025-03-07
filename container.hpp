@@ -3,18 +3,7 @@
 
 #include "hal.hpp"
 
-#define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
-    template<typename T> struct ContainerCode<LWE::stl::CONTAINER<T>> {                                                \
-        using enum MetaType;                                                                                           \
-        static constexpr MetaType VALUE = ENUM;                                                                        \
-    };                                                                                                                 \
-    template<typename, typename = std::void_t<>> struct Is##CONTAINER: std::false_type {};                             \
-    template<typename T> struct Is##CONTAINER<T, std::void_t<typename T::CONTAINER##Element>>: std::true_type {}
-
 #define DECLARE_CONTAINER(CONTAINER, ELEMENT)                                                                          \
-    virtual const char* typestring() const override {                                                                  \
-        return #CONTAINER;                                                                                             \
-    }                                                                                                                  \
     virtual std::string serialize() const override {                                                                   \
         std::string out;                                                                                               \
         Iterator    curr = begin();                                                                                    \
@@ -32,7 +21,8 @@
         } else return "{}";                                                                                            \
         return out;                                                                                                    \
     }                                                                                                                  \
-    using CONTAINER##Element = ELEMENT
+    using CONTAINER##Element = ELEMENT;                                                                                \
+    using value_type         = ELEMENT
 
 LWE_BEGIN
 
@@ -47,7 +37,6 @@ struct Container {
     virtual ~Container() noexcept {}
     virtual string      serialize() const                        = 0;
     virtual void        deserialize(const string&, bool = false) = 0;
-    virtual const char* typestring() const                       = 0;
 };
 
 } // namespace stl

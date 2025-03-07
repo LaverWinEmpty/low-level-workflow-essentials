@@ -28,6 +28,8 @@
 #include "container.hpp"
 #include "serialize.hpp"
 
+#include "iostream"
+
 LWE_BEGIN
 
 // TODO:
@@ -56,8 +58,8 @@ public:
         }
 
         size_t stack = 1;
-        size_t begin = 2; // "{ ", pass 2
-        size_t end   = in.size();
+        size_t begin = 2;             // "{ ", ignore 2
+        size_t end   = in.size() - 2; // " }", ignore 2 
         size_t len   = 0;
         size_t pair  = 0;
 
@@ -68,7 +70,6 @@ public:
         // parsing
         size_t i = begin;
         for(; i < end; ++i, ++len) {
-            // end
             if constexpr(std::is_same_v<T, string>) {
                 // find [",]
                 if(in[i] == '\"' && in[i + 1] == ',') {
@@ -76,10 +77,24 @@ public:
 
                     // len + 1: ignore '\"'
                     fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<T>());
-                    i     += 2; // pass [, ]
+                    i     += 3; // pass [", ]
                     begin  = i; // next position
                     len    = 0; // next length
-                    push(data);
+                    push(std::move(data));
+                }
+            }
+
+            else if constexpr (isSTL<T>()) {
+                // find [},]
+                if(in[i] == '}' && in[i + 1] == ',') {
+                    T data;
+
+                    // len + 1: ignore '{'
+                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<T>());
+                    i     += 3; // pass [}, ]
+                    begin  = i; // next position
+                    len    = 0; // next length
+                    push(std::move(data));
                 }
             }
 
@@ -89,23 +104,13 @@ public:
                 i     += 2; // pass [, ]
                 begin  = i; // next position
                 len    = 0; // next length
-                push(data);
+                push(std::move(data));
             }
         }
 
-        // end " }" skip
-        if constexpr(std::is_same_v<T, string>) {
-            T data;
-            // len + 1: ignore '\"'
-            fromstr(reinterpret_cast<void*>(&data), in.substr(begin + 1, len), typecode<T>());
-            push(data);
-        }
-
-        else {
-            T data;
-            fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<T>());
-            push(data);
-        }
+        T data;
+        fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<T>());
+        push(std::move(data));
     }
 
 public:
@@ -265,7 +270,7 @@ private:
 LWE_END
 } // namespace stl
 
-REGISTER_CONTAINER(Deque, STL_DEQUE);
+// REGISTER_CONTAINER(Deque, STL_DEQUE);
 
 #include "deque.ipp"
 #endif
