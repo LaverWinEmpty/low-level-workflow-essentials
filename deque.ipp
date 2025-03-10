@@ -45,24 +45,22 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, SVO>::Deque(Deque<T
         for(index_t i = 0; i < in.counter; ++i) {
             new(container + i) T(std::move(in.container[relative(i)]));
         }
-
-        head = 0;
-        tail = counter - 1;
+        
+        counter = in.counter;
+        head    = 0;
+        tail    = counter - 1;
     }
 
-    // move
+    // move pointer
     else {
-        container     = in.container;
+        container = in.container;
         capacitor = in.capacitor;
         head      = in.head;
         tail      = in.tail;
     }
 
-    // set counter
-    counter = in.counter;
-
     // set other
-    in.container     = in.stack;
+    in.container = in.stack;
     in.capacitor = in.MIN;
     in.counter   = 0;
     in.head      = 0;
@@ -94,19 +92,20 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, N>& Deque<T, SVO>::
                 new(container + i) T(std::move(in.container[i]));
             }
 
-            head = 0;
-            tail = counter - 1;
+            counter = in.counter;
+            head    = 0;
+            tail    = counter - 1;
         }
 
         else {
-            container     = in.container;
+            container = in.container;
             capacitor = in.capacitor;
             head      = in.head;
             tail      = in.tail;
         }
 
         // set other
-        in.container     = in.stack;
+        in.container = in.stack;
         in.capacitor = in.MIN;
         in.counter   = 0;
         in.head      = 0;
@@ -380,7 +379,7 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexc
     }
 
     // set
-    container     = newly;
+    container = newly;
     capacitor = in < MIN ? MIN : in;
     head      = 0;
     tail      = counter - 1;

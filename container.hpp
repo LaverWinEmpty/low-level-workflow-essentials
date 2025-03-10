@@ -3,19 +3,6 @@
 
 #include "hal.hpp"
 
-#define CONTAINER_BODY(CONTAINER, ...)                                                                                 \
-    using CONTAINER##Element = typename Container::Type<__VA_ARGS__>::Element;                                         \
-    virtual void deserialize(const string& in) override {                                                              \
-        *this = Container::deserialize<CONTAINER<__VA_ARGS__>>(in);                                                    \
-    }                                                                                                                  \
-    virtual std::string serialize() const override {                                                                   \
-        return Container::serialize<CONTAINER<__VA_ARGS__>>(this);                                                     \
-    }                                                                                                                  \
-    virtual void parsing(void* in) override {                                                                          \
-        push(std::move(*static_cast<CONTAINER##Element*>(in)));                                                        \
-    }                                                                                                                  \
-    using value_type = typename CONTAINER##Element
-
 LWE_BEGIN
 
 namespace stl {
@@ -29,20 +16,23 @@ struct Container {
     virtual ~Container() noexcept {}
     virtual string serialize() const          = 0;
     virtual void   deserialize(const string&) = 0;
-    virtual void   parsing(void*)             = 0; //!< use on deserialize, e.g. { push(*(T*)in); }
 
 protected:
+    /**
+     * @brief serialize
+     */
     template<typename Container> static string serialize(const Container* in) {
-        using Element = typename Container::value_type;
-        std::string                  out;
+        std::string out;
+
+        // CRTP begin / end
         typename Container::Iterator curr = in->begin();
         typename Container::Iterator last = in->end();
+        // has data
         if(curr != last) {
-
             out.append("{ ");
+            // for each
             while(true) {
-
-                tostr(&out, &*curr, typecode<Element>());
+                ::serialize(&out, &*curr, typecode<typename Container::value_type>());
                 ++curr;
                 if(curr != last) {
                     out.append(", ");
@@ -54,12 +44,16 @@ protected:
     }
 
 public:
+    /**
+     * @brief deserialize
+     * @note  NEED "push(T in)"
+     */
     template<typename Container> static Container deserialize(const string& in) {
         using Element = typename Container::value_type;
-        Container out;
         if(in == "{}") {
-            return out; // empty
+            return Container{}; // empty
         }
+        Container out; // else
 
         size_t stack = 1;
         size_t begin = 2;             // "{ ", ignore 2
@@ -75,11 +69,11 @@ public:
                 if(in[i] == '\"' && in[i + 1] == ',') {
                     Element data;
                     // len + 1: with '\"'
-                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                    ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
                     i     += 3; // pass [", ]
                     begin  = i; // next position
                     len    = 0; // next length
-                    out.parsing(reinterpret_cast<void*>(&data));
+                    out.push(std::move(data));
                 }
             }
 
@@ -88,35 +82,30 @@ public:
                 if(in[i] == '}' && in[i + 1] == ',') {
                     Element data;
                     // len + 1: with '}'
-                    fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                    ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
                     i     += 3; // pass [}, ]
                     begin  = i; // next position
                     len    = 0; // next length
-                    out.parsing(reinterpret_cast<void*>(&data));
+                    out.push(std::move(data));
                 }
             }
 
             else if(in[i] == ',') {
                 Element data;
-                fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+                ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
                 i     += 2; // pass [, ]
                 begin  = i; // next position
                 len    = 0; // next length
-                out.parsing(reinterpret_cast<void*>(&data));
+                out.push(std::move(data));
             }
         }
 
+        // insert last data
         Element data;
-        fromstr(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-        out.parsing(reinterpret_cast<void*>(&data));
-
+        ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+        out.push(std::move(data));
         return std::move(out);
     }
-
-public:
-    template<typename T, size_t...> struct Type {
-        using Element = T;
-    };
 };
 
 } // namespace stl

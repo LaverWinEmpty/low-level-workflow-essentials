@@ -5,7 +5,7 @@
 // clang-format off
 
 // primitive type to string
-template<typename T> string tostr(const T& in) {
+template<typename T> string serialize(const T& in) {
     std::stringstream ss;
     if constexpr(std::is_same_v<T, float>)       ss << std::fixed << std::setprecision(6) << in;
     else if constexpr(std::is_same_v<T, double>) ss << std::fixed << std::setprecision(14) << in;
@@ -14,12 +14,12 @@ template<typename T> string tostr(const T& in) {
 }
 
 // boolean type to string
-template<> string tostr<bool>(const bool& in) {
+template<> string serialize<bool>(const bool& in) {
     return in ? "true" : "false";
 }
 
 // string to string
-template<> string tostr<string>(const string& in) {
+template<> string serialize<string>(const string& in) {
     string out;
     out.append("\"");
     size_t loop = in.size();
@@ -37,12 +37,12 @@ template<> string tostr<string>(const string& in) {
 }
 
 // container to string
-template<> string tostr<LWE::stl::Container>(const LWE::stl::Container& in) {
+template<> string serialize<LWE::stl::Container>(const LWE::stl::Container& in) {
     return in.serialize();
 }
 
 // string to primitive type
-template<typename T> T fromstr(const string& in) {
+template<typename T> T deserialize(const string& in) {
     // TODO: exeption
     // 1. out of range
     // 2. format mismatch
@@ -67,7 +67,7 @@ template<typename T> T fromstr(const string& in) {
 }
 
 // string to boolean type
-template<> bool fromstr<bool>(const string& in) {
+template<> bool deserialize<bool>(const string& in) {
     // TODO: exeption
     // not "true" or "false"
 
@@ -78,7 +78,7 @@ template<> bool fromstr<bool>(const string& in) {
 }
 
 // string to string
-template<> string fromstr<string>(const string& in) {
+template<> string deserialize<string>(const string& in) {
     string result;
     if(in[0] != '\"') {
         assert(false);
@@ -104,12 +104,12 @@ template<> string fromstr<string>(const string& in) {
 }
 
 // string to container
-void fromstr(LWE::stl::Container* out, const string& in) {
+void deserialize(LWE::stl::Container* out, const string& in) {
     out->deserialize(in);
 }
 
 // runtime serialize
-void tostr(std::string* out, const void* in, const MetaType& type) {
+void serialize(std::string* out, const void* in, const MetaType& type) {
     switch (type) {
     // skip
     case MetaType::UNREGISTERED:
@@ -140,19 +140,19 @@ void tostr(std::string* out, const void* in, const MetaType& type) {
     // int
     case MetaType::SIGNED_INT:
     case MetaType::UNSIGNED_INT:
-        out->append(tostr(*static_cast<const int*>(in)));
+        out->append(serialize(*static_cast<const int*>(in)));
         break;
 
     // bool
     case MetaType::BOOL:
-        out->append(tostr(*static_cast<const bool*>(in)));
+        out->append(serialize(*static_cast<const bool*>(in)));
         break;
 
     // char
     case MetaType::CHAR:
     case MetaType::SIGNED_CHAR:
     case MetaType::UNSIGNED_CHAR:
-        out->append(tostr(*static_cast<const char*>(in)));
+        out->append(serialize(*static_cast<const char*>(in)));
         break;
 
     // wchar
@@ -164,34 +164,34 @@ void tostr(std::string* out, const void* in, const MetaType& type) {
     // short
     case MetaType::SIGNED_SHORT:
     case MetaType::UNSIGNED_SHORT: 
-        out->append(tostr(*static_cast<const short*>(in)));
+        out->append(serialize(*static_cast<const short*>(in)));
         break;
 
     // long
     case MetaType::SIGNED_LONG:
     case MetaType::UNSIGNED_LONG: 
-        out->append(tostr(*static_cast<const long*>(in)));
+        out->append(serialize(*static_cast<const long*>(in)));
         break;
 
     // long long
     case MetaType::SIGNED_LONG_LONG:
     case MetaType::UNSIGNED_LONG_LONG:
-        out->append(tostr(*static_cast<const long long*>(in)));
+        out->append(serialize(*static_cast<const long long*>(in)));
         break;
     
     // float
     case MetaType::FLOAT:
-        out->append(tostr<float>(*static_cast<const float*>(in))); 
+        out->append(serialize<float>(*static_cast<const float*>(in))); 
         break;
 
     // double
     case MetaType::DOUBLE: 
-        out->append(tostr<double>(*static_cast<const double*>(in)));
+        out->append(serialize<double>(*static_cast<const double*>(in)));
         break;
 
     // long double
     case MetaType::LONG_DOUBLE: 
-        out->append(tostr<long double>(*static_cast<const long double*>(in)));
+        out->append(serialize<long double>(*static_cast<const long double*>(in)));
         break;
     
     // function
@@ -200,17 +200,17 @@ void tostr(std::string* out, const void* in, const MetaType& type) {
         break;
 
     case MetaType::STD_STRING: 
-        out->append(tostr(*static_cast<const string*>(in)));
+        out->append(serialize(*static_cast<const string*>(in)));
         break;
 
     case MetaType::STL_DEQUE:
-        out->append(tostr(*static_cast<const LWE::stl::Container*>(in)));
+        out->append(serialize(*static_cast<const LWE::stl::Container*>(in)));
         break;
     }
 }
 
 // runtime deserialize
-void fromstr(void* out, const std::string& in, const MetaType& type) {
+void deserialize(void* out, const std::string& in, const MetaType& type) {
     switch (type) {
     case MetaType::UNREGISTERED:
     case MetaType::VOID:
@@ -239,19 +239,19 @@ void fromstr(void* out, const std::string& in, const MetaType& type) {
     // int
     case MetaType::SIGNED_INT:
     case MetaType::UNSIGNED_INT: 
-        *static_cast<int*>(out) = fromstr<int>(in);
+        *static_cast<int*>(out) = deserialize<int>(in);
         break;
 
     // bool
     case MetaType::BOOL:
-        *static_cast<bool*>(out) = fromstr<bool>(in);
+        *static_cast<bool*>(out) = deserialize<bool>(in);
     break;
 
     // char
     case MetaType::CHAR:
     case MetaType::SIGNED_CHAR:
     case MetaType::UNSIGNED_CHAR:
-        *static_cast<char*>(out) = fromstr<char>(in);
+        *static_cast<char*>(out) = deserialize<char>(in);
         break;
 
     // wchar
@@ -263,39 +263,39 @@ void fromstr(void* out, const std::string& in, const MetaType& type) {
     // short
     case MetaType::SIGNED_SHORT:
     case MetaType::UNSIGNED_SHORT: 
-        *static_cast<short*>(out) = fromstr<short>(in);
+        *static_cast<short*>(out) = deserialize<short>(in);
         break;
 
     // long
     case MetaType::SIGNED_LONG:
     case MetaType::UNSIGNED_LONG: 
-        *static_cast<long*>(out) = fromstr<long>(in);
+        *static_cast<long*>(out) = deserialize<long>(in);
         break;
 
     // long long
     case MetaType::SIGNED_LONG_LONG:
     case MetaType::UNSIGNED_LONG_LONG:
-        *static_cast<long long*>(out) = fromstr<long long>(in);
+        *static_cast<long long*>(out) = deserialize<long long>(in);
         break;
 
     // float
     case MetaType::FLOAT:
-        *static_cast<float*>(out) = fromstr<float>(in);
+        *static_cast<float*>(out) = deserialize<float>(in);
         break;
 
     // double
     case MetaType::DOUBLE:
-        *static_cast<double*>(out) = fromstr<double>(in);
+        *static_cast<double*>(out) = deserialize<double>(in);
         break;
 
     // long double    
     case MetaType::LONG_DOUBLE:
-        *static_cast<long double*>(out) = fromstr<long double>(in);
+        *static_cast<long double*>(out) = deserialize<long double>(in);
         break;
 
     // std::string
     case MetaType::STD_STRING: 
-        *static_cast<string*>(out) = fromstr<string>(in);
+        *static_cast<string*>(out) = deserialize<string>(in);
         break;
 
     case MetaType::STL_DEQUE:

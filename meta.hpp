@@ -55,14 +55,13 @@ enum class MetaAccess : int8 {
 template<typename, typename = std::void_t<>> struct MetaContainer {
     static constexpr MetaType CODE = MetaType::UNREGISTERED;
 };
-template<typename T> struct MetaContainer<T, std::void_t< typename T::DequeElement >> {
-    static constexpr MetaType CODE = MetaType::STL_DEQUE;
-};
+
+
+REGISTER_CONTAINER(Deque, STL_DEQUE);
 
 // get type
 template<typename T> constexpr MetaType typecode() {
     if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return MetaContainer<T>::CODE;
-
     if constexpr(std::is_pointer_v<T>)   return MetaType::POINTER;
     if constexpr(std::is_reference_v<T>) return MetaType::REFERENCE;
     if constexpr(std::is_union_v<T>)     return MetaType::UNION;
@@ -88,7 +87,6 @@ template<> constexpr MetaType typecode<double>()             { return MetaType::
 template<> constexpr MetaType typecode<long double>()        { return MetaType::LONG_DOUBLE; }
 template<> constexpr MetaType typecode<string>()             { return MetaType::STD_STRING; }
 
-// TODO: 전용 타입으로 수정할 예정
 using Types = std::vector<MetaType>;
 
 // type serialize rec
@@ -243,18 +241,18 @@ constexpr size_t typestring(string* out, const Types& in, size_t idx) {
 }
 
 // runtime type name string
-constexpr string typestring(const Types& in) {
+string typestring(const Types& in) {
     string out;
     typestring(&out, in, 0);
     return out;
 }
 
-template<typename T> constexpr const char* typestring() {
+template<typename T> const char* typestring() {
     static string str = typestring(tserial<T>());
     return str.c_str();
 }
 
-template<typename T> constexpr const char* typestring(const T&) {
+template<typename T> const char* typestring(const T&) {
     static string str = typestring(tserial<T>());
     return str.c_str();
 }

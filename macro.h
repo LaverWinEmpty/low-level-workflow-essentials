@@ -141,6 +141,30 @@
 
 // clang-format off
 
+/*
+ * @brief register metadata inner class
+ */
+#define REGISTER_CLASS(TYPE, BASE)                                                                                     \
+    friend struct MetaClass;                                                                                           \
+    struct TYPE##Meta: MetaClass {                                                                                     \
+        virtual const char* name() const override {                                                                    \
+            return #TYPE;                                                                                              \
+        }                                                                                                              \
+        virtual size_t size() const override {                                                                         \
+            return sizeof(TYPE);                                                                                       \
+        }                                                                                                              \
+        virtual MetaClass* base() const override {                                                                     \
+            return MetaClass::get<BASE>();                                                                             \
+        }                                                                                                              \
+        virtual const std::vector<MetaField>& properties() const override;                                             \
+    };                                                                                                                 \
+public:                                                                                                                \
+    virtual MetaClass* metaclass() override {                                                                          \
+        static TYPE##Meta meta;                                                                                        \
+        return &meta;                                                                                                  \
+    }                                                                                                                  \
+    using Base = BASE;
+
 //! @brief declare  evalue from string
 #define REGISTER_STRING_TO_ENUM_BEGIN(TYPE)                                                                            \
     template<> TYPE evalue<TYPE>(std::string IN) {                                                                     \
@@ -202,30 +226,6 @@
         return INDEX;                                                                                                  \
     }
 
-/*
- * @brief register metadata inner class
- */
-#define REGISTER_CLASS(TYPE, BASE)                                                                                     \
-    friend struct MetaClass;                                                                                           \
-    struct TYPE##Meta: MetaClass {                                                                                     \
-        virtual const char* name() const override {                                                                    \
-            return #TYPE;                                                                                              \
-        }                                                                                                              \
-        virtual size_t size() const override {                                                                         \
-            return sizeof(TYPE);                                                                                       \
-        }                                                                                                              \
-        virtual MetaClass* base() const override {                                                                     \
-            return MetaClass::get<BASE>();                                                                             \
-        }                                                                                                              \
-        virtual const std::vector<MetaField>& properties() const override;                                             \
-    };                                                                                                                 \
-public:                                                                                                                \
-    virtual MetaClass* metaclass() override {                                                                          \
-        static TYPE##Meta meta;                                                                                        \
-        return &meta;                                                                                                  \
-    }                                                                                                                  \
-    using Base = BASE;
-
 //! @brief fields begin
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
     const std::vector<MetaField>& TYPE::TYPE##Meta::properties() const {                                               \
@@ -244,6 +244,28 @@ public:                                                                         
         );                                                                                                             \
         return VECTOR;                                                                                                 \
     }
+
+/**
+ * @brief container enum value register
+ */
+#define REGISTER_CONTAINER(CONTAINER, VALUE)                                                                           \
+    template<typename T> struct MetaContainer<T, std::void_t<typename T::CONTAINER##Element>> {                        \
+        using enum MetaType;                                                                                           \
+        static constexpr MetaType CODE = VALUE;                                                                        \
+    }
+
+/**
+ * @brief default container serializer and deserializer override
+ */
+#define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
+    using CONTAINER##Element = ELEMENT;                                                                                \
+    virtual void deserialize(const string& in) override {                                                              \
+        *this = Container::deserialize<CONTAINER<ELEMENT, ## __VA_ARGS__>>(in);                                        \
+    }                                                                                                                  \
+    virtual std::string serialize() const override {                                                                   \
+        return Container::serialize<CONTAINER<ELEMENT, ## __VA_ARGS__>>(this);                                         \
+    }                                                                                                                  \
+    using value_type = CONTAINER##Element
 
 // clang-format on
 
