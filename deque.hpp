@@ -2,7 +2,7 @@
 #define LWE_CONTAINER_DEQUE_HEADER
 
 /**************************************************************************************************
- * circulation array
+ * circulation container
  *
  * use small vector
  * random accessible
@@ -37,7 +37,7 @@ LWE_BEGIN
 namespace stl {
 
 template<typename T, size_t SVO = DEF_SVO> struct Deque: Container {
-    CONTAINER_ARRAY_BODY(Deque, T, SVO);
+    CONTAINER_BODY(Deque, T, SVO);
 
 private:
     template<typename, size_t> friend struct Deque;
@@ -52,17 +52,6 @@ public:
     friend class Reverser;
 
 public:
-    // TODO: this methods move to macro CONTAINER_BODY()
-
-    virtual void load(const void* in) override {
-        push(std::move(*const_cast<DequeElement*>(static_cast<const DequeElement*>(in))));
-    }
-
-    virtual void deserialize(const string& in, bool append = false) override {
-        deserialization<Deque<T, SVO>>(in, append);
-    }
-
-    virtual std::string serialize() const override { return serialization<Deque<T, SVO>>(); }
 
 public:
     Deque();
@@ -105,12 +94,12 @@ public:
 
 public:
     size_t size() const noexcept;     //!< emement count == size
-    size_t capacity() const noexcept; //!< array size
+    size_t capacity() const noexcept; //!< container size
     bool   full() const noexcept;
     bool   empty() const noexcept;
 
 public:
-    T* data() const noexcept; //!< array address
+    T* data() const noexcept; //!< container address
     T& at(index_t) const;
 
 public:
@@ -142,8 +131,8 @@ private:
     union {
         T stack[MIN]; //!< small
     };
-    T*      container = stack; //!< array
-    size_t  capacitor = MIN;   //!< size: array
+    T*      container = stack; //!< container
+    size_t  capacitor = MIN;   //!< size: container
     index_t counter   = 0;     //!< size: element
     index_t head      = 0;     //!< index: front / bottom
     index_t tail      = -1;    //!< index: rear / top
