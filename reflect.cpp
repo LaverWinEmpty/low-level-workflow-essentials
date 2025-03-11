@@ -1,9 +1,5 @@
 #include "meta.hpp"
 
-// register class
-// TODO: it is old source
-// need reflect <-> metadata match
-
 //! @brief
 template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list) {
     static std::vector<MetaField> result;
@@ -55,3 +51,37 @@ template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaFi
     }
     return result;
 }
+
+//! @brief
+class Object {
+    friend struct MetaClass;
+    struct ObjectMeta: MetaClass {
+        virtual const char*      name() const override { return "Object"; }
+        virtual size_t           size() const override { return sizeof(Object); }
+        virtual const FieldInfo& properties() const override {
+            static const FieldInfo EMPTY; // default
+            return EMPTY;
+        }
+        virtual MetaClass* base() const override { return nullptr; }
+    };
+
+public:
+    virtual MetaClass* metaclass() {
+        static ObjectMeta meta;
+        return &meta;
+    }
+    virtual MetaClass* metabase() { return nullptr; }
+
+public:
+    std::string serialize() {
+        const FieldInfo& prop = metaclass()->properties();
+
+        std::string buffer;
+        buffer.reserve(4096);
+
+        for(int i = 0; i < prop.size(); ++i) {}
+    }
+
+public:
+    static void deserialize(Object* out, const std::string& in) {}
+};

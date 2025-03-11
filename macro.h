@@ -144,7 +144,7 @@
 /*
  * @brief register metadata inner class
  */
-#define REGISTER_CLASS(TYPE, BASE)                                                                                     \
+#define CLASS_BODY(TYPE, BASE)                                                                                         \
     friend struct MetaClass;                                                                                           \
     struct TYPE##Meta: MetaClass {                                                                                     \
         virtual const char* name() const override {                                                                    \
@@ -156,7 +156,7 @@
         virtual MetaClass* base() const override {                                                                     \
             return MetaClass::get<BASE>();                                                                             \
         }                                                                                                              \
-        virtual const std::vector<MetaField>& properties() const override;                                             \
+        virtual const FieldInfo& properties() const override;                                                           \
     };                                                                                                                 \
 public:                                                                                                                \
     virtual MetaClass* metaclass() override {                                                                          \
@@ -238,7 +238,7 @@ public:                                                                         
         static std::vector<MetaField> VECTOR = reflect<TYPE>( // {
 //! @brief field
 #define REGISTER_FIELD(ACCESS, NAME, ...) \
-            MetaField{ ACCESS_MODIFIER(#ACCESS), tserial<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },
+            MetaField{ ACCESS_MODIFIER(#ACCESS), typeinfo<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },
 //! @brief fiels end
 #define REGISTER_FIELD_END                                                                                             \
         );                                                                                                             \

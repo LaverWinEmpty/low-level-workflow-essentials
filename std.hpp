@@ -4,3 +4,6 @@
 #include <type_traits>
 #include <stdexcept>
 #include <cassert>
+#include <vector>
+#include <unordered_set>
+#include <unordered_map>

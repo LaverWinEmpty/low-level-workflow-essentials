@@ -1,4 +1,3 @@
-#include "deque.hpp"
 #ifdef LWE_CONTAINER_DEQUE_HEADER
 LWE_BEGIN
 
@@ -45,7 +44,7 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, SVO>::Deque(Deque<T
         for(index_t i = 0; i < in.counter; ++i) {
             new(container + i) T(std::move(in.container[relative(i)]));
         }
-        
+
         counter = in.counter;
         head    = 0;
         tail    = counter - 1;

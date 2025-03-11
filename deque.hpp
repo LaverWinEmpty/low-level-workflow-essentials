@@ -30,14 +30,14 @@
 
 #include "iostream"
 
-LWE_BEGIN
+REGISTER_CONTAINER(Deque, STL_DEQUE);
 
-// TODO:
+LWE_BEGIN
 
 namespace stl {
 
 template<typename T, size_t SVO = DEF_SVO> struct Deque: Container {
-    CONTAINER_BODY(Deque, T, SVO);
+    CONTAINER_BODY (Deque, T, SVO);
 
 private:
     template<typename, size_t> friend struct Deque;
@@ -50,8 +50,6 @@ public:
     class Reverser; //!< reverse iterator
     friend class Iterator;
     friend class Reverser;
-
-public:
 
 public:
     Deque();
