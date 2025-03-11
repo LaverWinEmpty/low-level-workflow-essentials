@@ -183,27 +183,6 @@ constexpr const char* typestring(MetaType code) {
     return "";
 }
 
-constexpr size_t typestring(string* out, const TypeInfo& in, size_t idx) {
-    // pointer or reference
-    if (in[idx] == MetaType::POINTER || in[idx] == MetaType::REFERENCE) {
-        typestring(out, in, idx + 1); // rec
-    }
-
-    out->append(typestring(in[idx]));
-
-    // has template
-    if (isSTL(in[idx])) {
-        out->append("<");
-        typestring(out, in, idx + 1);
-        
-        // TODO: map 처리
-
-        out->append(">");
-    }
-
-    return idx + 1;
-}
-
 string typestring(const TypeInfo& in) {
     std::function<size_t(string*, const TypeInfo&, size_t)> fn = [&fn](string* out, const TypeInfo& in, size_t idx) {
         // pointer or reference
