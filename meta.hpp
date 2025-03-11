@@ -106,7 +106,7 @@ public:
         return v;
     }
 
-private:
+public:
     MetaAccess level;  //!< NONE: exception
     TypeInfo   type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
     string     name;   //!< value name
@@ -143,6 +143,7 @@ public:
         static T dummy;
         return dummy.metaclass();
     }
+    
 public:
     virtual const char*      name() const       = 0;
     virtual size_t           size() const       = 0;
