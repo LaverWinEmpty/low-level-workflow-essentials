@@ -65,12 +65,14 @@ template<typename, typename = std::void_t<>> struct MetaContainer {
  * @brief type code: primitive type has 1 element, but pointer, reference, template, etc has more elements
  */
 struct TypeInfo {
-public:
+private:
     static constexpr size_t STACK = (sizeof(size_t) + sizeof(MetaType*));
     void                    push(MetaType in);
 
 public:
     template<typename T> static void make(TypeInfo* out);
+
+public:
     TypeInfo() = default;
     TypeInfo(const TypeInfo&);
     TypeInfo(TypeInfo&&) noexcept;
@@ -78,12 +80,17 @@ public:
     TypeInfo& operator=(const TypeInfo);
     TypeInfo& operator=(TypeInfo&&) noexcept;
     
-    public:
+public:
     const MetaType& operator[](size_t) const;
-    operator MetaType() const;
     const MetaType* begin() const;
     const MetaType* end() const;
     size_t          size() const;
+    hash_t          hash() const;
+    const char*     name() const;
+
+public:
+    explicit operator string() const;
+    operator MetaType() const;
 
 private:
     size_t count = 0;
@@ -94,6 +101,12 @@ private:
         };
         MetaType stack[STACK] = { MetaType::UNREGISTERED };
     };
+};
+
+template<> struct std::hash<TypeInfo> {
+    size_t operator()(const TypeInfo& obj) const {
+        return obj.hash();
+    } 
 };
 
 template<typename T> constexpr MetaType typecode();                     //!< get type enum value
@@ -180,10 +193,10 @@ public:
     virtual MetaClass*       base() const       = 0;
 };
 
-string                           typestring(const TypeInfo&); //!< get type name string
 constexpr const char*            typestring(MetaType);        //!< get type name string by enum
 template<typename T> const char* typestring();                //!< get type name string explicit
 template<typename T> const char* typestring(const T&);        //!< get type name string implicit
+const char*                      typestring(const TypeInfo&); //!< get type name
 
 constexpr bool                      isSTL(MetaType); //!< check container type code
 template<typename T> constexpr bool isSTL();         //!< check container explicit

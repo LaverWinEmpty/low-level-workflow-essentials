@@ -83,12 +83,11 @@ public:
 
         size_t index = 0;
         for(int i = 0; i < prop.size(); ++i) {
-            ::serialize(&buffer, ptr, prop[i].type[index]);
-            while (true) {
+            ::serialize(&buffer, ptr, prop[i].type);
+            while(true) {
                 ++index; // do while: next type
-                if (isSTL(prop[i].type[index])               ||
-                    prop[i].type[index] == MetaType::POINTER ||
-                    prop[i].type[index] == MetaType::REFERENCE) {
+                if(isSTL(prop[i].type[index]) || prop[i].type[index] == MetaType::POINTER ||
+                   prop[i].type[index] == MetaType::REFERENCE) {
                     continue;
                 }
             }
