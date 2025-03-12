@@ -12,7 +12,7 @@ template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaFi
         // reserve
         MetaClass* parent = meta->base();
         if(parent) {
-            result.reserve(loop + parent->properties().size()); // for append
+            result.reserve(loop + parent->field().size()); // for append
         } else result.reserve(loop);
 
         // declare append lambda
@@ -22,7 +22,7 @@ template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaFi
                 return; // end
             }
             append(out, base->base()); // parent first
-            for(auto& itr : base->properties()) {
+            for(auto& itr : base->field()) {
                 result.emplace_back(itr); // append
             }
         };
@@ -58,7 +58,7 @@ class Object {
     struct ObjectMeta: MetaClass {
         virtual const char*      name() const override { return "Object"; }
         virtual size_t           size() const override { return sizeof(Object); }
-        virtual const FieldInfo& properties() const override {
+        virtual const FieldInfo& field() const override {
             static const FieldInfo EMPTY; // default
             return EMPTY;
         }
@@ -74,7 +74,7 @@ public:
 
 public:
     std::string serialize() {
-        const FieldInfo& prop = metaclass()->properties();
+        const FieldInfo& prop = metaclass()->field();
 
         std::string buffer;
         buffer.reserve(4096);

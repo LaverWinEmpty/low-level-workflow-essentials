@@ -156,7 +156,7 @@
         virtual MetaClass* base() const override {                                                                     \
             return MetaClass::get<BASE>();                                                                             \
         }                                                                                                              \
-        virtual const FieldInfo& properties() const override;                                                          \
+        virtual const FieldInfo& field() const override;                                                               \
     };                                                                                                                 \
 public:                                                                                                                \
     virtual MetaClass* metaclass() override {                                                                          \
@@ -236,7 +236,7 @@ template<> MetaClass* MetaClass::get<TYPE>() {\
 
 //! @brief fields begin
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
-    const std::vector<MetaField>& TYPE::TYPE##Meta::properties() const {                                               \
+    const std::vector<MetaField>& TYPE::TYPE##Meta::field() const {                                                    \
         static auto ACCESS_MODIFIER = [](const char* in) -> MetaAccess {                                               \
             if(!std::strcmp(in, "public")) { return MetaAccess::PUBLIC; }                                              \
             if(!std::strcmp(in, "private")) { return MetaAccess::PRIVATE; }                                            \

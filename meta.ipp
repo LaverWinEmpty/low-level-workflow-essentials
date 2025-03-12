@@ -224,7 +224,7 @@ hash_t TypeInfo::hash() const {
     return hashed;
 }
 
-const char* TypeInfo::name() const {
+const char* TypeInfo::c_str() const {
     static std::unordered_map<TypeInfo, string> map;
     if(map.find(*this) == map.end()) {
         map.insert({ *this, string(*this) });
@@ -309,10 +309,11 @@ template<> constexpr MetaType typecode<float>()              { return MetaType::
 template<> constexpr MetaType typecode<double>()             { return MetaType::DOUBLE; }
 template<> constexpr MetaType typecode<long double>()        { return MetaType::LONG_DOUBLE; }
 template<> constexpr MetaType typecode<string>()             { return MetaType::STD_STRING; }
+// clang-format on
 
 template<typename T> const TypeInfo& typeinfo() {
     static TypeInfo list;
-    if (list.size() == 0) {
+    if(list.size() == 0) {
         TypeInfo::make<T>(&list);
     }
     return list;
@@ -324,7 +325,7 @@ template<typename T> const TypeInfo& typeinfo(const T&) {
 
 constexpr bool isSTL(MetaType code) {
     const char* name = estring(code);
-    if (name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
+    if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
         return true; // read 4 byte
     }
     return false;
@@ -338,7 +339,7 @@ template<typename T> constexpr bool isSTL(const T&) {
     return isSTL<T>();
 }
 
-
+// clang-format off
 constexpr const char* typestring(MetaType code) {
     switch(code) {
     case MetaType::UNREGISTERED:       return "";
@@ -376,7 +377,7 @@ constexpr const char* typestring(MetaType code) {
 // call by template
 template<typename T> const char* typestring() {
     TypeInfo statics = typeinfo<T>();
-    return statics.name();
+    return statics.c_str();
 }
 
 // call by argument
@@ -385,7 +386,7 @@ template<typename T> const char* typestring(const T&) {
 }
 
 const char* typestring(const TypeInfo& in) {
-    return in.name();
+    return in.c_str();
 }
 
 #endif

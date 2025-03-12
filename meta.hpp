@@ -86,7 +86,7 @@ public:
     const MetaType* end() const;
     size_t          size() const;
     hash_t          hash() const;
-    const char*     name() const;
+    const char*     c_str() const;
 
 public:
     explicit operator string() const;
@@ -137,24 +137,11 @@ template<typename T> void            typeinfo(TypeInfo*); //!< pirvate
  * @breif metadata field
  */
 struct MetaField {
-private:
-    template<typename T> static void traits(TypeInfo* out) { out->push(typecode<T>()); }
-
-public:
-    template<typename T> static TypeInfo traits() {
-        static TypeInfo v;
-        if(v.count() == 0) {
-            traits<T>(&v);
-        }
-        return v;
-    }
-
-public:
-    MetaAccess level;  //!< NONE: exception
-    TypeInfo   type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
-    string     name;   //!< value name
-    size_t     size;   //!< size
-    size_t     offset; //!< filed offset
+    MetaAccess  level;  //!< NONE: exception
+    TypeInfo    type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
+    const char* name;   //!< vairable name
+    size_t      size;   //!< variable size
+    size_t      offset; //!< variable offset
 };
 
 // TODO:
@@ -189,7 +176,7 @@ public:
 public:
     virtual const char*      name() const       = 0;
     virtual size_t           size() const       = 0;
-    virtual const FieldInfo& properties() const = 0;
+    virtual const FieldInfo& field() const = 0;
     virtual MetaClass*       base() const       = 0;
 };
 
