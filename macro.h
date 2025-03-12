@@ -256,10 +256,10 @@ template<> MetaClass* MetaClass::get<TYPE>() {\
 /**
  * @brief container enum value register
  */
-#define REGISTER_CONTAINER(CONTAINER, VALUE)                                                                           \
+#define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
     template<typename T> struct MetaContainer<T, std::void_t<typename T::CONTAINER##Element>> {                        \
         using enum MetaType;                                                                                           \
-        static constexpr MetaType CODE = VALUE;                                                                        \
+        static constexpr MetaType CODE = ENUM;                                                                         \
     }
 
 /**
@@ -268,10 +268,10 @@ template<> MetaClass* MetaClass::get<TYPE>() {\
 #define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
     using CONTAINER##Element = ELEMENT;                                                                                \
     virtual void deserialize(const string& in) override {                                                              \
-        *this = Container::deserialize<CONTAINER<ELEMENT, ## __VA_ARGS__>>(in);                                        \
+        *this = Container::deserialize<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                             \
     }                                                                                                                  \
     virtual std::string serialize() const override {                                                                   \
-        return Container::serialize<CONTAINER<ELEMENT, ## __VA_ARGS__>>(this);                                         \
+        return Container::serialize<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(this);                               \
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 

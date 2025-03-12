@@ -76,6 +76,167 @@ REGISTER_STRING_TO_ENUM_BEGIN(MetaAccess) {
     REGISTER_STRING_TO_ENUM(PUBLIC);
 } REGISTER_STRING_TO_ENUM_END;
 
+void TypeInfo::push(MetaType in) {
+    size_t next = count + 1;
+
+    // swap
+    if(next == STACK) {
+        MetaType buffer[STACK];
+        std::memcpy(buffer, stack, STACK);
+
+        capacitor = STACK << 1; // multiple of 2
+        heap      = static_cast<MetaType*>(malloc(sizeof(MetaType) * capacitor));
+        if(!heap) {
+            std::memcpy(stack, buffer, STACK); // rollback
+            throw std::bad_alloc();            // failed
+        }
+        std::memcpy(heap, buffer, STACK);
+
+        heap[count] = in;
+        count       = next;
+    }
+
+    // use heap
+    else if(next > STACK) {
+        // reallocate
+        if(next >= capacitor) {
+            capacitor       <<= 1;
+            MetaType* newly   = static_cast<MetaType*>(realloc(heap, capacitor));
+            if(!newly) {
+                capacitor >>= 1;
+                throw std::bad_alloc();
+            }
+            heap = newly;
+        }
+
+        heap[count] = in;
+        count       = next;
+    }
+
+    // use stack
+    else {
+        stack[count] = in;
+        count        = next;
+    }
+}
+
+template<typename T> static void TypeInfo::make(TypeInfo* out) {
+    if constexpr(isSTL<T>()) {
+        out->push(MetaContainer<T>::CODE);
+        make<typename T::value_type>(out);
+    } else {
+        out->push(typecode<T>());
+        if constexpr(std::is_pointer_v<T>) {
+            make<typename std::remove_pointer_t<T>>(out); // dereference
+        } else if constexpr(std::is_reference_v<T>) {
+            make<typename std::remove_reference_t<T>>(out); // dereference
+        }
+    }
+}
+
+TypeInfo::TypeInfo(const TypeInfo& in): count(in.count) {
+    if(in.count < STACK) {
+        std::memcpy(stack, in.stack, count);
+    }
+    else {
+        heap = static_cast<MetaType*>(malloc(sizeof(MetaType) * in.capacitor));
+        if(!heap) {
+            count = 0;
+            throw std::bad_alloc();
+        }
+        capacitor = in.capacitor;
+        std::memcpy(heap, in.heap, count);
+    }
+}
+
+TypeInfo::TypeInfo(TypeInfo&& in) noexcept : count(in.count) {
+    if(in.count < STACK) {
+        std::memcpy(stack, in.stack, count); // copy
+    }
+    else {
+        heap      = in.heap;
+        capacitor = in.capacitor;
+
+        in.heap      = nullptr;
+        in.capacitor = 0;
+        in.count     = 0;
+    }
+}
+
+
+
+TypeInfo::~TypeInfo() {
+    if(count >= STACK) {
+        free(heap);
+    }
+}
+
+TypeInfo& TypeInfo::operator=(const TypeInfo in) {
+    count = in.count;
+    if(count < STACK) {
+        std::memcpy(stack, in.stack, count);
+    }
+    else {
+        heap = static_cast<MetaType*>(malloc(sizeof(MetaType) * count));
+        if(!heap) {
+            count = 0;
+            throw std::bad_alloc();
+        }
+        capacitor = in.capacitor;
+        std::memcpy(heap, in.heap, count);
+    }
+    return *this;
+}
+
+TypeInfo& TypeInfo::operator=(TypeInfo&& in) noexcept {
+    if(this != &in) {
+        count = in.count;
+        if(count < STACK) {
+            std::memcpy(stack, in.stack, count); // copy
+        }
+        else {
+            heap      = in.heap;
+            capacitor = in.capacitor;
+
+            in.heap      = nullptr;
+            in.capacitor = 0;
+            in.count     = 0;
+        }
+    }
+    return *this;
+}
+
+const MetaType& TypeInfo::operator[](size_t idx) const {
+    if(count < STACK) {
+        return stack[idx];
+    } else return heap[idx];
+}
+
+TypeInfo::operator MetaType() const {
+    if(count < STACK) {
+        return *stack;
+    }
+    return *heap;
+}
+
+
+const MetaType* TypeInfo::begin() const {
+    if(count < STACK) {
+        return stack;
+    }
+    return heap;
+}
+
+const MetaType* TypeInfo::end() const {
+    if(count < STACK) {
+        return stack + count;
+    }
+    return heap + count;
+}
+
+size_t TypeInfo::size() const {
+    return count;
+}
 
 // get type enum
 template<typename T> constexpr MetaType typecode() {
@@ -107,7 +268,7 @@ template<> constexpr MetaType typecode<string>()             { return MetaType::
 
 template<typename T> const TypeInfo& typeinfo() {
     static TypeInfo list;
-    if (list.size == 0) {
+    if (list.size() == 0) {
         TypeInfo::make<T>(&list);
     }
     return list;
@@ -169,6 +330,10 @@ constexpr const char* typestring(MetaType code) {
 
 string typestring(const TypeInfo& in) {
     std::function<size_t(string*, const TypeInfo&, size_t)> fn = [&fn](string* out, const TypeInfo& in, size_t idx) {
+        if (idx >= in.size()) {
+            return idx;
+        }
+
         // pointer or reference
         if(in[idx] == MetaType::POINTER || in[idx] == MetaType::REFERENCE) {
             fn(out, in, idx + 1); // rec
