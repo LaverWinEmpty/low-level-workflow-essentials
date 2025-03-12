@@ -64,7 +64,107 @@ template<typename, typename = std::void_t<>> struct MetaContainer {
 /**
  * @brief type code: primitive type has 1 element, but pointer, reference, template, etc has more elements
  */
-using TypeInfo = std::vector<MetaType>;
+
+
+struct TypeInfo {
+private:
+    static constexpr size_t STACK = (sizeof(size_t) + sizeof(MetaType*));
+
+public:
+    template<typename T> static void make(TypeInfo* out) {
+        if constexpr(isSTL<T>()) {
+            out->push(MetaContainer<T>::CODE);
+            make<typename T::value_type>(out);
+        } else {
+            out->push(typecode<T>());
+            if constexpr(std::is_pointer_v<T>) {
+                make<typename std::remove_pointer_t<T>>(out); // dereference
+            } else if constexpr(std::is_reference_v<T>) {
+                make<typename std::remove_reference_t<T>>(out); // dereference
+            }
+        }
+    }
+
+public:
+    ~TypeInfo() {
+        if(count >= STACK) {
+            free(heap);
+        }
+    }
+
+public:
+    const MetaType& operator[](size_t idx) const {
+        if(count < STACK) {
+            return stack[idx];
+        } else return heap[idx];
+    }
+
+public:
+    operator MetaType() const {
+        if(count < STACK) {
+            return *stack;
+        }
+        return *heap;
+    }
+
+private:
+    void push(MetaType in) {
+        size_t next = count + 1;
+
+        // swap
+        if(next == STACK) {
+            MetaType buffer[STACK];
+            std::memcpy(buffer, stack, STACK);
+
+            capacitor = STACK << 1; // multiple of 2
+            heap      = static_cast<MetaType*>(malloc(sizeof(MetaType) * capacitor));
+            if(!heap) {
+                std::memcpy(stack, buffer, STACK); // rollback
+                throw std::bad_alloc();            // failed
+            }
+            std::memcpy(heap, buffer, STACK);
+
+            heap[count] = in;
+            count       = next;
+        }
+
+        // use heap
+        else if(next > STACK) {
+            // reallocate
+            if(next >= capacitor) {
+                capacitor       <<= 1;
+                MetaType* newly   = static_cast<MetaType*>(realloc(stack, capacitor));
+                if(!newly) {
+                    capacitor >>= 1;
+                    throw std::bad_alloc();
+                }
+                heap = newly;
+            }
+
+            heap[count] = in;
+            count       = next;
+        }
+
+        // use stack
+        else {
+            stack[count] = in;
+            count        = next;
+        }
+    }
+
+public:
+    const size_t& size = count; // read only
+
+private:
+    size_t count = 0;
+    union {
+        struct {
+            MetaType* heap;
+            size_t    capacitor;
+        };
+        MetaType stack[STACK] = { MetaType::UNREGISTERED };
+    };
+};
 
 template<typename T> constexpr MetaType typecode();                     //!< get type enum value
 template<> constexpr           MetaType typecode<void>();               //!< get type enum value
@@ -95,12 +195,12 @@ template<typename T> void            typeinfo(TypeInfo*); //!< pirvate
  */
 struct MetaField {
 private:
-    template<typename T> static void traits(TypeInfo* out) { out->push_back(typecode<T>()); }
+    template<typename T> static void traits(TypeInfo* out) { out->push(typecode<T>()); }
 
 public:
     template<typename T> static TypeInfo traits() {
         static TypeInfo v;
-        if(v.size() == 0) {
+        if(v.count() == 0) {
             traits<T>(&v);
         }
         return v;
@@ -140,8 +240,7 @@ using MethodInfo = std::vector<MetaMethod>;
 struct MetaClass {
 public:
     template<typename T> static MetaClass* get() {
-        static T dummy;
-        return dummy.metaclass();
+        return nullptr;
     }
     
 public:

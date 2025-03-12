@@ -99,3 +99,8 @@ public:
 public:
     static void deserialize(Object* out, const std::string& in) {}
 };
+
+template<> MetaClass* MetaClass::get<Object>() {
+    Object object;
+    return object.metaclass();
+}

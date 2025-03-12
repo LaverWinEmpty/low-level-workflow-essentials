@@ -105,26 +105,10 @@ template<> constexpr MetaType typecode<double>()             { return MetaType::
 template<> constexpr MetaType typecode<long double>()        { return MetaType::LONG_DOUBLE; }
 template<> constexpr MetaType typecode<string>()             { return MetaType::STD_STRING; }
 
-template<typename T> void typeinfo(TypeInfo* out) {
-    if constexpr(isSTL<T>()) {
-        out->push_back(MetaContainer<T>::CODE);
-        typeinfo<typename T::value_type>(out);
-    }
-    else {
-        out->push_back(typecode<T>());
-        if constexpr(std::is_pointer_v<T>) {
-            typeinfo<typename std::remove_pointer_t<T>>(out); // dereference
-        }
-        else if constexpr(std::is_reference_v<T>) {
-            typeinfo<typename std::remove_reference_t<T>>(out); // dereference
-        }
-    }
-}
-
 template<typename T> const TypeInfo& typeinfo() {
     static TypeInfo list;
-    if (list.size() == 0) {
-        typeinfo<T>(&list);
+    if (list.size == 0) {
+        TypeInfo::make<T>(&list);
     }
     return list;
 }

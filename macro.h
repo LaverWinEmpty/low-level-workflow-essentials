@@ -156,7 +156,7 @@
         virtual MetaClass* base() const override {                                                                     \
             return MetaClass::get<BASE>();                                                                             \
         }                                                                                                              \
-        virtual const FieldInfo& properties() const override;                                                           \
+        virtual const FieldInfo& properties() const override;                                                          \
     };                                                                                                                 \
 public:                                                                                                                \
     virtual MetaClass* metaclass() override {                                                                          \
@@ -225,6 +225,14 @@ public:                                                                         
         else return MAP[IN];                                                                                           \
         return INDEX;                                                                                                  \
     }
+
+//! @brief register class
+#define REGISTER_CLASS(TYPE)\
+template<> MetaClass* MetaClass::get<TYPE>() {\
+    static TYPE DUMMY;\
+    return DUMMY.metaclass();\
+}
+
 
 //! @brief fields begin
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
