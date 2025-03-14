@@ -228,25 +228,27 @@ public:                                                                         
 
 //! @brief register class
 #define REGISTER_CLASS(TYPE)\
-template<> MetaClass* MetaClass::get<TYPE>() {\
-    static TYPE DUMMY;\
-    return DUMMY.metaclass();\
-}
-
+    template<> MetaClass* MetaClass::get<TYPE>() {                                                                     \
+        static TYPE DUMMY;                                                                                             \
+        return DUMMY.metaclass();                                                                                      \
+    }                                                                                                                  \
+    template<> MetaClass* MetaClass::get<TYPE>(const TYPE&) {                                                          \
+        return get<TYPE>();                                                                                            \
+    }
 
 //! @brief fields begin
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
     const std::vector<MetaField>& TYPE::TYPE##Meta::field() const {                                                    \
-        static auto ACCESS_MODIFIER = [](const char* in) -> MetaAccess {                                               \
-            if(!std::strcmp(in, "public")) { return MetaAccess::PUBLIC; }                                              \
-            if(!std::strcmp(in, "private")) { return MetaAccess::PRIVATE; }                                            \
-            if(!std::strcmp(in, "protected")) { return MetaAccess::PROTECTED; }                                        \
-            return MetaAccess::NONE;                                                                                   \
+        static auto ACCESS_MODIFIER = [](const char* in) -> EAccess {                                               \
+            if(!std::strcmp(in, "public")) { return EAccess::PUBLIC; }                                              \
+            if(!std::strcmp(in, "private")) { return EAccess::PRIVATE; }                                            \
+            if(!std::strcmp(in, "protected")) { return EAccess::PROTECTED; }                                        \
+            return EAccess::NONE;                                                                                   \
         };                                                                                                             \
         static std::vector<MetaField> VECTOR = reflect<TYPE>( // {
 //! @brief field
 #define REGISTER_FIELD(ACCESS, NAME, ...) \
-            MetaField{ ACCESS_MODIFIER(#ACCESS), typeinfo<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },
+            MetaField{ ACCESS_MODIFIER(#ACCESS), typeof<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },
 //! @brief fiels end
 #define REGISTER_FIELD_END                                                                                             \
         );                                                                                                             \
@@ -257,9 +259,9 @@ template<> MetaClass* MetaClass::get<TYPE>() {\
  * @brief container enum value register
  */
 #define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
-    template<typename T> struct MetaContainer<T, std::void_t<typename T::CONTAINER##Element>> {                        \
-        using enum MetaType;                                                                                           \
-        static constexpr MetaType CODE = ENUM;                                                                         \
+    template<typename T> struct ContainerCode<T, std::void_t<typename T::CONTAINER##Element>> {                        \
+        using enum EType;                                                                                           \
+        static constexpr EType VALUE = ENUM;                                                                         \
     }
 
 /**

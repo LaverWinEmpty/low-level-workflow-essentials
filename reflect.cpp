@@ -1,5 +1,12 @@
 #include "meta.hpp"
 
+
+class TestA {
+    double d;
+    char test[83];
+    int v;
+};
+
 //! @brief
 template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list) {
     static std::vector<MetaField> result;
@@ -40,13 +47,28 @@ template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaFi
 
         // iterator
         MetaField*       itr = const_cast<MetaField*>(list.begin());
+        MetaField*       old = itr;
         const MetaField* end = list.end();
 
+        // first
+        if(itr != end) {
+            itr->offset = offset;                            // set
+            offset += itr->size;                             // next
+            result.emplace_back(*itr++);                     // add
+        }
         while(itr != end) {
-            size_t align = itr->size >= alignof(T) ? alignof(T) : itr->size; // max: alignof(T)
-            result.emplace_back(*itr);
-            offset += itr->size;
-            ++itr;
+            // 1 바이트 공간에 [7] current
+            // 4바이트 넣으려면 [8] next
+
+            // align 7 -> 8
+            // 근데 1바이트 넣을거면 그대로 1
+            // alignof(T) 보다 작은 값은
+            // align(offset, itr->size)
+            // 근데 크면 
+            offset = itr->size <= alignof(T) ? lwe::Common::align(offset, itr->size) : lwe::Common::align(offset, alignof(T));
+            itr->offset = offset;        // set
+            offset += itr->size;         // next
+            result.emplace_back(*itr++); // add
         }
     }
     return result;
@@ -80,19 +102,10 @@ public:
         buffer.reserve(4096);
 
         char* ptr = const_cast<char*>(reinterpret_cast<const char*>(this));
-
-        size_t index = 0;
         for(int i = 0; i < prop.size(); ++i) {
-            ::serialize(&buffer, ptr, prop[i].type);
-            while(true) {
-                ++index; // do while: next type
-                if(isSTL(prop[i].type[index]) || prop[i].type[index] == MetaType::POINTER ||
-                   prop[i].type[index] == MetaType::REFERENCE) {
-                    continue;
-                }
-            }
-            ptr += prop[i].offset; // next
+            ::serialize(&buffer, ptr + prop[i].offset, prop[i].type);
         }
+        return buffer;
     }
 
 public:

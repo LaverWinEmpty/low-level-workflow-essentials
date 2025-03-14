@@ -15,8 +15,8 @@ template<> bool        deserialize<bool>(const string&);                 //!< st
 template<> string      deserialize<string>(const string&);               //!< string to string
 void                   deserialize(LWE::stl::Container*, const string&); //!< string to container
 
-void serialize(std::string*, const void*, const MetaType&);   // runtime deserialize
-void deserialize(void*, const std::string&, const MetaType&); // runtime serialize
+void serialize(string*, const void*, const EType&);   // runtime deserialize
+void deserialize(void*, const string&, const EType&); // runtime serialize
 
 #include "serialize.ipp"
 #endif

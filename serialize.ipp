@@ -109,196 +109,196 @@ void deserialize(LWE::stl::Container* out, const string& in) {
 }
 
 // runtime serialize
-void serialize(std::string* out, const void* in, const MetaType& type) {
+void serialize(std::string* out, const void* in, const EType& type) {
     switch (type) {
     // skip
-    case MetaType::UNREGISTERED:
-    case MetaType::VOID: 
+    case EType::UNREGISTERED:
+    case EType::VOID: 
         //TODO:
         break;
 
-    case MetaType::CLASS: {
-        //TODO:
-        }
-        break;
-
-    case MetaType::POINTER: {
+    case EType::CLASS: {
         //TODO:
         }
         break;
 
-    case MetaType::REFERENCE: {
+    case EType::POINTER: {
         //TODO:
         }
         break;
 
-    case MetaType::UNION: {
+    case EType::REFERENCE: {
+        //TODO:
+        }
+        break;
+
+    case EType::UNION: {
         //TODO:
         }
         break;
 
     // int
-    case MetaType::SIGNED_INT:
-    case MetaType::UNSIGNED_INT:
+    case EType::SIGNED_INT:
+    case EType::UNSIGNED_INT:
         out->append(serialize(*static_cast<const int*>(in)));
         break;
 
     // bool
-    case MetaType::BOOL:
+    case EType::BOOL:
         out->append(serialize(*static_cast<const bool*>(in)));
         break;
 
     // char
-    case MetaType::CHAR:
-    case MetaType::SIGNED_CHAR:
-    case MetaType::UNSIGNED_CHAR:
+    case EType::CHAR:
+    case EType::SIGNED_CHAR:
+    case EType::UNSIGNED_CHAR:
         out->append(serialize(*static_cast<const char*>(in)));
         break;
 
     // wchar
-    case MetaType::WCHAR_T:
+    case EType::WCHAR_T:
         //TODO: fix
         // serialize<wchar_t>(out, in);
         break;
 
     // short
-    case MetaType::SIGNED_SHORT:
-    case MetaType::UNSIGNED_SHORT: 
+    case EType::SIGNED_SHORT:
+    case EType::UNSIGNED_SHORT: 
         out->append(serialize(*static_cast<const short*>(in)));
         break;
 
     // long
-    case MetaType::SIGNED_LONG:
-    case MetaType::UNSIGNED_LONG: 
+    case EType::SIGNED_LONG:
+    case EType::UNSIGNED_LONG: 
         out->append(serialize(*static_cast<const long*>(in)));
         break;
 
     // long long
-    case MetaType::SIGNED_LONG_LONG:
-    case MetaType::UNSIGNED_LONG_LONG:
+    case EType::SIGNED_LONG_LONG:
+    case EType::UNSIGNED_LONG_LONG:
         out->append(serialize(*static_cast<const long long*>(in)));
         break;
     
     // float
-    case MetaType::FLOAT:
+    case EType::FLOAT:
         out->append(serialize<float>(*static_cast<const float*>(in))); 
         break;
 
     // double
-    case MetaType::DOUBLE: 
+    case EType::DOUBLE: 
         out->append(serialize<double>(*static_cast<const double*>(in)));
         break;
 
     // long double
-    case MetaType::LONG_DOUBLE: 
+    case EType::LONG_DOUBLE: 
         out->append(serialize<long double>(*static_cast<const long double*>(in)));
         break;
     
     // function
-    case MetaType::FUNCTION: 
+    case EType::FUNCTION: 
         //TODO:
         break;
 
-    case MetaType::STD_STRING: 
+    case EType::STD_STRING: 
         out->append(serialize(*static_cast<const string*>(in)));
         break;
 
-    case MetaType::STL_DEQUE:
+    case EType::STL_DEQUE:
         out->append(serialize(*static_cast<const LWE::stl::Container*>(in)));
         break;
     }
 }
 
 // runtime deserialize
-void deserialize(void* out, const std::string& in, const MetaType& type) {
+void deserialize(void* out, const std::string& in, const EType& type) {
     switch (type) {
-    case MetaType::UNREGISTERED:
-    case MetaType::VOID:
+    case EType::UNREGISTERED:
+    case EType::VOID:
         break;
 
-    case MetaType::CLASS: {
+    case EType::CLASS: {
         //TODO:
         }
         break;
 
-    case MetaType::POINTER: {
+    case EType::POINTER: {
         //TODO:
        }
         break;
 
-    case MetaType::REFERENCE: {
+    case EType::REFERENCE: {
         //TODO:
         }
         break;
 
-    case MetaType::UNION: {
+    case EType::UNION: {
         //TODO:
         }
         break;
 
     // int
-    case MetaType::SIGNED_INT:
-    case MetaType::UNSIGNED_INT: 
+    case EType::SIGNED_INT:
+    case EType::UNSIGNED_INT: 
         *static_cast<int*>(out) = deserialize<int>(in);
         break;
 
     // bool
-    case MetaType::BOOL:
+    case EType::BOOL:
         *static_cast<bool*>(out) = deserialize<bool>(in);
     break;
 
     // char
-    case MetaType::CHAR:
-    case MetaType::SIGNED_CHAR:
-    case MetaType::UNSIGNED_CHAR:
+    case EType::CHAR:
+    case EType::SIGNED_CHAR:
+    case EType::UNSIGNED_CHAR:
         *static_cast<char*>(out) = deserialize<char>(in);
         break;
 
     // wchar
-    case MetaType::WCHAR_T:
+    case EType::WCHAR_T:
     // TODO: fix
         // deserialize<wchar_t>(static_cast<wchar_t*>(out), in, inout);
         break;
 
     // short
-    case MetaType::SIGNED_SHORT:
-    case MetaType::UNSIGNED_SHORT: 
+    case EType::SIGNED_SHORT:
+    case EType::UNSIGNED_SHORT: 
         *static_cast<short*>(out) = deserialize<short>(in);
         break;
 
     // long
-    case MetaType::SIGNED_LONG:
-    case MetaType::UNSIGNED_LONG: 
+    case EType::SIGNED_LONG:
+    case EType::UNSIGNED_LONG: 
         *static_cast<long*>(out) = deserialize<long>(in);
         break;
 
     // long long
-    case MetaType::SIGNED_LONG_LONG:
-    case MetaType::UNSIGNED_LONG_LONG:
+    case EType::SIGNED_LONG_LONG:
+    case EType::UNSIGNED_LONG_LONG:
         *static_cast<long long*>(out) = deserialize<long long>(in);
         break;
 
     // float
-    case MetaType::FLOAT:
+    case EType::FLOAT:
         *static_cast<float*>(out) = deserialize<float>(in);
         break;
 
     // double
-    case MetaType::DOUBLE:
+    case EType::DOUBLE:
         *static_cast<double*>(out) = deserialize<double>(in);
         break;
 
     // long double    
-    case MetaType::LONG_DOUBLE:
+    case EType::LONG_DOUBLE:
         *static_cast<long double*>(out) = deserialize<long double>(in);
         break;
 
     // std::string
-    case MetaType::STD_STRING: 
+    case EType::STD_STRING: 
         *static_cast<string*>(out) = deserialize<string>(in);
         break;
 
-    case MetaType::STL_DEQUE:
+    case EType::STL_DEQUE:
         static_cast<LWE::stl::Container*>(out)->deserialize(in);
         break;
     }

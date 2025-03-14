@@ -6,8 +6,8 @@
 
 /**************************************************************************************************
  * Meta~
- * - MetaType      | type name to enum
- * - MetaAccess    | access modifier to enum
+ * - type_t      | type name to enum
+ * - access_t    | access modifier to enum
  * - MetaField     | field information struct
  * - MetaMethod    | method information struct
  * - MetaClass     | class information struct
@@ -21,7 +21,7 @@
 
 // clang-format off
 
-enum class MetaType : int8 {
+enum class EType : int8 {
     UNREGISTERED,
     VOID,
     SIGNED_INT,
@@ -49,7 +49,7 @@ enum class MetaType : int8 {
     STL_DEQUE,
 };
 
-enum class MetaAccess : int8 {
+enum class EAccess : int8 {
     PRIVATE,
     PROTECTED,
     PUBLIC,
@@ -57,88 +57,94 @@ enum class MetaAccess : int8 {
 };
 
 // get container type code structur
-template<typename, typename = std::void_t<>> struct MetaContainer {
-    static constexpr MetaType CODE = MetaType::UNREGISTERED;
+template<typename, typename = std::void_t<>> struct ContainerCode {
+    static constexpr EType VALUE = EType::UNREGISTERED;
 };
 
 /**
  * @brief type code: primitive type has 1 element, but pointer, reference, template, etc has more elements
  */
-struct TypeInfo {
+struct Type {
 private:
-    static constexpr size_t STACK = (sizeof(size_t) + sizeof(MetaType*));
-    void                    push(MetaType in);
+    static constexpr size_t STACK = (sizeof(size_t) + sizeof(EType*));
+    void                    push(EType in);
 
 public:
-    template<typename T> static void make(TypeInfo* out);
+    template<typename T> static void make(Type* out);
 
 public:
-    TypeInfo() = default;
-    TypeInfo(const TypeInfo&);
-    TypeInfo(TypeInfo&&) noexcept;
-    ~TypeInfo();
-    TypeInfo& operator=(const TypeInfo);
-    TypeInfo& operator=(TypeInfo&&) noexcept;
+    Type() = default;
+    Type(const Type&);
+    Type(Type&&) noexcept;
+    ~Type();
+    Type& operator=(const Type);
+    Type& operator=(Type&&) noexcept;
     
 public:
-    const MetaType& operator[](size_t) const;
-    const MetaType* begin() const;
-    const MetaType* end() const;
-    size_t          size() const;
-    hash_t          hash() const;
-    const char*     c_str() const;
+    const EType& operator[](size_t) const;
+    const EType* begin() const;
+    const EType* end() const;
+    size_t        size() const;
+    hash_t        hash() const;
+    EType        type() const;
+    const char*   stringify() const;
 
 public:
     explicit operator string() const;
-    operator MetaType() const;
+    operator EType() const;
 
 private:
     size_t count = 0;
     union {
         struct {
-            MetaType* heap;
-            size_t    capacitor;
+            EType* heap;
+            size_t capacitor;
         };
-        MetaType stack[STACK] = { MetaType::UNREGISTERED };
+        EType stack[STACK] = { EType::UNREGISTERED };
     };
 };
 
-template<> struct std::hash<TypeInfo> {
-    size_t operator()(const TypeInfo& obj) const {
+template<> struct std::hash<Type> {
+    size_t operator()(const Type& obj) const {
         return obj.hash();
     } 
 };
 
-template<typename T> constexpr MetaType typecode();                     //!< get type enum value
-template<> constexpr           MetaType typecode<void>();               //!< get type enum value
-template<> constexpr           MetaType typecode<signed int>();         //!< get type enum value
-template<> constexpr           MetaType typecode<signed char>();        //!< get type enum value
-template<> constexpr           MetaType typecode<signed short>();       //!< get type enum value
-template<> constexpr           MetaType typecode<signed long>();        //!< get type enum value
-template<> constexpr           MetaType typecode<signed long long>();   //!< get type enum value
-template<> constexpr           MetaType typecode<unsigned int>();       //!< get type enum value
-template<> constexpr           MetaType typecode<unsigned char>();      //!< get type enum value
-template<> constexpr           MetaType typecode<unsigned short>();     //!< get type enum value
-template<> constexpr           MetaType typecode<unsigned long>();      //!< get type enum value
-template<> constexpr           MetaType typecode<unsigned long long>(); //!< get type enum value
-template<> constexpr           MetaType typecode<bool>();               //!< get type enum value
-template<> constexpr           MetaType typecode<char>();               //!< get type enum value
-template<> constexpr           MetaType typecode<wchar_t>();            //!< get type enum value
-template<> constexpr           MetaType typecode<float>();              //!< get type enum value
-template<> constexpr           MetaType typecode<double>();             //!< get type enum value
-template<> constexpr           MetaType typecode<long double>();        //!< get type enum value
-template<> constexpr           MetaType typecode<string>();             //!< get type enum value
+template<typename T> constexpr EType typecode();                     //!< get type enum value
+template<> constexpr           EType typecode<void>();               //!< get type enum value
+template<> constexpr           EType typecode<signed int>();         //!< get type enum value
+template<> constexpr           EType typecode<signed char>();        //!< get type enum value
+template<> constexpr           EType typecode<signed short>();       //!< get type enum value
+template<> constexpr           EType typecode<signed long>();        //!< get type enum value
+template<> constexpr           EType typecode<signed long long>();   //!< get type enum value
+template<> constexpr           EType typecode<unsigned int>();       //!< get type enum value
+template<> constexpr           EType typecode<unsigned char>();      //!< get type enum value
+template<> constexpr           EType typecode<unsigned short>();     //!< get type enum value
+template<> constexpr           EType typecode<unsigned long>();      //!< get type enum value
+template<> constexpr           EType typecode<unsigned long long>(); //!< get type enum value
+template<> constexpr           EType typecode<bool>();               //!< get type enum value
+template<> constexpr           EType typecode<char>();               //!< get type enum value
+template<> constexpr           EType typecode<wchar_t>();            //!< get type enum value
+template<> constexpr           EType typecode<float>();              //!< get type enum value
+template<> constexpr           EType typecode<double>();             //!< get type enum value
+template<> constexpr           EType typecode<long double>();        //!< get type enum value
+template<> constexpr           EType typecode<string>();             //!< get type enum value
 
-template<typename T> const TypeInfo& typeinfo();          //!< get typeinfo by template
-template<typename T> const TypeInfo& typeinfo(const T&);  //!< get typeinfo by argument
-template<typename T> void            typeinfo(TypeInfo*); //!< pirvate
+constexpr const char*            typestring(EType);      //!< get type name string by enum
+template<typename T> const char* typestring();            //!< get type name string explicit
+template<typename T> const char* typestring(const T&);    //!< get type name string implicit
+const char*                      typestring(const Type&); //!< get type name
+
+template<typename T> const Type& typeof();          //!< get typeinfo by template
+template<typename T> const Type& typeof(const T&);  //!< get typeinfo by argument
+template<typename T> void        typeof(Type*);     //!< pirvate
 
 /*
  * @breif metadata field
  */
 struct MetaField {
-    MetaAccess  level;  //!< NONE: exception
-    TypeInfo    type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
+    EAccess  level;  //!< NONE: exception
+    Type        type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
     const char* name;   //!< vairable name
     size_t      size;   //!< variable size
     size_t      offset; //!< variable offset
@@ -149,9 +155,9 @@ struct MetaField {
  * @breif metadata method
  */
 struct MetaMethod {
-    MetaAccess level;
-    MetaType   result;
-    TypeInfo   parameters;
+    EAccess level;
+    EType   result;
+    Type   parameters;
 };
 
 /**
@@ -172,7 +178,10 @@ public:
     template<typename T> static MetaClass* get() {
         return nullptr;
     }
-    
+    template<typename T> static MetaClass* get(const T&) {
+        return nullptr;
+    }
+
 public:
     virtual const char*      name() const       = 0;
     virtual size_t           size() const       = 0;
@@ -180,12 +189,7 @@ public:
     virtual MetaClass*       base() const       = 0;
 };
 
-constexpr const char*            typestring(MetaType);        //!< get type name string by enum
-template<typename T> const char* typestring();                //!< get type name string explicit
-template<typename T> const char* typestring(const T&);        //!< get type name string implicit
-const char*                      typestring(const TypeInfo&); //!< get type name
-
-constexpr bool                      isSTL(MetaType); //!< check container type code
+constexpr bool                      isSTL(EType); //!< check container type code
 template<typename T> constexpr bool isSTL();         //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&); //!< check container implicit
 

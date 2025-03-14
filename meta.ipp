@@ -2,7 +2,7 @@
 #ifdef LWE_META_HEADER
 
 // register estring type code
-REGISTER_ENUM_TO_STRING_BEGIN(MetaType) {
+REGISTER_ENUM_TO_STRING_BEGIN(EType) {
     REGISTER_ENUM_TO_STRING(UNREGISTERED);
     REGISTER_ENUM_TO_STRING(VOID);
     REGISTER_ENUM_TO_STRING(SIGNED_INT);
@@ -32,7 +32,7 @@ REGISTER_ENUM_TO_STRING_BEGIN(MetaType) {
 REGISTER_ENUM_TO_STRING_END;
 
 // register eval type code
-REGISTER_STRING_TO_ENUM_BEGIN(MetaType) {
+REGISTER_STRING_TO_ENUM_BEGIN(EType) {
     REGISTER_STRING_TO_ENUM(UNREGISTERED);
     REGISTER_STRING_TO_ENUM(VOID);
     REGISTER_STRING_TO_ENUM(SIGNED_INT);
@@ -62,7 +62,7 @@ REGISTER_STRING_TO_ENUM_BEGIN(MetaType) {
 REGISTER_STRING_TO_ENUM_END;
 
 // register estring access modifier
-REGISTER_ENUM_TO_STRING_BEGIN(MetaAccess) {
+REGISTER_ENUM_TO_STRING_BEGIN(EAccess) {
     REGISTER_ENUM_TO_STRING(NONE);
     REGISTER_ENUM_TO_STRING(PRIVATE);
     REGISTER_ENUM_TO_STRING(PROTECTED);
@@ -71,7 +71,7 @@ REGISTER_ENUM_TO_STRING_BEGIN(MetaAccess) {
 REGISTER_ENUM_TO_STRING_END;
 
 // register eval access modifier
-REGISTER_STRING_TO_ENUM_BEGIN(MetaAccess) {
+REGISTER_STRING_TO_ENUM_BEGIN(EAccess) {
     REGISTER_STRING_TO_ENUM(NONE);
     REGISTER_STRING_TO_ENUM(PRIVATE);
     REGISTER_STRING_TO_ENUM(PROTECTED);
@@ -79,16 +79,16 @@ REGISTER_STRING_TO_ENUM_BEGIN(MetaAccess) {
 }
 REGISTER_STRING_TO_ENUM_END;
 
-void TypeInfo::push(MetaType in) {
+void Type::push(EType in) {
     size_t next = count + 1;
 
     // swap
     if(next == STACK) {
-        MetaType buffer[STACK];
+        EType buffer[STACK];
         std::memcpy(buffer, stack, STACK);
 
         capacitor = STACK << 1; // multiple of 2
-        heap      = static_cast<MetaType*>(malloc(sizeof(MetaType) * capacitor));
+        heap      = static_cast<EType*>(malloc(sizeof(EType) * capacitor));
         if(!heap) {
             std::memcpy(stack, buffer, STACK); // rollback
             throw std::bad_alloc();            // failed
@@ -103,8 +103,8 @@ void TypeInfo::push(MetaType in) {
     else if(next > STACK) {
         // reallocate
         if(next >= capacitor) {
-            capacitor       <<= 1;
-            MetaType* newly   = static_cast<MetaType*>(realloc(heap, capacitor));
+            capacitor     <<= 1;
+            EType* newly   = static_cast<EType*>(realloc(heap, capacitor));
             if(!newly) {
                 capacitor >>= 1;
                 throw std::bad_alloc();
@@ -123,9 +123,9 @@ void TypeInfo::push(MetaType in) {
     }
 }
 
-template<typename T> static void TypeInfo::make(TypeInfo* out) {
+template<typename T> static void Type::make(Type* out) {
     if constexpr(isSTL<T>()) {
-        out->push(MetaContainer<T>::CODE);
+        out->push(ContainerCode<T>::VALUE);
         make<typename T::value_type>(out);
     } else {
         out->push(typecode<T>());
@@ -137,11 +137,11 @@ template<typename T> static void TypeInfo::make(TypeInfo* out) {
     }
 }
 
-TypeInfo::TypeInfo(const TypeInfo& in): count(in.count) {
+Type::Type(const Type& in): count(in.count) {
     if(in.count < STACK) {
         std::memcpy(stack, in.stack, count);
     } else {
-        heap = static_cast<MetaType*>(malloc(sizeof(MetaType) * in.capacitor));
+        heap = static_cast<EType*>(malloc(sizeof(EType) * in.capacitor));
         if(!heap) {
             count = 0;
             throw std::bad_alloc();
@@ -151,7 +151,7 @@ TypeInfo::TypeInfo(const TypeInfo& in): count(in.count) {
     }
 }
 
-TypeInfo::TypeInfo(TypeInfo&& in) noexcept: count(in.count) {
+Type::Type(Type&& in) noexcept: count(in.count) {
     if(in.count < STACK) {
         std::memcpy(stack, in.stack, count); // copy
     } else {
@@ -164,18 +164,18 @@ TypeInfo::TypeInfo(TypeInfo&& in) noexcept: count(in.count) {
     }
 }
 
-TypeInfo::~TypeInfo() {
+Type::~Type() {
     if(count >= STACK) {
         free(heap);
     }
 }
 
-TypeInfo& TypeInfo::operator=(const TypeInfo in) {
+Type& Type::operator=(const Type in) {
     count = in.count;
     if(count < STACK) {
         std::memcpy(stack, in.stack, count);
     } else {
-        heap = static_cast<MetaType*>(malloc(sizeof(MetaType) * count));
+        heap = static_cast<EType*>(malloc(sizeof(EType) * count));
         if(!heap) {
             count = 0;
             throw std::bad_alloc();
@@ -186,7 +186,7 @@ TypeInfo& TypeInfo::operator=(const TypeInfo in) {
     return *this;
 }
 
-TypeInfo& TypeInfo::operator=(TypeInfo&& in) noexcept {
+Type& Type::operator=(Type&& in) noexcept {
     if(this != &in) {
         count = in.count;
         if(count < STACK) {
@@ -203,43 +203,50 @@ TypeInfo& TypeInfo::operator=(TypeInfo&& in) noexcept {
     return *this;
 }
 
-const MetaType& TypeInfo::operator[](size_t idx) const {
+const EType& Type::operator[](size_t idx) const {
     if(count < STACK) {
         return stack[idx];
     } else return heap[idx];
 }
 
-TypeInfo::operator MetaType() const {
+Type::operator EType() const {
     if(count < STACK) {
         return *stack;
     }
     return *heap;
 }
 
-hash_t TypeInfo::hash() const {
+hash_t Type::hash() const {
     size_t hashed = 0;
     for(auto itr : *this) {
-        hashed = (hashed << 5) - static_cast<std::underlying_type_t<MetaType>>(itr);
+        hashed = (hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
     }
     return hashed;
 }
 
-const char* TypeInfo::c_str() const {
-    static std::unordered_map<TypeInfo, string> map;
+EType Type::type() const {
+    if(count < STACK) {
+        return *stack;
+    }
+    return *heap;
+}
+
+const char* Type::stringify() const {
+    static std::unordered_map<Type, string> map;
     if(map.find(*this) == map.end()) {
         map.insert({ *this, string(*this) });
     }
     return map[*this].c_str();
 }
 
-TypeInfo::operator string() const {
-    std::function<size_t(string*, const TypeInfo&, size_t)> fn = [&fn](string* out, const TypeInfo& in, size_t idx) {
+Type::operator string() const {
+    std::function<size_t(string*, const Type&, size_t)> fn = [&fn](string* out, const Type& in, size_t idx) {
         if(idx >= in.size()) {
             return idx;
         }
 
         // pointer or reference
-        if(in[idx] == MetaType::POINTER || in[idx] == MetaType::REFERENCE) {
+        if(in[idx] == EType::POINTER || in[idx] == EType::REFERENCE) {
             fn(out, in, idx + 1); // rec
         }
 
@@ -263,67 +270,82 @@ TypeInfo::operator string() const {
     return out;
 }
 
-const MetaType* TypeInfo::begin() const {
+const EType* Type::begin() const {
     if(count < STACK) {
         return stack;
     }
     return heap;
 }
 
-const MetaType* TypeInfo::end() const {
+const EType* Type::end() const {
     if(count < STACK) {
         return stack + count;
     }
     return heap + count;
 }
 
-size_t TypeInfo::size() const {
+size_t Type::size() const {
     return count;
 }
 
 // clang-format off
 // get type enum
-template<typename T> constexpr MetaType typecode() {
-    if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return MetaContainer<T>::CODE;
-    if constexpr(std::is_pointer_v<T>)   return MetaType::POINTER;
-    if constexpr(std::is_reference_v<T>) return MetaType::REFERENCE;
-    if constexpr(std::is_union_v<T>)     return MetaType::UNION;
-    if constexpr(std::is_class_v<T>)     return MetaType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
-    return MetaType::UNREGISTERED;
+template<typename T> constexpr EType typecode() {
+    if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
+    if constexpr(std::is_pointer_v<T>)   return EType::POINTER;
+    if constexpr(std::is_reference_v<T>) return EType::REFERENCE;
+    if constexpr(std::is_union_v<T>)     return EType::UNION;
+    if constexpr(std::is_class_v<T>)     return EType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
+    return EType::UNREGISTERED;
 }
-template<> constexpr MetaType typecode<void>()               { return MetaType::VOID; }
-template<> constexpr MetaType typecode<signed int>()         { return MetaType::SIGNED_INT; }
-template<> constexpr MetaType typecode<signed char>()        { return MetaType::SIGNED_CHAR; }
-template<> constexpr MetaType typecode<signed short>()       { return MetaType::SIGNED_SHORT; }
-template<> constexpr MetaType typecode<signed long>()        { return MetaType::SIGNED_LONG; }
-template<> constexpr MetaType typecode<signed long long>()   { return MetaType::SIGNED_LONG_LONG; }
-template<> constexpr MetaType typecode<unsigned int>()       { return MetaType::UNSIGNED_INT; }
-template<> constexpr MetaType typecode<unsigned char>()      { return MetaType::UNSIGNED_CHAR; }
-template<> constexpr MetaType typecode<unsigned short>()     { return MetaType::UNSIGNED_SHORT; }
-template<> constexpr MetaType typecode<unsigned long>()      { return MetaType::UNSIGNED_LONG; }
-template<> constexpr MetaType typecode<unsigned long long>() { return MetaType::UNSIGNED_LONG_LONG; }
-template<> constexpr MetaType typecode<bool>()               { return MetaType::BOOL; }
-template<> constexpr MetaType typecode<char>()               { return MetaType::CHAR; }
-template<> constexpr MetaType typecode<wchar_t>()            { return MetaType::WCHAR_T; }
-template<> constexpr MetaType typecode<float>()              { return MetaType::FLOAT; }
-template<> constexpr MetaType typecode<double>()             { return MetaType::DOUBLE; }
-template<> constexpr MetaType typecode<long double>()        { return MetaType::LONG_DOUBLE; }
-template<> constexpr MetaType typecode<string>()             { return MetaType::STD_STRING; }
+template<> constexpr EType typecode<void>()               { return EType::VOID; }
+template<> constexpr EType typecode<signed int>()         { return EType::SIGNED_INT; }
+template<> constexpr EType typecode<signed char>()        { return EType::SIGNED_CHAR; }
+template<> constexpr EType typecode<signed short>()       { return EType::SIGNED_SHORT; }
+template<> constexpr EType typecode<signed long>()        { return EType::SIGNED_LONG; }
+template<> constexpr EType typecode<signed long long>()   { return EType::SIGNED_LONG_LONG; }
+template<> constexpr EType typecode<unsigned int>()       { return EType::UNSIGNED_INT; }
+template<> constexpr EType typecode<unsigned char>()      { return EType::UNSIGNED_CHAR; }
+template<> constexpr EType typecode<unsigned short>()     { return EType::UNSIGNED_SHORT; }
+template<> constexpr EType typecode<unsigned long>()      { return EType::UNSIGNED_LONG; }
+template<> constexpr EType typecode<unsigned long long>() { return EType::UNSIGNED_LONG_LONG; }
+template<> constexpr EType typecode<bool>()               { return EType::BOOL; }
+template<> constexpr EType typecode<char>()               { return EType::CHAR; }
+template<> constexpr EType typecode<wchar_t>()            { return EType::WCHAR_T; }
+template<> constexpr EType typecode<float>()              { return EType::FLOAT; }
+template<> constexpr EType typecode<double>()             { return EType::DOUBLE; }
+template<> constexpr EType typecode<long double>()        { return EType::LONG_DOUBLE; }
+template<> constexpr EType typecode<string>()             { return EType::STD_STRING; }
 // clang-format on
 
-template<typename T> const TypeInfo& typeinfo() {
-    static TypeInfo list;
+// call by template
+template<typename T> const char* typestring() {
+    Type statics = typeof<T>();
+    return statics.stringify();
+}
+
+// call by argument
+template<typename T> const char* typestring(const T&) {
+    return typestring<T>();
+}
+
+const char* typestring(const Type& in) {
+    return in.stringify();
+}
+
+template<typename T> const Type& typeof() {
+    static Type list;
     if(list.size() == 0) {
-        TypeInfo::make<T>(&list);
+        Type::make<T>(&list);
     }
     return list;
 }
 
-template<typename T> const TypeInfo& typeinfo(const T&) {
-    return typeinfo<T>();
+template<typename T> const Type& typeof(const T&) {
+    return typeof<T>();
 }
 
-constexpr bool isSTL(MetaType code) {
+constexpr bool isSTL(EType code) {
     const char* name = estring(code);
     if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
         return true; // read 4 byte
@@ -332,7 +354,7 @@ constexpr bool isSTL(MetaType code) {
 }
 
 template<typename T> constexpr bool isSTL() {
-    return std::is_base_of_v<LWE::stl::Container, T> && MetaContainer<T>::CODE != MetaType::UNREGISTERED;
+    return std::is_base_of_v<LWE::stl::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
 };
 
 template<typename T> constexpr bool isSTL(const T&) {
@@ -340,53 +362,37 @@ template<typename T> constexpr bool isSTL(const T&) {
 }
 
 // clang-format off
-constexpr const char* typestring(MetaType code) {
+constexpr const char* typestring(EType code) {
     switch(code) {
-    case MetaType::UNREGISTERED:       return "";
-    case MetaType::VOID:               return "void";
-    case MetaType::SIGNED_INT:         return "int";
-    case MetaType::SIGNED_CHAR:        return "char";
-    case MetaType::SIGNED_SHORT:       return "short";
-    case MetaType::SIGNED_LONG:        return "long";
-    case MetaType::SIGNED_LONG_LONG:   return "long long";
-    case MetaType::UNSIGNED_SHORT:     return "unsigned short";
-    case MetaType::UNSIGNED_INT:       return "unsigned int";
-    case MetaType::UNSIGNED_CHAR:      return "unsigned char";
-    case MetaType::UNSIGNED_LONG:      return "unsigned long";
-    case MetaType::UNSIGNED_LONG_LONG: return "unsigned long long";
-    case MetaType::BOOL:               return "bool";
-    case MetaType::CHAR:               return "char";
-    case MetaType::WCHAR_T:            return "wchar_t";
-    case MetaType::FLOAT:              return "float";
-    case MetaType::DOUBLE:             return "double";
-    case MetaType::LONG_DOUBLE:        return "long double";
-    case MetaType::CLASS:              return "class";
-    case MetaType::UNION:              return "union";
-    case MetaType::POINTER:            return "*";
-    case MetaType::REFERENCE:          return "&";
-    case MetaType::FUNCTION:           return "function";
-    case MetaType::STD_STRING:         return "string";
-    case MetaType::STL_DEQUE:          return "Deque";
+    case EType::UNREGISTERED:       return "";
+    case EType::VOID:               return "void";
+    case EType::SIGNED_INT:         return "int";
+    case EType::SIGNED_CHAR:        return "char";
+    case EType::SIGNED_SHORT:       return "short";
+    case EType::SIGNED_LONG:        return "long";
+    case EType::SIGNED_LONG_LONG:   return "long long";
+    case EType::UNSIGNED_SHORT:     return "unsigned short";
+    case EType::UNSIGNED_INT:       return "unsigned int";
+    case EType::UNSIGNED_CHAR:      return "unsigned char";
+    case EType::UNSIGNED_LONG:      return "unsigned long";
+    case EType::UNSIGNED_LONG_LONG: return "unsigned long long";
+    case EType::BOOL:               return "bool";
+    case EType::CHAR:               return "char";
+    case EType::WCHAR_T:            return "wchar_t";
+    case EType::FLOAT:              return "float";
+    case EType::DOUBLE:             return "double";
+    case EType::LONG_DOUBLE:        return "long double";
+    case EType::CLASS:              return "class";
+    case EType::UNION:              return "union";
+    case EType::POINTER:            return "*";
+    case EType::REFERENCE:          return "&";
+    case EType::FUNCTION:           return "function";
+    case EType::STD_STRING:         return "string";
+    case EType::STL_DEQUE:          return "Deque";
     }
 
     // error
     return "";
 }
 // clang-format on
-
-// call by template
-template<typename T> const char* typestring() {
-    TypeInfo statics = typeinfo<T>();
-    return statics.c_str();
-}
-
-// call by argument
-template<typename T> const char* typestring(const T&) {
-    return typestring<T>();
-}
-
-const char* typestring(const TypeInfo& in) {
-    return in.c_str();
-}
-
 #endif
