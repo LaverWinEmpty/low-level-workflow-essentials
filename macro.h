@@ -159,7 +159,7 @@
         virtual const FieldInfo& field() const override;                                                               \
     };                                                                                                                 \
 public:                                                                                                                \
-    virtual MetaClass* metaclass() override {                                                                          \
+    virtual MetaClass* metaclass() const override {                                                                    \
         static TYPE##Meta meta;                                                                                        \
         return &meta;                                                                                                  \
     }                                                                                                                  \

@@ -1,6 +1,6 @@
-#ifndef LWE_SERIALIZE_HEADER
-#    include "serialize.hpp"
-#endif
+#ifdef LWE_SERIALIZE_HEADER
+
+#include "reflect.hpp"
 
 // clang-format off
 
@@ -120,9 +120,8 @@ void serialize(std::string* out, const void* in, const EType& type) {
         //TODO:
         break;
 
-    case EType::CLASS: {
-        //TODO:
-        }
+    case EType::CLASS:
+        out->append(reinterpret_cast<const Object*>(in)->serialize());
         break;
 
     case EType::POINTER: {
@@ -219,9 +218,8 @@ void deserialize(void* out, const std::string& in, const EType& type) {
     case EType::VOID:
         break;
 
-    case EType::CLASS: {
-        //TODO:
-        }
+    case EType::CLASS: 
+        Object::deserialize(static_cast<Object*>(out), in);
         break;
 
     case EType::POINTER: {
@@ -306,3 +304,5 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
     }
 }
+
+#endif

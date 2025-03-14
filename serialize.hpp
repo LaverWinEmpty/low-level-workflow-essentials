@@ -5,6 +5,8 @@
 #include <iomanip>
 #include "meta.hpp"
 
+class Object;
+
 template<typename T> string serialize(const T&);                                        //!< primitive type to string
 template<> string           serialize<bool>(const bool&);                               //!< boolean type to string
 template<> string           serialize<string>(const string&);                           //!< string to string

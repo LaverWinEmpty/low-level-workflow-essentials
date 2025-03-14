@@ -1,4 +1,3 @@
-#include "meta.hpp"
 #ifdef LWE_META_HEADER
 
 // register estring type code
@@ -103,7 +102,7 @@ void Type::push(EType in) {
     else if(next > STACK) {
         // reallocate
         if(next >= capacitor) {
-            capacitor     <<= 1;
+            capacitor    <<= 1;
             EType* newly   = static_cast<EType*>(realloc(heap, capacitor));
             if(!newly) {
                 capacitor >>= 1;
@@ -355,7 +354,7 @@ template<typename T> constexpr bool isSTL(const T&) {
 
 template<> bool isSTL<EType>(const EType& code) {
     const char* name = estring(code);
-    if (name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
+    if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
         return true; // read 4 byte
     }
     return false;
@@ -394,5 +393,6 @@ constexpr const char* typestring(EType code) {
     // error
     return "";
 }
+
 // clang-format on
 #endif
