@@ -143,7 +143,7 @@ template<typename T> void        typeof(Type*);     //!< pirvate
  * @breif metadata field
  */
 struct MetaField {
-    EAccess  level;  //!< NONE: exception
+    EAccess     level;  //!< NONE: exception
     Type        type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
     const char* name;   //!< vairable name
     size_t      size;   //!< variable size
@@ -189,9 +189,9 @@ public:
     virtual MetaClass*       base() const       = 0;
 };
 
-constexpr bool                      isSTL(EType); //!< check container type code
-template<typename T> constexpr bool isSTL();         //!< check container explicit
-template<typename T> constexpr bool isSTL(const T&); //!< check container implicit
+template<typename T> constexpr bool isSTL();                    //!< check container explicit
+template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
+template<> bool                     isSTL<EType>(const EType&); //!< check container type code
 
 // clang-format on
 #include "meta.ipp"

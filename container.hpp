@@ -29,7 +29,7 @@ protected:
         typename Container::Iterator last = in->end();
         // has data
         if(curr != last) {
-            out.append("{ ");
+            out.append("[");
             // for each
             while(true) {
                 ::serialize(&out, &*curr, typecode<typename Container::value_type>());
@@ -38,8 +38,8 @@ protected:
                     out.append(", ");
                 } else break;
             }
-            out.append(" }");
-        } else return "{}";
+            out.append("]");
+        } else return "[]";
         return out;
     }
 
@@ -50,27 +50,25 @@ public:
      */
     template<typename Container> static Container deserialize(const string& in) {
         using Element = typename Container::value_type;
-        if(in == "{}") {
+        if(in == "[]") {
             return Container{}; // empty
         }
         Container out; // else
 
-        size_t stack = 1;
-        size_t begin = 2;             // "{ ", ignore 2
-        size_t end   = in.size() - 2; // " }", ignore 2
+        size_t begin = 1;             // "[", ignore 1
+        size_t end   = in.size() - 1; // "]", ignore 1
         size_t len   = 0;
-        size_t pair  = 0;
 
         // parsing
         size_t i = begin;
         for(; i < end; ++i, ++len) {
             if constexpr(std::is_same_v<Element, string>) {
-                // find [",]
-                if(in[i] == '\"' && in[i + 1] == ',') {
+                // find <",> but ignore \"
+                if(in[i] == '\"' && in[i + 1] == ',', in[i - 1] != '\\') {
                     Element data;
                     // len + 1: with '\"'
                     ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                    i     += 3; // pass [", ]
+                    i     += 3; // pass <", >
                     begin  = i; // next position
                     len    = 0; // next length
                     out.push(std::move(data));
@@ -78,12 +76,12 @@ public:
             }
 
             else if constexpr(isSTL<Element>()) {
-                // find [},]
-                if(in[i] == '}' && in[i + 1] == ',') {
+                // find <],> but ignore \]
+                if(in[i] == ']' && in[i + 1] == ',' && in[i - 1] != '\\') {
                     Element data;
-                    // len + 1: with '}'
+                    // len + 1: with ']'
                     ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                    i     += 3; // pass [}, ]
+                    i     += 3; // pass <], >
                     begin  = i; // next position
                     len    = 0; // next length
                     out.push(std::move(data));
@@ -93,7 +91,7 @@ public:
             else if(in[i] == ',') {
                 Element data;
                 ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-                i     += 2; // pass [, ]
+                i     += 2; // pass <, >
                 begin  = i; // next position
                 len    = 0; // next length
                 out.push(std::move(data));

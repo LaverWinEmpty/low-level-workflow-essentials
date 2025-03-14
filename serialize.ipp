@@ -29,6 +29,10 @@ template<> string serialize<string>(const string& in) {
             case '\"': out.append("\\\"");   break;
             case '\n': out.append("\\n");    break;
             case '\t': out.append("\\t");    break;
+            case '[': out.append("\\[");    break;
+            case ']': out.append("\\]");    break;
+            case '{': out.append("\\{");    break;
+            case '}': out.append("\\}");    break;
             default:   out.append(1, in[i]); break;
           }
     }
@@ -47,11 +51,6 @@ template<typename T> T deserialize(const string& in) {
     // 1. out of range
     // 2. format mismatch
     // 3. type mismatch ?
-
-    /*size_t pos = in.find_first_of(",\0");
-    if(out) {
-        *out = pos;
-    }*/
 
     size_t pos = 0;
     while (true) {
@@ -89,6 +88,10 @@ template<> string deserialize<string>(const string& in) {
             switch (in[i + 1]) {
                 case '\\': result.append("\\"); break;
                 case '\"': result.append("\""); break;
+                case '[':  result.append("["); break;
+                case ']':  result.append("]"); break;
+                case '{':  result.append("{"); break;
+                case '}':  result.append("}"); break;
 
                 // \n, \t, etc...
                 default:
