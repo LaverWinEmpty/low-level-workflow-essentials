@@ -1,7 +1,5 @@
 #ifdef LWE_CONTAINER_HEADER
 
-#include "reflect.hpp"
-
 LWE_BEGIN
 namespace stl {
 

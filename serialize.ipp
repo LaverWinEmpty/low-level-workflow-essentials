@@ -1,7 +1,5 @@
 #ifdef LWE_SERIALIZE_HEADER
 
-#include "reflect.hpp"
-
 // clang-format off
 
 // primitive type to string
@@ -120,7 +118,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         //TODO:
         break;
 
-    case EType::CLASS:
+    case EType::CLASS:  
         out->append(reinterpret_cast<const Object*>(in)->serialize());
         break;
 
@@ -134,9 +132,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         }
         break;
 
-    case EType::UNION: {
-        //TODO:
-        }
+        out->append(serialize(*static_cast<const bool*>(in)));
         break;
 
     // int
@@ -145,9 +141,8 @@ void serialize(std::string* out, const void* in, const EType& type) {
         out->append(serialize(*static_cast<const int*>(in)));
         break;
 
-    // bool
     case EType::BOOL:
-        out->append(serialize(*static_cast<const bool*>(in)));
+        out->append(serialize(*static_cast<const int*>(in)));
         break;
 
     // char
@@ -196,6 +191,9 @@ void serialize(std::string* out, const void* in, const EType& type) {
         out->append(serialize<long double>(*static_cast<const long double*>(in)));
         break;
     
+    case EType::ENUM:
+        break;
+
     // function
     case EType::FUNCTION: 
         //TODO:

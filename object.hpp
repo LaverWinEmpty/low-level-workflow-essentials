@@ -1,11 +1,7 @@
-#ifndef LWE_REFLECT_HEADER
-#define LWE_REFLECT_HEADER
+#ifndef LWE_OBJECT_HEADER
+#define LWE_OBJECT_HEADER
 
 #include "meta.hpp"
-#include "serialize.hpp"
-
-//! @brief
-template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list);
 
 //! @brief
 class Object {
@@ -33,5 +29,4 @@ public:
     static void deserialize(Object* out, const std::string& in);
 };
 
-#include "reflect.ipp"
 #endif

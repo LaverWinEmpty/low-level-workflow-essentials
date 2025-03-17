@@ -3,9 +3,7 @@
 
 #include <sstream>
 #include <iomanip>
-#include "meta.hpp"
-
-class Object;
+#include "object.hpp"
 
 template<typename T> string serialize(const T&);                                        //!< primitive type to string
 template<> string           serialize<bool>(const bool&);                               //!< boolean type to string
@@ -20,5 +18,4 @@ void                   deserialize(LWE::stl::Container*, const string&); //!< st
 void serialize(string*, const void*, const EType&);   // runtime deserialize
 void deserialize(void*, const string&, const EType&); // runtime serialize
 
-#include "serialize.ipp"
 #endif

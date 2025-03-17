@@ -163,11 +163,11 @@ public:                                                                         
         static TYPE##Meta meta;                                                                                        \
         return &meta;                                                                                                  \
     }                                                                                                                  \
-    using Base = BASE;
+    using Base = BASE
 
 //! @brief declare  evalue from string
 #define REGISTER_STRING_TO_ENUM_BEGIN(TYPE)                                                                            \
-    template<> TYPE evalue<TYPE>(std::string IN) {                                                                     \
+    template<> TYPE evalue<TYPE>(const std::string& IN) {                                                              \
         using enum TYPE;                                                                                               \
         std::unordered_map<std::string, TYPE> MAP;                                                                     \
         if(MAP.find(IN) == MAP.end())
@@ -226,26 +226,16 @@ public:                                                                         
         return INDEX;                                                                                                  \
     }
 
-//! @brief register class
-#define REGISTER_CLASS(TYPE)\
-    template<> MetaClass* MetaClass::get<TYPE>() {                                                                     \
-        static TYPE DUMMY;                                                                                             \
-        return DUMMY.metaclass();                                                                                      \
-    }                                                                                                                  \
-    template<> MetaClass* MetaClass::get<TYPE>(const TYPE&) {                                                          \
-        return get<TYPE>();                                                                                            \
-    }
-
 //! @brief fields begin
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
-    const std::vector<MetaField>& TYPE::TYPE##Meta::field() const {                                                    \
-        static auto ACCESS_MODIFIER = [](const char* in) -> EAccess {                                               \
-            if(!std::strcmp(in, "public")) { return EAccess::PUBLIC; }                                              \
-            if(!std::strcmp(in, "private")) { return EAccess::PRIVATE; }                                            \
-            if(!std::strcmp(in, "protected")) { return EAccess::PROTECTED; }                                        \
-            return EAccess::NONE;                                                                                   \
+    const FieldInfo& TYPE::TYPE##Meta::field() const {                                                                 \
+        static auto ACCESS_MODIFIER = [](const char* in) -> EAccess {                                                  \
+            if(!std::strcmp(in, "public")) { return EAccess::PUBLIC; }                                                 \
+            if(!std::strcmp(in, "private")) { return EAccess::PRIVATE; }                                               \
+            if(!std::strcmp(in, "protected")) { return EAccess::PROTECTED; }                                           \
+            return EAccess::NONE;                                                                                      \
         };                                                                                                             \
-        static std::vector<MetaField> VECTOR = reflect<TYPE>( // {
+        static FieldInfo VECTOR = reflect<TYPE>( // {
 //! @brief field
 #define REGISTER_FIELD(ACCESS, NAME, ...) \
             MetaField{ ACCESS_MODIFIER(#ACCESS), typeof<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },

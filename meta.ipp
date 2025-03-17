@@ -1,5 +1,17 @@
 #ifdef LWE_META_HEADER
 
+template<typename T> MetaClass* MetaClass::get() {
+    if(std::is_base_of_v<Object, T>) {
+        static T dummy;
+        return dummy.metaclass();
+    }
+    return nullptr;
+}
+
+template<typename T> MetaClass* MetaClass::get(const T&) {
+    return get<T>();
+}
+
 // register estring type code
 REGISTER_ENUM_TO_STRING_BEGIN(EType) {
     REGISTER_ENUM_TO_STRING(UNREGISTERED);
@@ -20,6 +32,7 @@ REGISTER_ENUM_TO_STRING_BEGIN(EType) {
     REGISTER_ENUM_TO_STRING(FLOAT);
     REGISTER_ENUM_TO_STRING(DOUBLE);
     REGISTER_ENUM_TO_STRING(LONG_DOUBLE);
+    REGISTER_ENUM_TO_STRING(ENUM);
     REGISTER_ENUM_TO_STRING(CLASS);
     REGISTER_ENUM_TO_STRING(UNION);
     REGISTER_ENUM_TO_STRING(POINTER);
@@ -50,6 +63,7 @@ REGISTER_STRING_TO_ENUM_BEGIN(EType) {
     REGISTER_STRING_TO_ENUM(FLOAT);
     REGISTER_STRING_TO_ENUM(DOUBLE);
     REGISTER_STRING_TO_ENUM(LONG_DOUBLE);
+    REGISTER_STRING_TO_ENUM(ENUM);
     REGISTER_STRING_TO_ENUM(CLASS);
     REGISTER_STRING_TO_ENUM(UNION);
     REGISTER_STRING_TO_ENUM(POINTER);
@@ -161,6 +175,10 @@ Type::Type(Type&& in) noexcept: count(in.count) {
         in.capacitor = 0;
         in.count     = 0;
     }
+}
+
+Type::Type(EType in): count(1) {
+    stack[0] = in;
 }
 
 Type::~Type() {
@@ -291,6 +309,7 @@ size_t Type::size() const {
 // get type enum
 template<typename T> constexpr EType typecode() {
     if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
+    if constexpr(std::is_enum_v<T>)      return typecode<typename std::underlying_type_t<T>>();
     if constexpr(std::is_pointer_v<T>)   return EType::POINTER;
     if constexpr(std::is_reference_v<T>) return EType::REFERENCE;
     if constexpr(std::is_union_v<T>)     return EType::UNION;
@@ -392,6 +411,68 @@ constexpr const char* typestring(EType code) {
 
     // error
     return "";
+}
+
+
+//! @brief
+template<typename T> FieldInfo reflect(std::initializer_list<MetaField> list) {
+    static FieldInfo result;
+    // check
+    size_t loop = list.size();
+    if(loop != 0 || result.size() == 0) {
+        MetaClass* meta = MetaClass::get<T>();
+        MetaClass* base = meta->base();
+
+        // reserve
+        MetaClass* parent = meta->base();
+        if(parent) {
+            result.reserve(loop + parent->field().size()); // for append
+        } else result.reserve(loop);
+
+        // declare append lambda
+        std::function<void(FieldInfo&, const MetaClass*)> append = [&append](FieldInfo& out, const MetaClass* base) {
+            if(!base) {
+                return; // end
+            }
+            append(out, base->base()); // parent first
+            for(auto& itr : base->field()) {
+                result.emplace_back(itr); // append
+            }
+        };
+
+        // call
+        append(result, base);
+
+        // set
+        size_t offset = 0;
+        if(base != nullptr) {
+            offset = base->size(); // append
+        } else if(std::is_polymorphic_v<T>) {
+            offset = sizeof(void*); // pass vptr
+        }
+
+        // iterator
+        MetaField*       itr = const_cast<MetaField*>(list.begin());
+        MetaField*       old = itr;
+        const MetaField* end = list.end();
+
+        // first
+        if(itr != end) {
+            itr->offset  = offset;       // set
+            offset      += itr->size;    // next
+            result.emplace_back(*itr++); // add
+        }
+        while(itr != end) {
+            // align
+            offset = itr->size <= alignof(T) ? LWE::Common::align(offset, itr->size) :
+                                               LWE::Common::align(offset, alignof(T));
+
+            itr->offset  = offset;       // set
+            offset      += itr->size;    // next
+            result.emplace_back(*itr++); // add
+        }
+    }
+    return result;
 }
 
 // clang-format on

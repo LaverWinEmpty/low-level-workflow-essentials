@@ -1,8 +1,8 @@
 #ifndef LWE_META_HEADER
 #define LWE_META_HEADER
 
-#include "enum.hpp"
-#include "container.hpp"
+#include "hal.hpp"
+#include "common.hpp"
 
 /**************************************************************************************************
  * Meta~
@@ -40,6 +40,7 @@ enum class EType : int8 {
     FLOAT,
     DOUBLE,
     LONG_DOUBLE,
+    ENUM,
     CLASS,
     UNION,
     POINTER,
@@ -76,6 +77,7 @@ public:
     Type() = default;
     Type(const Type&);
     Type(Type&&) noexcept;
+    Type(EType);
     ~Type();
     Type& operator=(const Type);
     Type& operator=(Type&&) noexcept;
@@ -157,7 +159,7 @@ struct MetaField {
 struct MetaMethod {
     EAccess level;
     EType   result;
-    Type   parameters;
+    Type    parameters;
 };
 
 /**
@@ -175,24 +177,28 @@ using MethodInfo = std::vector<MetaMethod>;
  */
 struct MetaClass {
 public:
-    template<typename T> static MetaClass* get() {
-        return nullptr;
-    }
-    template<typename T> static MetaClass* get(const T&) {
-        return nullptr;
-    }
-
+    template<typename T> static MetaClass* get();
+    template<typename T> static MetaClass* get(const T&);
 public:
-    virtual const char*      name() const       = 0;
-    virtual size_t           size() const       = 0;
+    virtual const char*      name() const  = 0;
+    virtual size_t           size() const  = 0;
     virtual const FieldInfo& field() const = 0;
-    virtual MetaClass*       base() const       = 0;
+    virtual MetaClass*       base() const  = 0;
 };
 
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
 template<> bool                     isSTL<EType>(const EType&); //!< check container type code
 
+template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list);
+
+template<typename E> E evalue(size_t);        //!< declare index to enum for template specialization
+template<typename E> E evalue(const string&); //!< declare string to enum for template specialization
+
+// get enum max
+template<typename E> size_t emax(E) {
+    return static_cast<size_t>(eval<E>(-1));
+}
+
 // clang-format on
-#include "meta.ipp"
 #endif

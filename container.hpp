@@ -34,5 +34,4 @@ public:
 
 LWE_END
 
-#include "container.ipp"
 #endif
