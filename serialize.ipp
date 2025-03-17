@@ -192,6 +192,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
     
     case EType::ENUM:
+        out->append(static_cast<const EInterface*>(in)->serialize());
         break;
 
     // function
@@ -222,7 +223,7 @@ void deserialize(void* out, const std::string& in, const EType& type) {
 
     case EType::POINTER: {
         //TODO:
-       }
+        }
         break;
 
     case EType::REFERENCE: {
@@ -290,6 +291,15 @@ void deserialize(void* out, const std::string& in, const EType& type) {
     // long double    
     case EType::LONG_DOUBLE:
         *static_cast<long double*>(out) = deserialize<long double>(in);
+        break;
+
+    case EType::ENUM:
+        static_cast<EInterface*>(out)->deserialize(in);
+        break;
+
+    // function
+    case EType::FUNCTION:
+        //TODO:
         break;
 
     // std::string

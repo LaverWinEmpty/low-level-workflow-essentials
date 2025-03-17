@@ -10,7 +10,7 @@ template<typename E> void Enum<E>::deserialize(const std::string& in) {
 
 template<typename E> Enum<E>::Enum(E in) noexcept: value(in) {}
 
-template<typename E> Enum<E>::Enum(U in) noexcept: value(static_cast<E>(in)) {}
+template<typename E> Enum<E>::Enum(Underlying in) noexcept: value(static_cast<E>(in)) {}
 
 template<typename E> Enum<E>::Enum(const Enum& in) noexcept: value(in.value) {}
 
@@ -19,25 +19,25 @@ template<typename E> auto Enum<E>::operator=(E in) noexcept -> Enum& {
     return *this;
 }
 
-template<typename E> auto Enum<E>::operator=(U in) noexcept -> Enum& {
+template<typename E> auto Enum<E>::operator=(Underlying in) noexcept -> Enum& {
     value = static_cast<E>(in);
     return *this;
 }
 
 template<typename E> E Enum<E>::operator~() const noexcept {
-    return static_cast<E>(~static_cast<U>(value));
+    return static_cast<E>(~static_cast<Underlying>(value));
 }
 
 template<typename E> template<typename T> E Enum<E>::operator|(T in) const noexcept {
-    return static_cast<E>(static_cast<U>(value) | static_cast<U>(static_cast<E>(in)));
+    return static_cast<E>(static_cast<Underlying>(value) | static_cast<Underlying>(static_cast<E>(in)));
 }
 
 template<typename E> template<typename T> E Enum<E>::operator&(T in) const noexcept {
-    return static_cast<E>(static_cast<U>(value) & static_cast<U>(static_cast<E>(in)));
+    return static_cast<E>(static_cast<Underlying>(value) & static_cast<Underlying>(static_cast<E>(in)));
 }
 
 template<typename E> template<typename T> E Enum<E>::operator^(T in) const noexcept {
-    return static_cast<E>(static_cast<U>(value) ^ static_cast<U>(static_cast<E>(in)));
+    return static_cast<E>(static_cast<Underlying>(value) ^ static_cast<Underlying>(static_cast<E>(in)));
 }
 
 template<typename E> template<typename T> E& Enum<E>::operator|=(T in) noexcept {

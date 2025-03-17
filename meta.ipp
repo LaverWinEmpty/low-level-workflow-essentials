@@ -309,11 +309,12 @@ size_t Type::size() const {
 // get type enum
 template<typename T> constexpr EType typecode() {
     if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
-    if constexpr(std::is_enum_v<T>)      return typecode<typename std::underlying_type_t<T>>();
-    if constexpr(std::is_pointer_v<T>)   return EType::POINTER;
-    if constexpr(std::is_reference_v<T>) return EType::REFERENCE;
-    if constexpr(std::is_union_v<T>)     return EType::UNION;
-    if constexpr(std::is_class_v<T>)     return EType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
+    if constexpr(std::is_enum_v<T>)                return typecode<typename std::underlying_type_t<T>>();
+    if constexpr(std::is_pointer_v<T>)             return EType::POINTER;
+    if constexpr(std::is_base_of_v<EInterface, T>) return EType::ENUM;
+    if constexpr(std::is_reference_v<T>)           return EType::REFERENCE;
+    if constexpr(std::is_union_v<T>)               return EType::UNION;
+    if constexpr(std::is_class_v<T>)               return EType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
     return EType::UNREGISTERED;
 }
 template<> constexpr EType typecode<void>()               { return EType::VOID; }
@@ -377,6 +378,18 @@ template<> bool isSTL<EType>(const EType& code) {
         return true; // read 4 byte
     }
     return false;
+}
+
+template<typename T> inline constexpr bool isEnum() {
+    return std::is_base_of_v<EInterface, T>;
+}
+
+template<typename T> inline constexpr bool isEnum(const T&) {
+    return isEnum<T>();
+}
+
+template<> inline bool isEnum(const EType& code) {
+    return code == EType::ENUM;
 }
 
 // clang-format off

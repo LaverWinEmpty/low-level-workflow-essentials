@@ -1,29 +1,24 @@
 #ifndef LWE_ENUM_HEADER
 #define LWE_ENUM_HEADER
 
-#include "object.hpp"
-
-struct EInterface {
-    virtual std::string serialize() const               = 0;
-    virtual void        deserialize(const std::string&) = 0;
-};
+#include "meta.hpp"
 
 template<typename E> struct Enum: EInterface {
 private:
-    using U    = std::underlying_type_t<E>;
-    using Base = Object;
+    using Underlying = std::underlying_type_t<E>;
+    using Base       = EInterface;
 
 public:
     friend struct MetaClass;
     struct EnumMeta: MetaClass {
-        virtual const char*      name() const override { return "Enum"; }
-        virtual size_t           size() const override { return sizeof(*this); }
-        virtual MetaClass*       base() const override { return MetaClass::get<Object>(); }
-        virtual const FieldInfo& field() const override {
-            static const FieldInfo EMPTY = {
-                MetaField{ EAccess::PRIVATE, typecode<U>(), "value", sizeof(0), sizeof(void*) }
+        const char*      name() const override { return "Enum"; }
+        size_t           size() const override { return sizeof(*this); }
+        MetaClass*       base() const override { return nullptr; }
+        const FieldInfo& field() const override {
+            static const FieldInfo VECTOR = {
+                MetaField{ EAccess::PRIVATE, typecode<Underlying>(), "value", sizeof(0), sizeof(void*) }
             };
-            return EMPTY;
+            return VECTOR;
         }
     };
 
@@ -44,12 +39,12 @@ public:
 
 public:
     Enum(E) noexcept;
-    Enum(U) noexcept;
+    Enum(Underlying) noexcept;
     Enum(const Enum&) noexcept;
 
 public:
     Enum& operator=(E) noexcept;
-    Enum& operator=(U) noexcept;
+    Enum& operator=(Underlying) noexcept;
 
 public:
     template<typename T> E operator|(T) const noexcept;

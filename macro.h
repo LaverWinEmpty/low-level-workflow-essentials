@@ -170,14 +170,18 @@ public:                                                                         
     template<> TYPE evalue<TYPE>(const std::string& IN) {                                                              \
         using enum TYPE;                                                                                               \
         std::unordered_map<std::string, TYPE> MAP;                                                                     \
-        if(MAP.find(IN) == MAP.end())
+        if(IN.size() == 0) {                                                                                           \
+            return static_cast<TYPE>(0);                                                                               \
+        }                                                                                                              \
+        else if(MAP.find(IN) == MAP.end()) // {
 #define REGISTER_STRING_TO_ENUM(VAL)                                                                                   \
-    if(#VAL == IN) {                                                                                                   \
-        MAP.insert({ #VAL, VAL });                                                                                     \
-        return VAL;                                                                                                    \
-    }
+            if(#VAL == IN) {                                                                                           \
+                MAP.insert({ #VAL, VAL });                                                                             \
+                return VAL;                                                                                            \
+            }
 #define REGISTER_STRING_TO_ENUM_END                                                                                    \
-    else return MAP[IN]; throw std::out_of_range(IN);                                                                  \
+        else return MAP[IN];                                                                                           \
+        throw std::out_of_range(IN);                                                                                   \
     }
 
 //! @brief register enum to string
@@ -188,7 +192,7 @@ public:                                                                         
 #define REGISTER_ENUM_TO_STRING(VAL)                                                                                   \
         case VAL: return #VAL;
 #define REGISTER_ENUM_TO_STRING_END                                                                                    \
-    return "";                                                                                                         \
+        return "";                                                                                                     \
     }
 
 //! @brief delcare evalue from index

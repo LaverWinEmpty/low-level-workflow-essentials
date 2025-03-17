@@ -106,10 +106,11 @@ private:
     };
 };
 
-template<> struct std::hash<Type> {
-    size_t operator()(const Type& obj) const {
-        return obj.hash();
-    } 
+
+
+struct EInterface {
+    virtual std::string serialize() const               = 0;
+    virtual void        deserialize(const std::string&) = 0;
 };
 
 template<typename T> constexpr EType typecode();                     //!< get type enum value
@@ -190,6 +191,10 @@ template<typename T> constexpr bool isSTL();                    //!< check conta
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
 template<> bool                     isSTL<EType>(const EType&); //!< check container type code
 
+template<typename T> constexpr bool isEnum();                    
+template<typename T> constexpr bool isEnum(const T&);
+template<> bool                     isEnum<EType>(const EType&);
+
 template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list);
 
 template<typename E> E evalue(size_t);        //!< declare index to enum for template specialization
@@ -199,6 +204,12 @@ template<typename E> E evalue(const string&); //!< declare string to enum for te
 template<typename E> size_t emax(E) {
     return static_cast<size_t>(eval<E>(-1));
 }
+
+template<> struct std::hash<Type> {
+    size_t operator()(const Type& obj) const {
+        return obj.hash();
+    }
+};
 
 // clang-format on
 #endif
