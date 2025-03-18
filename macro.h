@@ -125,19 +125,7 @@
 // use #prgma MESSAGE
 #define MESSAGE(x) message(__FILE__ " [" MACRO(__LINE__) "] " #x)
 
-#if(CPP_VERSION >= CPP17)
-#    define IF_CONST if constexpr
-#else
-#    define IF_CONST if
-#endif
-
-#if(CPP_VERSION >= CPP17)
-#    define LOCKGUARD(lock) if(std::lock_guard<decltype(lock)> MACRO_lock_guard(lock); true)
-#else
-#    define LOCKGUARD(lock)                                                                                            \
-        for(int i = 0; i < 1;)                                                                                         \
-            for(std::lock_guard<decltype(lock)> MACRO_lock_guard(lock); i < 1; ++i)
-#endif
+#define LOCKGUARD(lock) if(std::lock_guard<decltype(lock)> MACRO_lock_guard(lock); true)
 
 // clang-format off
 
@@ -190,7 +178,7 @@ public:                                                                         
         using enum TYPE;                                                                                               \
         switch(IN) // {
 #define REGISTER_ENUM_TO_STRING(VAL)                                                                                   \
-        case VAL: return #VAL;
+        case VAL: return #VAL // }
 #define REGISTER_ENUM_TO_STRING_END                                                                                    \
         return "";                                                                                                     \
     }
@@ -207,7 +195,7 @@ public:                                                                         
                 MAP.insert({ INDEX, VAL });                                                                            \
                 return VAL;                                                                                            \
             }                                                                                                          \
-            ++INDEX;
+            ++INDEX // }
 #define REGISTER_INDEX_TO_ENUM_END                                                                                     \
         else return MAP[IN]; return static_cast<decltype(MAP.begin()->second)>(INDEX);                                 \
     }
@@ -224,30 +212,44 @@ public:                                                                         
                 MAP.insert({ VAL, INDEX });                                                                            \
                 return INDEX;                                                                                          \
             }                                                                                                          \
-            ++INDEX;
+            ++INDEX // }
 #define REGISTER_ENUM_TO_INDEX_END                                                                                     \
         else return MAP[IN];                                                                                           \
         return INDEX;                                                                                                  \
     }
 
-//! @brief fields begin
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
-    const FieldInfo& TYPE::TYPE##Meta::field() const {                                                                 \
+    template<> const FieldInfo& reflect<TYPE>();                                                                       \
+    const FieldInfo& TYPE::TYPE##Meta::field() const { return reflect<TYPE>(); }                                       \
+    template<> const FieldInfo& reflect<TYPE>() {                                                                      \
+        using CLASS_NAME = TYPE;                                                                                       \
+        static FieldInfo result;                                                                                       \
         static auto ACCESS_MODIFIER = [](const char* in) -> EAccess {                                                  \
             if(!std::strcmp(in, "public")) { return EAccess::PUBLIC; }                                                 \
             if(!std::strcmp(in, "private")) { return EAccess::PRIVATE; }                                               \
             if(!std::strcmp(in, "protected")) { return EAccess::PROTECTED; }                                           \
             return EAccess::NONE;                                                                                      \
         };                                                                                                             \
-        static FieldInfo VECTOR = reflect<TYPE>( // {
-//! @brief field
-#define REGISTER_FIELD(ACCESS, NAME, ...) \
-            MetaField{ ACCESS_MODIFIER(#ACCESS), typeof<__VA_ARGS__>(), #NAME, sizeof(__VA_ARGS__)  },
-//! @brief fiels end
+        if(result.size() == 0) {                                                                                       \
+            MetaClass* meta = MetaClass::get<TYPE>();                                                                  \
+            MetaClass* base = meta->base();                                                                            \
+            result = base->field();                                                                                    \
+            size_t offset = meta->base()->size();                                                                      \
+            size_t index  = 0; // {
+#define REGISTER_FIELD(ACCESS, NAME, ...)                                                                              \
+            regist<CLASS_NAME>(&result,                                                                                \
+                               index++,                                                                                \
+                               ACCESS_MODIFIER(#ACCESS),                                                               \
+                               typeof<__VA_ARGS__>(),                                                                  \
+                               #NAME,                                                                                  \
+                               sizeof(__VA_ARGS__),                                                                    \
+                               offset                                                                                  \
+            ) // }
 #define REGISTER_FIELD_END                                                                                             \
-        );                                                                                                             \
-        return VECTOR;                                                                                                 \
+        }                                                                                                              \
+        return result;                                                                                                 \
     }
+
 
 /**
  * @brief container enum value register

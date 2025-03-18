@@ -19,8 +19,6 @@
  * - typestring | get type name string
  **************************************************************************************************/
 
-// clang-format off
-
 enum class EType : int8 {
     UNREGISTERED,
     VOID,
@@ -48,6 +46,7 @@ enum class EType : int8 {
     FUNCTION,
     STD_STRING,
     STL_DEQUE,
+    CONST,
 };
 
 enum class EAccess : int8 {
@@ -81,15 +80,15 @@ public:
     ~Type();
     Type& operator=(const Type);
     Type& operator=(Type&&) noexcept;
-    
+
 public:
     const EType& operator[](size_t) const;
     const EType* begin() const;
     const EType* end() const;
-    size_t        size() const;
-    hash_t        hash() const;
+    size_t       size() const;
+    hash_t       hash() const;
     EType        type() const;
-    const char*   stringify() const;
+    const char*  stringify() const;
 
 public:
     explicit operator string() const;
@@ -106,12 +105,12 @@ private:
     };
 };
 
-
-
 struct EInterface {
     virtual std::string serialize() const               = 0;
     virtual void        deserialize(const std::string&) = 0;
 };
+
+// clang-format off
 
 template<typename T> constexpr EType typecode();                     //!< get type enum value
 template<> constexpr           EType typecode<void>();               //!< get type enum value
@@ -141,6 +140,7 @@ const char*                      typestring(const Type&); //!< get type name
 template<typename T> const Type& typeof();          //!< get typeinfo by template
 template<typename T> const Type& typeof(const T&);  //!< get typeinfo by argument
 template<typename T> void        typeof(Type*);     //!< pirvate
+// clang-format on
 
 /*
  * @breif metadata field
@@ -157,10 +157,15 @@ struct MetaField {
 /*
  * @breif metadata method
  */
-struct MetaMethod {
-    EAccess level;
-    EType   result;
-    Type    parameters;
+class MetaMethod {
+public:
+
+
+
+private:
+    EAccess           level;
+    Type              result;
+    std::vector<Type> args;
 };
 
 /**
@@ -191,11 +196,9 @@ template<typename T> constexpr bool isSTL();                    //!< check conta
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
 template<> bool                     isSTL<EType>(const EType&); //!< check container type code
 
-template<typename T> constexpr bool isEnum();                    
-template<typename T> constexpr bool isEnum(const T&);
-template<> bool                     isEnum<EType>(const EType&);
-
-template<typename T> std::vector<MetaField> reflect(std::initializer_list<MetaField> list);
+template<typename T> constexpr bool isEnum();                    //!< check enum explicit
+template<typename T> constexpr bool isEnum(const T&);            //!< check enum implicit
+template<> bool                     isEnum<EType>(const EType&); //!< check enum type code
 
 template<typename E> E evalue(size_t);        //!< declare index to enum for template specialization
 template<typename E> E evalue(const string&); //!< declare string to enum for template specialization
@@ -206,10 +209,38 @@ template<typename E> size_t emax(E) {
 }
 
 template<> struct std::hash<Type> {
-    size_t operator()(const Type& obj) const {
-        return obj.hash();
-    }
+    size_t operator()(const Type& obj) const { return obj.hash(); }
 };
 
-// clang-format on
+//  template<typename T> FieldInfo reflect(std::initializer_list<MetaField>);
+
+template<typename T>
+void regist(FieldInfo* out, size_t index, EAccess level, const Type& type, const char* name, size_t size,
+            size_t& offset) {
+    MetaField field;
+    field.level  = level;
+    field.type   = type;
+    field.name   = name;
+    field.size   = size;
+    field.offset = 0;
+
+    // not first: align
+    if(index) {
+        using LWE::Common::align;
+        offset = size <= alignof(T) ? align(offset, size) : align(offset, alignof(T));
+
+        field.offset  = offset;   // set
+        offset       += size;     // next
+        out->emplace_back(field); // add
+    }
+
+    else {
+        field.offset  = offset;   // set
+        offset       += size;     // next
+        out->emplace_back(field); // add
+    }
+}
+
+template<typename T> const FieldInfo& reflect();
+
 #endif

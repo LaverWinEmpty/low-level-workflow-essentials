@@ -40,6 +40,7 @@ REGISTER_ENUM_TO_STRING_BEGIN(EType) {
     REGISTER_ENUM_TO_STRING(FUNCTION);
     REGISTER_ENUM_TO_STRING(STD_STRING);
     REGISTER_ENUM_TO_STRING(STL_DEQUE);
+    REGISTER_ENUM_TO_STRING(CONST);
 }
 REGISTER_ENUM_TO_STRING_END;
 
@@ -71,6 +72,7 @@ REGISTER_STRING_TO_ENUM_BEGIN(EType) {
     REGISTER_STRING_TO_ENUM(FUNCTION);
     REGISTER_STRING_TO_ENUM(STD_STRING);
     REGISTER_STRING_TO_ENUM(STL_DEQUE);
+    REGISTER_STRING_TO_ENUM(CONST);
 }
 REGISTER_STRING_TO_ENUM_END;
 
@@ -137,6 +139,9 @@ void Type::push(EType in) {
 }
 
 template<typename T> static void Type::make(Type* out) {
+    if constexpr(std::is_const_v<T>) {
+        out->push(EType::CONST);
+    }
     if constexpr(isSTL<T>()) {
         out->push(ContainerCode<T>::VALUE);
         make<typename T::value_type>(out);
@@ -261,10 +266,19 @@ Type::operator string() const {
         if(idx >= in.size()) {
             return idx;
         }
-
         // pointer or reference
         if(in[idx] == EType::POINTER || in[idx] == EType::REFERENCE) {
             fn(out, in, idx + 1); // rec
+        }
+        // const
+        if(in[idx] == EType::CONST) {
+            if(idx == 0) {
+                out->append("const ");
+                return fn(out, in, idx + 1); // next
+            } else {
+                out->append(" const");
+                return fn(out, in, idx + 1); // next
+            }
         }
 
         out->append(typestring(in[idx]));
@@ -425,7 +439,6 @@ constexpr const char* typestring(EType code) {
     // error
     return "";
 }
-
 
 //! @brief
 template<typename T> FieldInfo reflect(std::initializer_list<MetaField> list) {
