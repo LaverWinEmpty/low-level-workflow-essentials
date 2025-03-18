@@ -263,7 +263,13 @@ const EType& Type::operator[](size_t idx) const {
 
 Type::operator EType() const {
     if(count < STACK) {
+        if (*stack == EType::CONST) {
+            return stack[1];
+        }
         return *stack;
+    }
+    if (*heap == EType::CONST) {
+        return heap[1];
     }
     return *heap;
 }
