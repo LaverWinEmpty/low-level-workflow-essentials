@@ -98,7 +98,7 @@ void Object::deserialize(Object* out, const std::string& in) {
     out->deserialize(in);
 }
 
-template<> MetaClass* MetaClass::get<Object>() {
+template<> MetaClass* MetaClass::make<Object>() {
     Object object;
     return object.metaclass();
 }

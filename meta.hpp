@@ -70,6 +70,9 @@ private:
     void                    push(EType in);
 
 public:
+    template<typename T> static Type make();
+
+private:
     template<typename T> static void make(Type* out);
 
 public:
@@ -95,6 +98,7 @@ public:
     operator EType() const;
 
 private:
+    hash_t hashed = 0;
     size_t count = 0;
     union {
         struct {
@@ -183,8 +187,8 @@ using MethodInfo = std::vector<MetaMethod>;
  */
 struct MetaClass {
 public:
-    template<typename T> static MetaClass* get();
-    template<typename T> static MetaClass* get(const T&);
+    template<typename T> static MetaClass* make();
+    template<typename T> static MetaClass* make(const T&);
 public:
     virtual const char*      name() const  = 0;
     virtual size_t           size() const  = 0;

@@ -142,7 +142,7 @@
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
         virtual MetaClass* base() const override {                                                                     \
-            return MetaClass::get<BASE>();                                                                             \
+            return MetaClass::make<BASE>();                                                                             \
         }                                                                                                              \
         virtual const FieldInfo& field() const override;                                                               \
     };                                                                                                                 \
@@ -231,7 +231,7 @@ public:                                                                         
             return EAccess::NONE;                                                                                      \
         };                                                                                                             \
         if(result.size() == 0) {                                                                                       \
-            MetaClass* meta = MetaClass::get<TYPE>();                                                                  \
+            MetaClass* meta = MetaClass::make<TYPE>();                                                                  \
             MetaClass* base = meta->base();                                                                            \
             result = base->field();                                                                                    \
             size_t offset = meta->base()->size();                                                                      \

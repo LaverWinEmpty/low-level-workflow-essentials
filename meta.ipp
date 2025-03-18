@@ -1,6 +1,7 @@
+#include "meta.hpp"
 #ifdef LWE_META_HEADER
 
-template<typename T> MetaClass* MetaClass::get() {
+template<typename T> MetaClass* MetaClass::make() {
     if(std::is_base_of_v<Object, T>) {
         static T dummy;
         return dummy.metaclass();
@@ -8,8 +9,8 @@ template<typename T> MetaClass* MetaClass::get() {
     return nullptr;
 }
 
-template<typename T> MetaClass* MetaClass::get(const T&) {
-    return get<T>();
+template<typename T> MetaClass* MetaClass::make(const T&) {
+    return make<T>();
 }
 
 // register estring type code
@@ -126,7 +127,6 @@ void Type::push(EType in) {
             }
             heap = newly;
         }
-
         heap[count] = in;
         count       = next;
     }
@@ -138,24 +138,50 @@ void Type::push(EType in) {
     }
 }
 
+template<typename T> static Type Type::make() {
+    Type type;
+    if(type.size() == 0) {
+        make<T>(&type);
+        for(auto itr : type) {
+            type.hashed = (type.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
+        }
+    }
+    return type;
+}
+
 template<typename T> static void Type::make(Type* out) {
     if constexpr(std::is_const_v<T>) {
         out->push(EType::CONST);
+        make<typename std::remove_const_t<T>>(out);
     }
-    if constexpr(isSTL<T>()) {
+
+    else if constexpr(isSTL<T>()) {
         out->push(ContainerCode<T>::VALUE);
         make<typename T::value_type>(out);
-    } else {
-        out->push(typecode<T>());
-        if constexpr(std::is_pointer_v<T>) {
-            make<typename std::remove_pointer_t<T>>(out); // dereference
-        } else if constexpr(std::is_reference_v<T>) {
-            make<typename std::remove_reference_t<T>>(out); // dereference
-        }
     }
+
+    else if constexpr(std::is_pointer_v<T>) {
+        // POINTER CONST TYPENAME: const typeanme*
+        // CONST POINTER TYPENAME: typename* const
+        out->push(EType::POINTER);
+        make<typename std::remove_pointer_t<T>>(out); // dereference
+    }
+
+    else if constexpr(std::is_reference_v<T>) {
+        using Temp = typename std::remove_reference_t<T>;
+        // CONST REFERENCE TYPENAME
+        if(std::is_const_v<Temp>) {
+            out->push(EType::CONST);
+            out->push(EType::REFERENCE);
+            make<typename std::remove_const_t<Temp>>(out);
+        } else {
+            out->push(EType::REFERENCE);
+            make<Temp>(out); // dereference
+        }
+    } else out->push(typecode<T>()); // primitive
 }
 
-Type::Type(const Type& in): count(in.count) {
+Type::Type(const Type& in): count(in.count), hashed(in.hashed) {
     if(in.count < STACK) {
         std::memcpy(stack, in.stack, count);
     } else {
@@ -169,20 +195,22 @@ Type::Type(const Type& in): count(in.count) {
     }
 }
 
-Type::Type(Type&& in) noexcept: count(in.count) {
+Type::Type(Type&& in) noexcept: count(in.count), hashed(in.hashed) {
     if(in.count < STACK) {
         std::memcpy(stack, in.stack, count); // copy
     } else {
         heap      = in.heap;
         capacitor = in.capacitor;
+        hashed    = in.hashed;
 
         in.heap      = nullptr;
         in.capacitor = 0;
         in.count     = 0;
+        in.hashed    = 0;
     }
 }
 
-Type::Type(EType in): count(1) {
+Type::Type(EType in): count(1), hashed(hash()) {
     stack[0] = in;
 }
 
@@ -193,7 +221,8 @@ Type::~Type() {
 }
 
 Type& Type::operator=(const Type in) {
-    count = in.count;
+    count  = in.count;
+    hashed = in.hashed;
     if(count < STACK) {
         std::memcpy(stack, in.stack, count);
     } else {
@@ -210,7 +239,8 @@ Type& Type::operator=(const Type in) {
 
 Type& Type::operator=(Type&& in) noexcept {
     if(this != &in) {
-        count = in.count;
+        count  = in.count;
+        hashed = in.hashed;
         if(count < STACK) {
             std::memcpy(stack, in.stack, count); // copy
         } else {
@@ -239,10 +269,6 @@ Type::operator EType() const {
 }
 
 hash_t Type::hash() const {
-    size_t hashed = 0;
-    for(auto itr : *this) {
-        hashed = (hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
-    }
     return hashed;
 }
 
@@ -254,14 +280,6 @@ EType Type::type() const {
 }
 
 const char* Type::stringify() const {
-    static std::unordered_map<Type, string> map;
-    if(map.find(*this) == map.end()) {
-        map.insert({ *this, string(*this) });
-    }
-    return map[*this].c_str();
-}
-
-Type::operator string() const {
     std::function<size_t(string*, const Type&, size_t)> fn = [&fn](string* out, const Type& in, size_t idx) {
         if(idx >= in.size()) {
             return idx;
@@ -272,16 +290,22 @@ Type::operator string() const {
         }
         // const
         if(in[idx] == EType::CONST) {
-            if(idx == 0) {
-                out->append("const ");
-                return fn(out, in, idx + 1); // next
-            } else {
+            // CONST POINTER ... = ...* const
+            if(in[idx + 1] == EType::POINTER) {
+                fn(out, in, idx + 1);
                 out->append(" const");
-                return fn(out, in, idx + 1); // next
+            }
+            // CONST ... = const ...
+            // CONST REFERENCE ...  = const ...&
+            else {
+                out->append("const ");
+                fn(out, in, idx + 1);
             }
         }
 
-        out->append(typestring(in[idx]));
+        // primitive
+        else
+            out->append(typestring(in[idx]));
 
         // has template
         if(isSTL(in[idx])) {
@@ -296,9 +320,17 @@ Type::operator string() const {
         return idx + 1;
     };
 
-    string out;
-    fn(&out, *this, 0);
-    return out;
+    static std::unordered_map<size_t, string> map;
+    if(map.find(hashed) == map.end()) {
+        string temp;
+        fn(&temp, *this, 0);
+        map.insert({ hashed, temp });
+    }
+    return map[hashed].c_str();
+}
+
+Type::operator string() const {
+    return stringify(); // copy
 }
 
 const EType* Type::begin() const {
@@ -367,11 +399,8 @@ const char* typestring(const Type& in) {
 }
 
 template<typename T> const Type& typeof() {
-    static Type list;
-    if(list.size() == 0) {
-        Type::make<T>(&list);
-    }
-    return list;
+    static Type type = Type::make<T>();
+    return type;
 }
 
 template<typename T> const Type& typeof(const T&) {
@@ -434,6 +463,7 @@ constexpr const char* typestring(EType code) {
     case EType::FUNCTION:           return "function";
     case EType::STD_STRING:         return "string";
     case EType::STL_DEQUE:          return "Deque";
+    case EType::CONST:              return "const";
     }
 
     // error
@@ -446,7 +476,7 @@ template<typename T> FieldInfo reflect(std::initializer_list<MetaField> list) {
     // check
     size_t loop = list.size();
     if(loop != 0 || result.size() == 0) {
-        MetaClass* meta = MetaClass::get<T>();
+        MetaClass* meta = MetaClass::make<T>();
         MetaClass* base = meta->base();
 
         // reserve
