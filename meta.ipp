@@ -221,24 +221,33 @@ Type::~Type() {
 }
 
 Type& Type::operator=(const Type in) {
+    EType* dest = count < STACK ? stack : heap; // allocated: use heap
+    if (in.count < STACK) {
+        std::memcpy(dest, in.stack, in.count); // copy stack
+    }
+    else {
+        // reallocation required
+        if (in.count > capacitor) {
+            dest = static_cast<EType*>(malloc(sizeof(EType) * in.count));
+            if (dest) {
+                if (count > STACK) free(heap); // counter is before moving
+            }
+            else throw std::bad_alloc(); // error
+        }
+        std::memcpy(dest, in.heap, in.count);
+        heap      = dest;
+        capacitor = in.capacitor;
+    }
     count  = in.count;
     hashed = in.hashed;
-    if(count < STACK) {
-        std::memcpy(stack, in.stack, count);
-    } else {
-        heap = static_cast<EType*>(malloc(sizeof(EType) * count));
-        if(!heap) {
-            count = 0;
-            throw std::bad_alloc();
-        }
-        capacitor = in.capacitor;
-        std::memcpy(heap, in.heap, count);
-    }
     return *this;
 }
 
 Type& Type::operator=(Type&& in) noexcept {
     if(this != &in) {
+        if (count > STACK) {
+            free(heap);
+        }
         count  = in.count;
         hashed = in.hashed;
         if(count < STACK) {
@@ -262,6 +271,7 @@ const EType& Type::operator[](size_t idx) const {
 }
 
 Type::operator EType() const {
+    if (count == 0) return EType::UNREGISTERED;
     if(count < STACK) {
         if (*stack == EType::CONST) {
             return stack[1];
