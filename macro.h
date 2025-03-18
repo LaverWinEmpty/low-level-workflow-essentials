@@ -224,21 +224,15 @@ public:                                                                         
     template<> const FieldInfo& reflect<TYPE>() {                                                                      \
         using CLASS_NAME = TYPE;                                                                                       \
         static FieldInfo result;                                                                                       \
-        static auto ACCESS_MODIFIER = [](const char* in) -> EAccess {                                                  \
-            if(!std::strcmp(in, "public")) { return EAccess::PUBLIC; }                                                 \
-            if(!std::strcmp(in, "private")) { return EAccess::PRIVATE; }                                               \
-            if(!std::strcmp(in, "protected")) { return EAccess::PROTECTED; }                                           \
-            return EAccess::NONE;                                                                                      \
-        };                                                                                                             \
         if(result.size() == 0) {                                                                                       \
             result = MetaClass::make<TYPE>()->base()->fields(); // {
-#define REGISTER_FIELD(ACCESS, NAME)                                                                                   \
+#define REGISTER_FIELD(NAME)                                                                                           \
             result.push_back(                                                                                          \
                 MetaField {                                                                                            \
-                    ACCESS_MODIFIER(#ACCESS),                                                                          \
                     typeof<decltype(CLASS_NAME::NAME)>(),                                                              \
                     #NAME,                                                                                             \
-                    sizeof(CLASS_NAME::NAME), offsetof(CLASS_NAME, NAME)                                               \
+                    sizeof(CLASS_NAME::NAME),                                                                          \
+                    offsetof(CLASS_NAME, NAME)                                                                         \
                 }                                                                                                      \
             ) // }
 #define REGISTER_FIELD_END                                                                                             \

@@ -49,13 +49,6 @@ enum class EType : int8 {
     CONST,
 };
 
-enum class EAccess : int8 {
-    PRIVATE,
-    PROTECTED,
-    PUBLIC,
-    NONE,
-};
-
 // get container type code structur
 template<typename, typename = std::void_t<>> struct ContainerCode {
     static constexpr EType VALUE = EType::UNREGISTERED;
@@ -150,7 +143,6 @@ template<typename T> void        typeof(Type*);     //!< pirvate
  * @breif metadata fields
  */
 struct MetaField {
-    EAccess     level;  //!< NONE: exception
     Type        type;   //!< [0] is type: other is template parameters, [0] is pointer, reference count
     const char* name;   //!< vairable name
     size_t      size;   //!< variable size
@@ -176,10 +168,13 @@ public:
         (args.push_back(typeof<T>()), ...);
     }
 
+    // TODO:
+    template<class Class> void invoke(Class* in, void* out = nullptr, std::vector<void*> args = {}) {
+    }
+
 private:
     uintptr           address;
     const char*       name;
-    EAccess           level;
     Type              result;
     std::vector<Type> args;
 };

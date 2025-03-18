@@ -16,7 +16,7 @@ public:
         MetaClass*       base() const override { return nullptr; }
         const FieldInfo& fields() const override {
             static const FieldInfo VECTOR = {
-                MetaField{ EAccess::PRIVATE, typecode<Underlying>(), "value", sizeof(0), sizeof(void*) }
+                MetaField{ typecode<Underlying>(), "value", sizeof(0), sizeof(void*) }
             };
             return VECTOR;
         }
