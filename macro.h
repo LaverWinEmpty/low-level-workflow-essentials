@@ -144,7 +144,7 @@
         virtual MetaClass* base() const override {                                                                     \
             return MetaClass::make<BASE>();                                                                             \
         }                                                                                                              \
-        virtual const FieldInfo& field() const override;                                                               \
+        virtual const FieldInfo& fields() const override;                                                               \
     };                                                                                                                 \
 public:                                                                                                                \
     virtual MetaClass* metaclass() const override {                                                                    \
@@ -220,7 +220,7 @@ public:                                                                         
 
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
     template<> const FieldInfo& reflect<TYPE>();                                                                       \
-    const FieldInfo& TYPE::TYPE##Meta::field() const { return reflect<TYPE>(); }                                       \
+    const FieldInfo& TYPE::TYPE##Meta::fields() const { return reflect<TYPE>(); }                                      \
     template<> const FieldInfo& reflect<TYPE>() {                                                                      \
         using CLASS_NAME = TYPE;                                                                                       \
         static FieldInfo result;                                                                                       \
@@ -231,25 +231,20 @@ public:                                                                         
             return EAccess::NONE;                                                                                      \
         };                                                                                                             \
         if(result.size() == 0) {                                                                                       \
-            MetaClass* meta = MetaClass::make<TYPE>();                                                                  \
-            MetaClass* base = meta->base();                                                                            \
-            result = base->field();                                                                                    \
-            size_t offset = meta->base()->size();                                                                      \
-            size_t index  = 0; // {
-#define REGISTER_FIELD(ACCESS, NAME, ...)                                                                              \
-            regist<CLASS_NAME>(&result,                                                                                \
-                               index++,                                                                                \
-                               ACCESS_MODIFIER(#ACCESS),                                                               \
-                               typeof<__VA_ARGS__>(),                                                                  \
-                               #NAME,                                                                                  \
-                               sizeof(__VA_ARGS__),                                                                    \
-                               offset                                                                                  \
+            result = MetaClass::make<TYPE>()->base()->fields(); // {
+#define REGISTER_FIELD(ACCESS, NAME)                                                                                   \
+            result.push_back(                                                                                          \
+                MetaField {                                                                                            \
+                    ACCESS_MODIFIER(#ACCESS),                                                                          \
+                    typeof<decltype(CLASS_NAME::NAME)>(),                                                              \
+                    #NAME,                                                                                             \
+                    sizeof(CLASS_NAME::NAME), offsetof(CLASS_NAME, NAME)                                               \
+                }                                                                                                      \
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
         }                                                                                                              \
         return result;                                                                                                 \
     }
-
 
 /**
  * @brief container enum value register

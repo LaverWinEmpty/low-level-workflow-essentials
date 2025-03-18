@@ -14,7 +14,7 @@ public:
         const char*      name() const override { return "Enum"; }
         size_t           size() const override { return sizeof(*this); }
         MetaClass*       base() const override { return nullptr; }
-        const FieldInfo& field() const override {
+        const FieldInfo& fields() const override {
             static const FieldInfo VECTOR = {
                 MetaField{ EAccess::PRIVATE, typecode<Underlying>(), "value", sizeof(0), sizeof(void*) }
             };

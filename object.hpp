@@ -9,7 +9,7 @@ class Object {
     struct ObjectMeta: MetaClass {
         virtual const char*      name() const override { return "Object"; }
         virtual size_t           size() const override { return sizeof(Object); }
-        virtual const FieldInfo& field() const override {
+        virtual const FieldInfo& fields() const override {
             static const FieldInfo EMPTY; // default
             return EMPTY;
         }

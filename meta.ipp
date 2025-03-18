@@ -222,17 +222,15 @@ Type::~Type() {
 
 Type& Type::operator=(const Type in) {
     EType* dest = count < STACK ? stack : heap; // allocated: use heap
-    if (in.count < STACK) {
+    if(in.count < STACK) {
         std::memcpy(dest, in.stack, in.count); // copy stack
-    }
-    else {
+    } else {
         // reallocation required
-        if (in.count > capacitor) {
+        if(in.count > capacitor) {
             dest = static_cast<EType*>(malloc(sizeof(EType) * in.count));
-            if (dest) {
-                if (count > STACK) free(heap); // counter is before moving
-            }
-            else throw std::bad_alloc(); // error
+            if(dest) {
+                if(count > STACK) free(heap); // counter is before moving
+            } else throw std::bad_alloc();    // error
         }
         std::memcpy(dest, in.heap, in.count);
         heap      = dest;
@@ -245,7 +243,7 @@ Type& Type::operator=(const Type in) {
 
 Type& Type::operator=(Type&& in) noexcept {
     if(this != &in) {
-        if (count > STACK) {
+        if(count > STACK) {
             free(heap);
         }
         count  = in.count;
@@ -271,14 +269,14 @@ const EType& Type::operator[](size_t idx) const {
 }
 
 Type::operator EType() const {
-    if (count == 0) return EType::UNREGISTERED;
+    if(count == 0) return EType::UNREGISTERED;
     if(count < STACK) {
-        if (*stack == EType::CONST) {
+        if(*stack == EType::CONST) {
             return stack[1];
         }
         return *stack;
     }
-    if (*heap == EType::CONST) {
+    if(*heap == EType::CONST) {
         return heap[1];
     }
     return *heap;
@@ -484,67 +482,6 @@ constexpr const char* typestring(EType code) {
 
     // error
     return "";
-}
-
-//! @brief
-template<typename T> FieldInfo reflect(std::initializer_list<MetaField> list) {
-    static FieldInfo result;
-    // check
-    size_t loop = list.size();
-    if(loop != 0 || result.size() == 0) {
-        MetaClass* meta = MetaClass::make<T>();
-        MetaClass* base = meta->base();
-
-        // reserve
-        MetaClass* parent = meta->base();
-        if(parent) {
-            result.reserve(loop + parent->field().size()); // for append
-        } else result.reserve(loop);
-
-        // declare append lambda
-        std::function<void(FieldInfo&, const MetaClass*)> append = [&append](FieldInfo& out, const MetaClass* base) {
-            if(!base) {
-                return; // end
-            }
-            append(out, base->base()); // parent first
-            for(auto& itr : base->field()) {
-                result.emplace_back(itr); // append
-            }
-        };
-
-        // call
-        append(result, base);
-
-        // set
-        size_t offset = 0;
-        if(base != nullptr) {
-            offset = base->size(); // append
-        } else if(std::is_polymorphic_v<T>) {
-            offset = sizeof(void*); // pass vptr
-        }
-
-        // iterator
-        MetaField*       itr = const_cast<MetaField*>(list.begin());
-        MetaField*       old = itr;
-        const MetaField* end = list.end();
-
-        // first
-        if(itr != end) {
-            itr->offset  = offset;       // set
-            offset      += itr->size;    // next
-            result.emplace_back(*itr++); // add
-        }
-        while(itr != end) {
-            // align
-            offset = itr->size <= alignof(T) ? LWE::Common::align(offset, itr->size) :
-                                               LWE::Common::align(offset, alignof(T));
-
-            itr->offset  = offset;       // set
-            offset      += itr->size;    // next
-            result.emplace_back(*itr++); // add
-        }
-    }
-    return result;
 }
 
 // clang-format on

@@ -8,7 +8,7 @@
  * Meta~
  * - type_t      | type name to enum
  * - access_t    | access modifier to enum
- * - MetaField     | field information struct
+ * - MetaField     | fields information struct
  * - MetaMethod    | method information struct
  * - MetaClass     | class information struct
  * - MetaContainer | container information getter struct
@@ -99,7 +99,7 @@ public:
 
 private:
     hash_t hashed = 0;
-    size_t count = 0;
+    size_t count  = 0;
     union {
         struct {
             EType* heap;
@@ -147,7 +147,7 @@ template<typename T> void        typeof(Type*);     //!< pirvate
 // clang-format on
 
 /*
- * @breif metadata field
+ * @breif metadata fields
  */
 struct MetaField {
     EAccess     level;  //!< NONE: exception
@@ -163,10 +163,22 @@ struct MetaField {
  */
 class MetaMethod {
 public:
+    enum EFlag {
+        CONST   = 1 << 0,
+        VIRTUAL = 1 << 1
+    };
 
-
+public:
+    // TODO:
+    template<class Class, typename R, typename... T> void set(R (Class::*in)(T...)) {
+        address = reinterpret_cast<uintptr>(in);
+        result  = typeof<R>();
+        (args.push_back(typeof<T>()), ...);
+    }
 
 private:
+    uintptr           address;
+    const char*       name;
     EAccess           level;
     Type              result;
     std::vector<Type> args;
@@ -190,10 +202,11 @@ public:
     template<typename T> static MetaClass* make();
     template<typename T> static MetaClass* make(const T&);
 public:
-    virtual const char*      name() const  = 0;
-    virtual size_t           size() const  = 0;
-    virtual const FieldInfo& field() const = 0;
-    virtual MetaClass*       base() const  = 0;
+    virtual const char*       name() const   = 0;
+    virtual size_t            size() const   = 0;
+    virtual const FieldInfo&  fields() const = 0;
+    virtual const MethodInfo& methods() const { return {}; } // TODO:
+    virtual MetaClass*        base() const = 0;
 };
 
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
@@ -215,35 +228,6 @@ template<typename E> size_t emax(E) {
 template<> struct std::hash<Type> {
     size_t operator()(const Type& obj) const { return obj.hash(); }
 };
-
-//  template<typename T> FieldInfo reflect(std::initializer_list<MetaField>);
-
-template<typename T>
-void regist(FieldInfo* out, size_t index, EAccess level, const Type& type, const char* name, size_t size,
-            size_t& offset) {
-    MetaField field;
-    field.level  = level;
-    field.type   = type;
-    field.name   = name;
-    field.size   = size;
-    field.offset = 0;
-
-    // not first: align
-    if(index) {
-        using LWE::Common::align;
-        offset = size <= alignof(T) ? align(offset, size) : align(offset, alignof(T));
-
-        field.offset  = offset;   // set
-        offset       += size;     // next
-        out->emplace_back(field); // add
-    }
-
-    else {
-        field.offset  = offset;   // set
-        offset       += size;     // next
-        out->emplace_back(field); // add
-    }
-}
 
 template<typename T> const FieldInfo& reflect();
 
