@@ -153,99 +153,70 @@ public:                                                                         
     }                                                                                                                  \
     using Base = BASE
 
-//! @brief declare  evalue from string
-#define REGISTER_STRING_TO_ENUM_BEGIN(TYPE)                                                                            \
-    template<> TYPE evalue<TYPE>(const std::string& IN) {                                                              \
-        using enum TYPE;                                                                                               \
-        std::unordered_map<std::string, TYPE> MAP;                                                                     \
-        if(IN.size() == 0) {                                                                                           \
-            return static_cast<TYPE>(0);                                                                               \
-        }                                                                                                              \
-        else if(MAP.find(IN) == MAP.end()) // {
-#define REGISTER_STRING_TO_ENUM(VAL)                                                                                   \
-            if(#VAL == IN) {                                                                                           \
-                MAP.insert({ #VAL, VAL });                                                                             \
-                return VAL;                                                                                            \
-            }
-#define REGISTER_STRING_TO_ENUM_END                                                                                    \
-        else return MAP[IN];                                                                                           \
-        throw std::out_of_range(IN);                                                                                   \
-    }
-
-//! @brief register enum to string
-#define REGISTER_ENUM_TO_STRING_BEGIN(TYPE)                                                                            \
-    constexpr const char* estring(TYPE IN) {                                                                           \
-        using enum TYPE;                                                                                               \
-        switch(IN) // {
-#define REGISTER_ENUM_TO_STRING(VAL)                                                                                   \
-        case VAL: return #VAL // }
-#define REGISTER_ENUM_TO_STRING_END                                                                                    \
-        return "";                                                                                                     \
-    }
-
-//! @brief delcare evalue from index
-#define REGISTER_INDEX_TO_ENUM_BEGIN(TYPE)                                                                             \
-    template<> TYPE evalue<TYPE>(size_t IN) {                                                                          \
-        using enum TYPE;                                                                                               \
-        size_t                           INDEX = 0;                                                                    \
-        std::unordered_map<size_t, TYPE> MAP;                                                                          \
-        if(MAP.find(IN) == MAP.end()) // {
-#define REGISTER_INDEX_TO_ENUM(VAL)                                                                                    \
-            if(IN == INDEX) {                                                                                          \
-                MAP.insert({ INDEX, VAL });                                                                            \
-                return VAL;                                                                                            \
-            }                                                                                                          \
-            ++INDEX // }
-#define REGISTER_INDEX_TO_ENUM_END                                                                                     \
-        else return MAP[IN]; return static_cast<decltype(MAP.begin()->second)>(INDEX);                                 \
-    }
-
-//! @brief register enum to index
-#define REGISTER_ENUM_TO_INDEX_BEGIN(TYPE)                                                                             \
-    constexpr size_t eindex(TYPE IN) {                                                                                 \
-        using enum TYPE;                                                                                               \
-        size_t                                  INDEX = 0;                                                             \
-        static std::unordered_map<TYPE, size_t> MAP;                                                                   \
-        if(MAP.find(IN) == MAP.end()) // {
-#define REGISTER_ENUM_TO_INDEX(VAL)                                                                                    \
-            if(VAL == IN) {                                                                                            \
-                MAP.insert({ VAL, INDEX });                                                                            \
-                return INDEX;                                                                                          \
-            }                                                                                                          \
-            ++INDEX // }
-#define REGISTER_ENUM_TO_INDEX_END                                                                                     \
-        else return MAP[IN];                                                                                           \
-        return INDEX;                                                                                                  \
-    }
-
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
-    template<> const Structure& Structure::reflect<TYPE>();                                                            \
+    template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
+    Registered REGISTERED_CLASS_##TYPE = registclass<TYPE>();                                                          \
     const Structure& TYPE::TYPE##Meta::fields() const {                                                                \
         return Structure::reflect<TYPE>();                                                                             \
     }                                                                                                                  \
-    template<> const Structure& Structure::reflect<TYPE>() {                                                           \
-        using CLASS_NAME = TYPE;                                                                                       \
-        static Structure result;                                                                                       \
-        if(result.size() == 0) {                                                                                       \
-            result = MetaClass::get<TYPE>()->base()->fields(); // {
-#define REGISTER_FIELD(NAME)                                                                                           \
-            result.push(                                                                                               \
-                Variable {                                                                                             \
-                    typeof<decltype(CLASS_NAME::NAME)>(),                                                              \
-                    #NAME,                                                                                             \
-                    sizeof(CLASS_NAME::NAME),                                                                          \
-                    offsetof(CLASS_NAME, NAME)                                                                         \
+    template<> template<> const Structure& Structure::reflect<TYPE>() {                                                \
+        using CLASS = TYPE;                                                                                            \
+        const char* NAME = #TYPE;                                                                                      \
+        auto result = registry.find(NAME);                                                                             \
+        if (result != registry.end()) {                                                                                \
+        	return result->second;                                                                                     \
+        }                                                                                                              \
+        Structure meta; // {
+#define REGISTER_FIELD(FIELD)                                                                                          \
+        meta.push(                                                                                                     \
+                Field {                                                                                                \
+                    typeof<decltype(CLASS::FIELD)>(),                                                                  \
+                    #FIELD,                                                                                            \
+                    sizeof(CLASS::FIELD),                                                                              \
+                    offsetof(CLASS, FIELD)                                                                             \
                 }                                                                                                      \
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
+        meta.shrink();                                                                                                 \
+        registry.insert({ NAME, meta });                                                                               \
+        return registry[NAME];                                                                                         \
+    }
+
+#define REGISTER_ENUM_BEGIN(TYPE)                                                                                      \
+    template<> template<> const Enumerate& Enumerate::reflect<TYPE>();                                                 \
+    Registered REGISTERED_FLAG_ENUM_##TYPE = registenum<TYPE>();                                                       \
+    struct TYPE##Meta: MetaEnum {                                                                                      \
+        virtual const char* name() const {                                                                             \
+            return #TYPE;                                                                                              \
         }                                                                                                              \
-        Variable* newly = static_cast<Variable*>(realloc(result.fields, sizeof(Variable) * result.count));             \
-        if(!newly) {                                                                                                   \
-            throw std::bad_alloc();                                                                                    \
+        virtual size_t size() const {                                                                                  \
+            return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
-        result.fields = newly;                                                                                         \
-        result.capacitor = result.count;                                                                               \
-        return result;                                                                                                 \
+        virtual const Enumerate& enums() const {                                                                       \
+            return Enumerate::reflect<TYPE>();                                                                         \
+        }                                                                                                              \
+    };                                                                                                                 \
+    template<> MetaEnum* MetaEnum::get<TYPE>() {                                                                       \
+        static TYPE##Meta meta;                                                                                        \
+        return &meta;                                                                                                  \
+    }                                                                                                                  \
+    template<> MetaEnum* MetaEnum::get<TYPE>(const TYPE&) {                                                            \
+        return MetaEnum::get<TYPE>();                                                                                  \
+    }                                                                                                                  \
+    template<> template<> const Enumerate& Enumerate::reflect<TYPE>() {                                                \
+        using enum TYPE;                                                                                               \
+        const char* NAME = #TYPE;                                                                                      \
+        auto result = registry.find(NAME);                                                                             \
+        if (result != registry.end()) {                                                                                \
+        	return result->second;                                                                                     \
+        }                                                                                                              \
+        Enumerate meta; // {
+#define REGISTER_ENUM(VALUE)                                                                                           \
+        meta.push(Enum{ static_cast<uint64>(VALUE), #VALUE }) // }
+#define REGISTER_ENUM_END                                                                                              \
+        meta.shrink();                                                                                                 \
+        registry.insert({ NAME, meta });                                                                               \
+        return registry[NAME];                                                                                         \
     }
 
 /**

@@ -4,20 +4,7 @@
 #include "hal.hpp"
 #include "common.hpp"
 
-/**************************************************************************************************
- * Meta~
- * - type_t      | type name to enum
- * - access_t    | access modifier to enum
- * - MetaField     | fields information struct
- * - MetaMethod    | method information struct
- * - MetaClass     | class information struct
- * - MetaContainer | container information getter struct
- *
- * functions
- * - typecode   | get type enum
- * - typeinfo   | get type information vector
- * - typestring | get type name string
- **************************************************************************************************/
+std::unordered_map<string, std::vector<std::pair<string, uint64>>> enumerate;
 
 enum class EType : int8 {
     UNREGISTERED,
@@ -101,13 +88,7 @@ private:
     };
 };
 
-struct EInterface {
-    virtual std::string serialize() const               = 0;
-    virtual void        deserialize(const std::string&) = 0;
-};
-
 // clang-format off
-
 template<typename T> constexpr EType typecode();                     //!< reflect type enum value
 template<> constexpr           EType typecode<void>();               //!< reflect type enum value
 template<> constexpr           EType typecode<signed int>();         //!< reflect type enum value
@@ -138,53 +119,69 @@ template<typename T> const Type& typeof(const T&);  //!< reflect typeinfo by arg
 template<typename T> void        typeof(Type*);     //!< pirvate
 // clang-format on
 
-/*
- * @breif metadata fields
- */
 struct Variable {
     Type        type;
     const char* name;
     size_t      size;
-    size_t      offset;
 };
 
-struct Structure {
-public:
-    template<typename T> static const Structure& reflect(); // define by macro
-
-public:
-    Structure() = default;
-    Structure(const Structure&);
-    Structure(Structure&&) noexcept;
-    Structure(const std::initializer_list<Variable>&);
-    ~Structure();
-
-public:
-    Structure& operator=(const Structure);
-    Structure& operator=(Structure&&) noexcept;
-
-public:
-    const Variable& operator[](size_t) const;
-
-public:
-    const Variable* begin() const;
-    const Variable* end() const;
-    size_t          size() const;
-
-private:
-    template<typename Arg> void push(Arg&&); //!< USE ON REFLECT ONLY
-
-private:
-    Variable* fields    = nullptr;
-    size_t    capacitor = 0;
-    size_t    count     = 0;
+struct Field: Variable {
+    size_t offset;
 };
 
-// template<> const Structure::Fields& Structure::reflect<>();
+struct Enum {
+    uint64      value;
+    const char* name;
+};
 
-/*
- * @breif metadata class base
- */
+template<typename T> struct Reflect {
+    template<class C> static const Reflect<T>& reflect();
+
+public:
+    template<typename C> static const Reflect<T>& get();
+    template<typename C> static const Reflect<T>& get(const C&);
+    static const Reflect<T>&                      get(const char*);
+
+public:
+    template<typename C> bool flag() const;
+    template<typename C> bool flag(const C&) const;
+    bool                      flag(const char*) const;
+
+public:
+    Reflect() = default;
+    Reflect(const Reflect&);
+    Reflect(Reflect&&) noexcept;
+    Reflect(const std::initializer_list<T>&);
+    ~Reflect();
+
+public:
+    Reflect& operator=(const Reflect);
+    Reflect& operator=(Reflect&&) noexcept;
+
+public:
+    const T& operator[](size_t) const;
+
+public:
+    const T* begin() const;
+    const T* end() const;
+    size_t   size() const;
+
+private:
+    template<typename Arg> void push(Arg&&);
+    void                        shrink();
+
+private:
+    T*     data      = nullptr;
+    size_t capacitor = 0;
+    size_t count     = 0;
+
+private:
+    inline static std::unordered_map<const char*, Reflect<T>> registry;
+};
+
+using Enumerate = Reflect<Enum>;
+using Structure = Reflect<Field>;
+
 struct MetaClass {
 public:
     template<typename T> static MetaClass* get();
@@ -194,6 +191,16 @@ public:
     virtual size_t           size() const   = 0;
     virtual const Structure& fields() const = 0;
     virtual MetaClass*       base() const   = 0;
+};
+
+struct MetaEnum {
+public:
+    template<typename T> static MetaEnum* get();
+    template<typename T> static MetaEnum* get(const T&);
+public:
+    virtual const char*      name() const  = 0;
+    virtual size_t           size() const  = 0;
+    virtual const Enumerate& enums() const = 0;
 };
 
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
@@ -215,5 +222,12 @@ template<typename E> size_t emax(E) {
 template<> struct std::hash<Type> {
     size_t operator()(const Type& obj) const { return obj.hash(); }
 };
+
+enum class Registered : bool {
+    REGISTERED = 1
+};
+
+template<typename T> Registered registclass();
+template<typename T> Registered registenum();
 
 #endif

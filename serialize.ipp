@@ -192,7 +192,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
     
     case EType::ENUM:
-        out->append(static_cast<const EInterface*>(in)->serialize());
+        // out->append(static_cast<const EInterface*>(in)->serialize());
         break;
 
     // function
@@ -294,7 +294,7 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
 
     case EType::ENUM:
-        static_cast<EInterface*>(out)->deserialize(in);
+        // static_cast<EInterface*>(out)->deserialize(in);
         break;
 
     // function

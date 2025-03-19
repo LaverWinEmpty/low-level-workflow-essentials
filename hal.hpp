@@ -60,10 +60,7 @@ using namespace LWE::HAL;
 using std::function;
 using std::string;
 
-#if CPP_VERSION >= CPP17
 using std::nullopt;
 using std::nullopt_t;
 template<typename T> using opt = std::optional<T>;
-#endif
-
 #endif

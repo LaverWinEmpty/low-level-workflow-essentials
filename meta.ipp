@@ -13,70 +13,6 @@ template<typename T> MetaClass* MetaClass::get(const T&) {
     return get<T>();
 }
 
-// register estring type code
-REGISTER_ENUM_TO_STRING_BEGIN(EType) {
-    REGISTER_ENUM_TO_STRING(UNREGISTERED);
-    REGISTER_ENUM_TO_STRING(VOID);
-    REGISTER_ENUM_TO_STRING(SIGNED_INT);
-    REGISTER_ENUM_TO_STRING(SIGNED_CHAR);
-    REGISTER_ENUM_TO_STRING(SIGNED_SHORT);
-    REGISTER_ENUM_TO_STRING(SIGNED_LONG);
-    REGISTER_ENUM_TO_STRING(SIGNED_LONG_LONG);
-    REGISTER_ENUM_TO_STRING(UNSIGNED_SHORT);
-    REGISTER_ENUM_TO_STRING(UNSIGNED_INT);
-    REGISTER_ENUM_TO_STRING(UNSIGNED_CHAR);
-    REGISTER_ENUM_TO_STRING(UNSIGNED_LONG);
-    REGISTER_ENUM_TO_STRING(UNSIGNED_LONG_LONG);
-    REGISTER_ENUM_TO_STRING(BOOL);
-    REGISTER_ENUM_TO_STRING(CHAR);
-    REGISTER_ENUM_TO_STRING(WCHAR_T);
-    REGISTER_ENUM_TO_STRING(FLOAT);
-    REGISTER_ENUM_TO_STRING(DOUBLE);
-    REGISTER_ENUM_TO_STRING(LONG_DOUBLE);
-    REGISTER_ENUM_TO_STRING(ENUM);
-    REGISTER_ENUM_TO_STRING(CLASS);
-    REGISTER_ENUM_TO_STRING(UNION);
-    REGISTER_ENUM_TO_STRING(POINTER);
-    REGISTER_ENUM_TO_STRING(REFERENCE);
-    REGISTER_ENUM_TO_STRING(FUNCTION);
-    REGISTER_ENUM_TO_STRING(STD_STRING);
-    REGISTER_ENUM_TO_STRING(STL_DEQUE);
-    REGISTER_ENUM_TO_STRING(CONST);
-}
-REGISTER_ENUM_TO_STRING_END;
-
-// register eval type code
-REGISTER_STRING_TO_ENUM_BEGIN(EType) {
-    REGISTER_STRING_TO_ENUM(UNREGISTERED);
-    REGISTER_STRING_TO_ENUM(VOID);
-    REGISTER_STRING_TO_ENUM(SIGNED_INT);
-    REGISTER_STRING_TO_ENUM(SIGNED_CHAR);
-    REGISTER_STRING_TO_ENUM(SIGNED_SHORT);
-    REGISTER_STRING_TO_ENUM(SIGNED_LONG);
-    REGISTER_STRING_TO_ENUM(SIGNED_LONG_LONG);
-    REGISTER_STRING_TO_ENUM(UNSIGNED_SHORT);
-    REGISTER_STRING_TO_ENUM(UNSIGNED_INT);
-    REGISTER_STRING_TO_ENUM(UNSIGNED_CHAR);
-    REGISTER_STRING_TO_ENUM(UNSIGNED_LONG);
-    REGISTER_STRING_TO_ENUM(UNSIGNED_LONG_LONG);
-    REGISTER_STRING_TO_ENUM(BOOL);
-    REGISTER_STRING_TO_ENUM(CHAR);
-    REGISTER_STRING_TO_ENUM(WCHAR_T);
-    REGISTER_STRING_TO_ENUM(FLOAT);
-    REGISTER_STRING_TO_ENUM(DOUBLE);
-    REGISTER_STRING_TO_ENUM(LONG_DOUBLE);
-    REGISTER_STRING_TO_ENUM(ENUM);
-    REGISTER_STRING_TO_ENUM(CLASS);
-    REGISTER_STRING_TO_ENUM(UNION);
-    REGISTER_STRING_TO_ENUM(POINTER);
-    REGISTER_STRING_TO_ENUM(REFERENCE);
-    REGISTER_STRING_TO_ENUM(FUNCTION);
-    REGISTER_STRING_TO_ENUM(STD_STRING);
-    REGISTER_STRING_TO_ENUM(STL_DEQUE);
-    REGISTER_STRING_TO_ENUM(CONST);
-}
-REGISTER_STRING_TO_ENUM_END;
-
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -285,7 +221,7 @@ const char* Type::stringify() const {
             fn(out, in, idx + 1); // rec
         }
         // const
-        if(in[idx] == EType::CONST) {
+        else if(in[idx] == EType::CONST) {
             // CONST POINTER ... = ...* const
             if(in[idx + 1] == EType::POINTER) {
                 fn(out, in, idx + 1);
@@ -298,11 +234,10 @@ const char* Type::stringify() const {
                 fn(out, in, idx + 1);
             }
         }
-
         // primitive
-        else
+        else {
             out->append(typestring(in[idx]));
-
+        }
         // has template
         if(isSTL(in[idx])) {
             out->append("<");
@@ -347,95 +282,137 @@ size_t Type::size() const {
     return count;
 }
 
-Structure::Structure(const Structure& in) {
-    fields = static_cast<Variable*>(malloc(sizeof(Variable) * in.capacitor));
-    if(!fields) {
-        throw std::bad_alloc();
-    }
-    std::memcpy(fields, in.fields, sizeof(Variable) * in.capacitor);
+template<typename T> Reflect<T>::Reflect(const Reflect& in): capacitor(in.capacitor), count(in.count) {
+    // set
     capacitor = in.capacitor;
     count     = in.count;
-    return;
+    if(count == 0) {
+        data = nullptr;
+        return;
+    }
+
+    // new and copy
+    data = static_cast<T*>(malloc(sizeof(T) * capacitor));
+    if(!data) {
+        capacitor = 0;
+        count     = 0;
+        throw std::bad_alloc();
+    }
+    std::memcpy(data, in.data, sizeof(T) * capacitor);
 }
 
-Structure::Structure(Structure&& in) noexcept: fields(in.fields), count(in.count), capacitor(in.capacitor) {
-    in.fields    = nullptr;
+template<typename T>
+Reflect<T>::Reflect(Reflect&& in) noexcept: data(in.data), count(in.count), capacitor(in.capacitor) {
+    in.data      = nullptr;
     in.capacitor = 0;
     in.count     = 0;
 }
 
-Structure::Structure(const std::initializer_list<Variable>& in): count(0), capacitor(in.size()) {
-    fields = static_cast<Variable*>(malloc(sizeof(Variable) * capacitor));
-    if(!fields) {
+template<typename T> Reflect<T>::Reflect(const std::initializer_list<T>& in): count(0), capacitor(in.size()) {
+    data = static_cast<Field*>(malloc(sizeof(Field) * capacitor));
+    if(!data) {
         throw std::bad_alloc();
     }
     for(auto& i : in) {
-        fields[count++] = i;
+        data[count++] = i;
     }
 }
 
-Structure::~Structure() {
-    if(fields) {
-        free(fields);
+template<typename T> Reflect<T>::~Reflect() {
+    if(data) {
+        free(data);
     }
 }
 
-Structure& Structure::operator=(const Structure in) {
-    if(fields) {
-        free(fields);
+template<typename T> Reflect<T>& Reflect<T>::operator=(const Reflect in) {
+    if(data) {
+        free(data);
     }
-    fields = static_cast<Variable*>(malloc(sizeof(Variable) * in.capacitor));
-    if(!fields) {
-        throw std::bad_alloc();
-    }
-    std::memcpy(fields, in.fields, sizeof(Variable) * in.capacitor);
+
+    // set
     count     = in.count;
     capacitor = in.capacitor;
+    if(count == 0) {
+        data = nullptr;
+        return *this;
+    }
+
+    // new and copy
+    data = static_cast<Field*>(malloc(sizeof(Field) * capacitor));
+    if(!data) {
+        count     = 0;
+        capacitor = 0;
+        throw std::bad_alloc();
+    }
+    std::memcpy(data, in.data, sizeof(Field) * capacitor);
+
     return *this;
 }
 
-Structure& Structure::operator=(Structure&& in) noexcept {
+template<typename T> Reflect<T>& Reflect<T>::operator=(Reflect&& in) noexcept {
     if(this != &in) {
-        if(fields) {
-            free(fields);
+        if(data) {
+            free(data);
         }
-        fields       = in.fields;
+        data         = in.data;
         count        = in.count;
         capacitor    = in.capacitor;
-        in.fields    = nullptr;
+        in.data      = nullptr;
         in.capacitor = 0;
         in.count     = 0;
     }
     return *this;
 }
 
-const Variable& Structure::operator[](size_t in) const {
-    return fields[in];
+template<typename T> const T& Reflect<T>::operator[](size_t in) const {
+    return data[in];
 }
 
-const Variable* Structure::begin() const {
-    return fields;
+template<typename T> const T* Reflect<T>::begin() const {
+    return data;
 }
 
-const Variable* Structure::end() const {
-    return fields + count;
+template<typename T> const T* Reflect<T>::end() const {
+    return data + count;
 }
 
-size_t Structure::size() const {
+template<typename T> size_t Reflect<T>::size() const {
     return count;
 }
 
-template<typename Arg> void Structure::push(Arg&& in) {
+template<typename T> void Reflect<T>::shrink() {
+    T* newly = static_cast<T*>(realloc(data, sizeof(T) * count));
+    if(!newly) {
+        throw std::bad_alloc();
+    }
+    data      = newly;
+    capacitor = count;
+}
+
+template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get() {
+    static Reflect statics = reflect<C>();
+    return statics;
+}
+
+template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get(const C&) {
+    return get<C>();
+}
+
+template<typename T> const Reflect<T>& Reflect<T>::get(const char* in) {
+    return registry[in];
+}
+
+template<typename T> template<typename Arg> void Reflect<T>::push(Arg&& in) {
     if(count >= capacitor) {
         capacitor += 256;
-        Variable* newly = static_cast<Variable*>(realloc(fields, sizeof(Variable) * capacitor));
+        T* newly   = static_cast<T*>(realloc(data, sizeof(T) * capacitor));
         if(!newly) {
             capacitor >>= 1;
             throw std::bad_alloc();
         }
-        fields = newly;
+        data = newly;
     }
-    new(fields + count) Variable(std::forward<Arg>(in));
+    new(data + count) T(std::forward<Arg>(in));
     ++count;
 }
 
@@ -443,12 +420,11 @@ template<typename Arg> void Structure::push(Arg&& in) {
 // get type enum
 template<typename T> constexpr EType typecode() {
     if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
-    if constexpr(std::is_enum_v<T>)                return typecode<typename std::underlying_type_t<T>>();
-    if constexpr(std::is_pointer_v<T>)             return EType::POINTER;
-    if constexpr(std::is_base_of_v<EInterface, T>) return EType::ENUM;
-    if constexpr(std::is_reference_v<T>)           return EType::REFERENCE;
-    if constexpr(std::is_union_v<T>)               return EType::UNION;
-    if constexpr(std::is_class_v<T>)               return EType::CLASS; //!< TODO: UClass 처럼 조건 되는 Class만 Class로 변경
+    if constexpr(std::is_enum_v<T>)      return EType::ENUM;
+    if constexpr(std::is_pointer_v<T>)   return EType::POINTER;
+    if constexpr(std::is_reference_v<T>) return EType::REFERENCE;
+    if constexpr(std::is_union_v<T>)     return EType::UNION;
+    if constexpr(std::is_class_v<T>)     return EType::CLASS;
     return EType::UNREGISTERED;
 }
 template<> constexpr EType typecode<void>()               { return EType::VOID; }
@@ -503,15 +479,20 @@ template<typename T> constexpr bool isSTL(const T&) {
 }
 
 template<> bool isSTL<EType>(const EType& code) {
-    const char* name = estring(code);
-    if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
-        return true; // read 4 byte
+    // const char* name = estring(code);
+    // if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
+    //     return true; // read 4 byte
+    // }
+    switch(code) {
+        case EType::STL_DEQUE:
+            return true;
     }
     return false;
 }
 
-template<typename T> inline constexpr bool isEnum() {
-    return std::is_base_of_v<EInterface, T>;
+template<typename T> constexpr bool isEnum() {
+    // return std::is_base_of_v<EInterface, T>;
+    return std::is_enum_v<T>;
 }
 
 template<typename T> inline constexpr bool isEnum(const T&) {
@@ -551,10 +532,21 @@ constexpr const char* typestring(EType code) {
     case EType::STD_STRING:         return "string";
     case EType::STL_DEQUE:          return "Deque";
     case EType::CONST:              return "const";
+    case EType::ENUM:               return "enum";
     }
 
     // error
     return "";
+}
+
+template<typename T> Registered registclass() {
+    Structure::reflect<T>();
+    return Registered::REGISTERED;
+}
+
+template<typename T> Registered registenum() {
+    Enumerate::reflect<T>();
+    return Registered::REGISTERED;
 }
 
 // clang-format on

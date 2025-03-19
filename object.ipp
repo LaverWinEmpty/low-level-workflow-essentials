@@ -103,7 +103,7 @@ template<> MetaClass* MetaClass::get<Object>() {
     return object.metaclass();
 }
 
-template<> const Structure& Structure::reflect<Object>() {
+template<> template<> const Structure& Structure::reflect<Object>() {
     static Structure EMPTY; // default
     return EMPTY;
 }
