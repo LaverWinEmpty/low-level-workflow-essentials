@@ -142,9 +142,9 @@
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
         virtual MetaClass* base() const override {                                                                     \
-            return MetaClass::make<BASE>();                                                                             \
+            return MetaClass::get<BASE>();                                                                             \
         }                                                                                                              \
-        virtual const FieldInfo& fields() const override;                                                               \
+        virtual const Structure& fields() const override;                                                              \
     };                                                                                                                 \
 public:                                                                                                                \
     virtual MetaClass* metaclass() const override {                                                                    \
@@ -219,16 +219,18 @@ public:                                                                         
     }
 
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
-    template<> const FieldInfo& reflect<TYPE>();                                                                       \
-    const FieldInfo& TYPE::TYPE##Meta::fields() const { return reflect<TYPE>(); }                                      \
-    template<> const FieldInfo& reflect<TYPE>() {                                                                      \
+    template<> const Structure& Structure::reflect<TYPE>();                                                            \
+    const Structure& TYPE::TYPE##Meta::fields() const {                                                                \
+        return Structure::reflect<TYPE>();                                                                             \
+    }                                                                                                                  \
+    template<> const Structure& Structure::reflect<TYPE>() {                                                           \
         using CLASS_NAME = TYPE;                                                                                       \
-        static FieldInfo result;                                                                                       \
+        static Structure result;                                                                                       \
         if(result.size() == 0) {                                                                                       \
-            result = MetaClass::make<TYPE>()->base()->fields(); // {
+            result = MetaClass::get<TYPE>()->base()->fields(); // {
 #define REGISTER_FIELD(NAME)                                                                                           \
-            result.push_back(                                                                                          \
-                MetaField {                                                                                            \
+            result.push(                                                                                               \
+                Variable {                                                                                             \
                     typeof<decltype(CLASS_NAME::NAME)>(),                                                              \
                     #NAME,                                                                                             \
                     sizeof(CLASS_NAME::NAME),                                                                          \
@@ -237,6 +239,12 @@ public:                                                                         
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
         }                                                                                                              \
+        Variable* newly = static_cast<Variable*>(realloc(result.fields, sizeof(Variable) * result.count));             \
+        if(!newly) {                                                                                                   \
+            throw std::bad_alloc();                                                                                    \
+        }                                                                                                              \
+        result.fields = newly;                                                                                         \
+        result.capacitor = result.count;                                                                               \
         return result;                                                                                                 \
     }
 

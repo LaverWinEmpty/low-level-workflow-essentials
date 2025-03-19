@@ -1,7 +1,7 @@
 #include "meta.hpp"
 #ifdef LWE_META_HEADER
 
-template<typename T> MetaClass* MetaClass::make() {
+template<typename T> MetaClass* MetaClass::get() {
     if(std::is_base_of_v<Object, T>) {
         static T dummy;
         return dummy.metaclass();
@@ -9,8 +9,8 @@ template<typename T> MetaClass* MetaClass::make() {
     return nullptr;
 }
 
-template<typename T> MetaClass* MetaClass::make(const T&) {
-    return make<T>();
+template<typename T> MetaClass* MetaClass::get(const T&) {
+    return get<T>();
 }
 
 // register estring type code
@@ -120,10 +120,10 @@ void Type::push(EType in) {
     }
 }
 
-template<typename T> static Type Type::make() {
-    Type type;
+template<typename T> static const Type& Type::reflect() {
+    static Type type;
     if(type.size() == 0) {
-        make<T>(&type);
+        reflect<T>(&type);
         for(auto itr : type) {
             type.hashed = (type.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
         }
@@ -131,22 +131,22 @@ template<typename T> static Type Type::make() {
     return type;
 }
 
-template<typename T> static void Type::make(Type* out) {
+template<typename T> static void Type::reflect(Type* out) {
     if constexpr(std::is_const_v<T>) {
         out->push(EType::CONST);
-        make<typename std::remove_const_t<T>>(out);
+        reflect<typename std::remove_const_t<T>>(out);
     }
 
     else if constexpr(isSTL<T>()) {
         out->push(ContainerCode<T>::VALUE);
-        make<typename T::value_type>(out);
+        reflect<typename T::value_type>(out);
     }
 
     else if constexpr(std::is_pointer_v<T>) {
         // POINTER CONST TYPENAME: const typeanme*
         // CONST POINTER TYPENAME: typename* const
         out->push(EType::POINTER);
-        make<typename std::remove_pointer_t<T>>(out); // dereference
+        reflect<typename std::remove_pointer_t<T>>(out); // dereference
     }
 
     else if constexpr(std::is_reference_v<T>) {
@@ -155,10 +155,10 @@ template<typename T> static void Type::make(Type* out) {
         if(std::is_const_v<Temp>) {
             out->push(EType::CONST);
             out->push(EType::REFERENCE);
-            make<typename std::remove_const_t<Temp>>(out);
+            reflect<typename std::remove_const_t<Temp>>(out);
         } else {
             out->push(EType::REFERENCE);
-            make<Temp>(out); // dereference
+            reflect<Temp>(out); // dereference
         }
     } else out->push(typecode<T>()); // primitive
 }
@@ -347,6 +347,98 @@ size_t Type::size() const {
     return count;
 }
 
+Structure::Structure(const Structure& in) {
+    fields = static_cast<Variable*>(malloc(sizeof(Variable) * in.capacitor));
+    if(!fields) {
+        throw std::bad_alloc();
+    }
+    std::memcpy(fields, in.fields, sizeof(Variable) * in.capacitor);
+    capacitor = in.capacitor;
+    count     = in.count;
+    return;
+}
+
+Structure::Structure(Structure&& in) noexcept: fields(in.fields), count(in.count), capacitor(in.capacitor) {
+    in.fields    = nullptr;
+    in.capacitor = 0;
+    in.count     = 0;
+}
+
+Structure::Structure(const std::initializer_list<Variable>& in): count(0), capacitor(in.size()) {
+    fields = static_cast<Variable*>(malloc(sizeof(Variable) * capacitor));
+    if(!fields) {
+        throw std::bad_alloc();
+    }
+    for(auto& i : in) {
+        fields[count++] = i;
+    }
+}
+
+Structure::~Structure() {
+    if(fields) {
+        free(fields);
+    }
+}
+
+Structure& Structure::operator=(const Structure in) {
+    if(fields) {
+        free(fields);
+    }
+    fields = static_cast<Variable*>(malloc(sizeof(Variable) * in.capacitor));
+    if(!fields) {
+        throw std::bad_alloc();
+    }
+    std::memcpy(fields, in.fields, sizeof(Variable) * in.capacitor);
+    count     = in.count;
+    capacitor = in.capacitor;
+    return *this;
+}
+
+Structure& Structure::operator=(Structure&& in) noexcept {
+    if(this != &in) {
+        if(fields) {
+            free(fields);
+        }
+        fields       = in.fields;
+        count        = in.count;
+        capacitor    = in.capacitor;
+        in.fields    = nullptr;
+        in.capacitor = 0;
+        in.count     = 0;
+    }
+    return *this;
+}
+
+const Variable& Structure::operator[](size_t in) const {
+    return fields[in];
+}
+
+const Variable* Structure::begin() const {
+    return fields;
+}
+
+const Variable* Structure::end() const {
+    return fields + count;
+}
+
+size_t Structure::size() const {
+    return count;
+}
+
+template<typename Arg> void Structure::push(Arg&& in) {
+    if(count >= capacitor) {
+        capacitor += 256;
+        Variable* newly = static_cast<Variable*>(realloc(fields, sizeof(Variable) * capacitor));
+        if(!newly) {
+            capacitor >>= 1;
+            throw std::bad_alloc();
+        }
+        fields = newly;
+    }
+    new(fields + count) Variable(std::forward<Arg>(in));
+    ++count;
+}
+
 // clang-format off
 // get type enum
 template<typename T> constexpr EType typecode() {
@@ -395,12 +487,11 @@ const char* typestring(const Type& in) {
 }
 
 template<typename T> const Type& typeof() {
-    static Type type = Type::make<T>();
-    return type;
+    return Type::reflect<T>();
 }
 
 template<typename T> const Type& typeof(const T&) {
-    return typeof<T>();
+    return Type::reflect<T>();
 }
 
 template<typename T> constexpr bool isSTL() {

@@ -14,11 +14,11 @@ public:
         const char*      name() const override { return "Enum"; }
         size_t           size() const override { return sizeof(*this); }
         MetaClass*       base() const override { return nullptr; }
-        const FieldInfo& fields() const override {
-            static const FieldInfo VECTOR = {
-                MetaField{ typecode<Underlying>(), "value", sizeof(0), sizeof(void*) }
+        const Structure& fields() const override {
+            static const Structure STATICS = {
+                Variable{ typecode<Underlying>(), "value", sizeof(0), sizeof(void*) }
             };
-            return VECTOR;
+            return STATICS;
         }
     };
 

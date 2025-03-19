@@ -1,7 +1,7 @@
 #ifdef LWE_OBJECT_HEADER
 
 std::string Object::serialize() const {
-    const FieldInfo& prop = metaclass()->fields();
+    const Structure& prop = metaclass()->fields();
     if(prop.size() == 0) {
         return {};
     }
@@ -24,7 +24,7 @@ std::string Object::serialize() const {
 void Object::deserialize(const std::string& in) {
     char* out = const_cast<char*>(reinterpret_cast<const char*>(this));
 
-    const FieldInfo& prop = metaclass()->fields();
+    const Structure& prop = metaclass()->fields();
     if(prop.size() == 0) {
         assert(false);
     }
@@ -98,7 +98,7 @@ void Object::deserialize(Object* out, const std::string& in) {
     out->deserialize(in);
 }
 
-template<> MetaClass* MetaClass::make<Object>() {
+template<> MetaClass* MetaClass::get<Object>() {
     Object object;
     return object.metaclass();
 }

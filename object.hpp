@@ -9,8 +9,8 @@ class Object {
     struct ObjectMeta: MetaClass {
         virtual const char*      name() const override { return "Object"; }
         virtual size_t           size() const override { return sizeof(Object); }
-        virtual const FieldInfo& fields() const override {
-            static const FieldInfo EMPTY; // default
+        virtual const Structure& fields() const override {
+            static Structure EMPTY; // default
             return EMPTY;
         }
         virtual MetaClass* base() const override { return nullptr; }
@@ -21,7 +21,6 @@ public:
         static ObjectMeta meta;
         return &meta;
     }
-    virtual MetaClass* metabase() { return nullptr; }
 
 public:
     std::string serialize() const;
