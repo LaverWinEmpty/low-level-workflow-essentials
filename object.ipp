@@ -103,4 +103,25 @@ template<> MetaClass* MetaClass::get<Object>() {
     return object.metaclass();
 }
 
+template<> const Structure& Structure::reflect<Object>() {
+    static Structure EMPTY; // default
+    return EMPTY;
+}
+
+const char* Object::ObjectMeta::name() const {
+    return "Object";
+}
+
+size_t Object::ObjectMeta::size() const {
+    return sizeof(Object);
+}
+
+const Structure& Object::ObjectMeta::fields() const {
+    return Structure::reflect<Object>();
+}
+
+MetaClass* Object::ObjectMeta::base() const {
+    return nullptr;
+}
+
 #endif
