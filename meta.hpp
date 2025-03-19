@@ -182,52 +182,55 @@ private:
 using Enumerate = Reflect<Enum>;
 using Structure = Reflect<Field>;
 
+enum class Registered : bool {
+    REGISTERED = 1
+};
+
 struct MetaClass {
+    template<typename T> friend Registered registclass();
+
 public:
     template<typename T> static MetaClass* get();
     template<typename T> static MetaClass* get(const T&);
+    static MetaClass*                      get(const char*);
+
 public:
     virtual const char*      name() const   = 0;
     virtual size_t           size() const   = 0;
     virtual const Structure& fields() const = 0;
     virtual MetaClass*       base() const   = 0;
+
+private:
+    inline static std::unordered_map<const char*, MetaClass*> registry;
 };
 
 struct MetaEnum {
-public:
-    template<typename T> static MetaEnum* get();
-    template<typename T> static MetaEnum* get(const T&);
+    template<typename T> friend Registered registenum();
+    friend MetaEnum*                       metaclass(const char*);
+
 public:
     virtual const char*      name() const  = 0;
     virtual size_t           size() const  = 0;
     virtual const Enumerate& enums() const = 0;
+
+private:
+    inline static std::unordered_map<const char*, MetaEnum*> registry;
 };
 
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
 template<> bool                     isSTL<EType>(const EType&); //!< check container type code
 
-template<typename T> constexpr bool isEnum();                    //!< check enum explicit
-template<typename T> constexpr bool isEnum(const T&);            //!< check enum implicit
-template<> bool                     isEnum<EType>(const EType&); //!< check enum type code
+template<typename T> Registered registclass();
+template<typename T> Registered registenum();
 
-template<typename E> E evalue(size_t);        //!< declare index to enum for template specialization
-template<typename E> E evalue(const string&); //!< declare string to enum for template specialization
-
-// reflect enum max
-template<typename E> size_t emax(E) {
-    return static_cast<size_t>(eval<E>(-1));
-}
+// TODO: class도 이거로 빼는 방식으로 변경 MetaClass::get 삭제
+template<typename T> MetaEnum* metaenum();
+template<typename T> MetaEnum* metaenum(const T&);
+MetaEnum*                      metaclass(const char*);
 
 template<> struct std::hash<Type> {
     size_t operator()(const Type& obj) const { return obj.hash(); }
 };
-
-enum class Registered : bool {
-    REGISTERED = 1
-};
-
-template<typename T> Registered registclass();
-template<typename T> Registered registenum();
 
 #endif

@@ -153,8 +153,14 @@ public:                                                                         
     }                                                                                                                  \
     using Base = BASE
 
+
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
     template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
+    template<> Registered registclass<TYPE>() {                                                                        \
+        Structure::reflect<TYPE>();                                                                                    \
+        MetaClass::registry.insert({ #TYPE, MetaClass::get<TYPE>() });                                                 \
+        return Registered::REGISTERED;                                                                                 \
+    }                                                                                                                  \
     Registered REGISTERED_CLASS_##TYPE = registclass<TYPE>();                                                          \
     const Structure& TYPE::TYPE##Meta::fields() const {                                                                \
         return Structure::reflect<TYPE>();                                                                             \
@@ -183,8 +189,8 @@ public:                                                                         
     }
 
 #define REGISTER_ENUM_BEGIN(TYPE)                                                                                      \
+    struct TYPE##Meta;                                                                                                 \
     template<> template<> const Enumerate& Enumerate::reflect<TYPE>();                                                 \
-    Registered REGISTERED_FLAG_ENUM_##TYPE = registenum<TYPE>();                                                       \
     struct TYPE##Meta: MetaEnum {                                                                                      \
         virtual const char* name() const {                                                                             \
             return #TYPE;                                                                                              \
@@ -196,13 +202,16 @@ public:                                                                         
             return Enumerate::reflect<TYPE>();                                                                         \
         }                                                                                                              \
     };                                                                                                                 \
-    template<> MetaEnum* MetaEnum::get<TYPE>() {                                                                       \
-        static TYPE##Meta meta;                                                                                        \
-        return &meta;                                                                                                  \
+    template<> MetaEnum* metaenum<TYPE>() {                                                                            \
+        static TYPE##Meta DUMMY;                                                                                       \
+        return &DUMMY;                                                                                                 \
     }                                                                                                                  \
-    template<> MetaEnum* MetaEnum::get<TYPE>(const TYPE&) {                                                            \
-        return MetaEnum::get<TYPE>();                                                                                  \
+    template<> Registered registenum<TYPE>() {                                                                         \
+        Enumerate::reflect<TYPE>();                                                                                    \
+        MetaEnum::registry.insert({ #TYPE, metaenum<TYPE>() });                                                        \
+        return Registered::REGISTERED;                                                                                 \
     }                                                                                                                  \
+    Registered REGISTERED_FLAG_ENUM_##TYPE = registenum<TYPE>();                                                       \
     template<> template<> const Enumerate& Enumerate::reflect<TYPE>() {                                                \
         using enum TYPE;                                                                                               \
         const char* NAME = #TYPE;                                                                                      \

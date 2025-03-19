@@ -13,6 +13,13 @@ template<typename T> MetaClass* MetaClass::get(const T&) {
     return get<T>();
 }
 
+MetaClass* MetaClass::get(const char* in) {
+    if(registry.find(in) == registry.end()) {
+        return nullptr;
+    }
+    return registry[in];
+}
+
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -490,17 +497,20 @@ template<> bool isSTL<EType>(const EType& code) {
     return false;
 }
 
-template<typename T> constexpr bool isEnum() {
-    // return std::is_base_of_v<EInterface, T>;
-    return std::is_enum_v<T>;
+template<typename T> MetaEnum* metaenum() {
+    return nullptr;
 }
 
-template<typename T> inline constexpr bool isEnum(const T&) {
-    return isEnum<T>();
+template<typename T> MetaEnum* metaenum(const T&) {
+    return metaenum<T>();
 }
 
-template<> inline bool isEnum(const EType& code) {
-    return code == EType::ENUM;
+// DOTO: 이거 string을 T로 인식함 특수화 해야됨
+MetaEnum* metaclass(const char* in) {
+    if(MetaEnum::registry.find(in) == MetaEnum::registry.end()) {
+        return nullptr;
+    }
+    return MetaEnum::registry[in];
 }
 
 // clang-format off
@@ -537,16 +547,6 @@ constexpr const char* typestring(EType code) {
 
     // error
     return "";
-}
-
-template<typename T> Registered registclass() {
-    Structure::reflect<T>();
-    return Registered::REGISTERED;
-}
-
-template<typename T> Registered registenum() {
-    Enumerate::reflect<T>();
-    return Registered::REGISTERED;
 }
 
 // clang-format on
