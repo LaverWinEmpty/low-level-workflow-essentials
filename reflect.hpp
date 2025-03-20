@@ -1,5 +1,11 @@
 #ifndef LWE_INLINE_HEADER
 #define LWE_INLINE_HEADER
+
+#include "meta.hpp"
+#include "container.hpp"
+#include "object.hpp"
+#include "serialize.hpp"
+
 #include "meta.ipp"
 #include "serialize.ipp"
 #include "object.ipp"

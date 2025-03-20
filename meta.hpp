@@ -4,8 +4,9 @@
 #include "hal.hpp"
 #include "common.hpp"
 
-std::unordered_map<string, std::vector<std::pair<string, uint64>>> enumerate;
-
+/**
+ * @brief type codes
+ */
 enum class EType : uint8 {
     UNREGISTERED,
     VOID,
@@ -36,14 +37,8 @@ enum class EType : uint8 {
     CONST,
 };
 
-// get container type code structur
-template<typename, typename = std::void_t<>> struct ContainerCode {
-    static constexpr EType VALUE = EType::UNREGISTERED;
-};
-
 /**
- * @brief
- *
+ * @brief type info
  */
 struct Type {
     template<typename T> static const Type& reflect();
@@ -90,16 +85,16 @@ private:
 };
 
 // clang-format off
-template<typename T> constexpr EType typecode();                     //!< reflect type enum value
+template<typename T> constexpr EType typecode(); //!< get type code
 
 constexpr const char*            typestring(EType);      //!< reflect type name string by enum
 template<typename T> const char* typestring();            //!< reflect type name string explicit
 template<typename T> const char* typestring(const T&);    //!< reflect type name string implicit
 const char*                      typestring(const Type&); //!< reflect type name
 
-template<typename T> const Type& typeof();          //!< reflect typeinfo by template
-template<typename T> const Type& typeof(const T&);  //!< reflect typeinfo by argument
-template<typename T> void        typeof(Type*);     //!< pirvate
+template<typename T> const Type& typeof();         //!< reflect typeinfo by template
+template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
+template<typename T> void        typeof(Type*);    //!< pirvate
 // clang-format on
 
 struct Variable {
@@ -214,10 +209,6 @@ private:
 private:
     static Map& registry();
 };
-
-template<typename T> constexpr bool isSTL();                    //!< check container explicit
-template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
-template<> bool                     isSTL<EType>(const EType&); //!< check container type code
 
 template<typename T> Registered registclass();
 template<typename T> Registered registenum();

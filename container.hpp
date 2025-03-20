@@ -1,7 +1,7 @@
 #ifndef LWE_CONTAINER_HEADER
 #define LWE_CONTAINER_HEADER
 
-#include "hal.hpp"
+#include "meta.hpp"
 
 LWE_BEGIN
 
@@ -33,5 +33,14 @@ public:
 } // namespace stl
 
 LWE_END
+
+template<typename T> constexpr bool isSTL();                    //!< check container explicit
+template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
+template<> bool                     isSTL<EType>(const EType&); //!< check container type code
+
+// get container type code structur
+template<typename, typename = std::void_t<>> struct ContainerCode {
+    static constexpr EType VALUE = EType::UNREGISTERED;
+};
 
 #endif

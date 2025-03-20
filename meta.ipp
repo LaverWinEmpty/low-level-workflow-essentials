@@ -467,26 +467,6 @@ template<typename T> const Type& typeof(const T&) {
     return Type::reflect<T>();
 }
 
-template<typename T> constexpr bool isSTL() {
-    return std::is_base_of_v<LWE::stl::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
-};
-
-template<typename T> constexpr bool isSTL(const T&) {
-    return isSTL<T>();
-}
-
-template<> bool isSTL<EType>(const EType& code) {
-    // const char* name = estring(code);
-    // if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
-    //     return true; // read 4 byte
-    // }
-    switch(code) {
-        case EType::STL_DEQUE:
-            return true;
-    }
-    return false;
-}
-
 template<typename T> T* Register<T>::get(const char* in) {
     return get(string{ in });
 }
