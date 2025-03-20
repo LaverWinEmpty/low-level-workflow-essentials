@@ -1,7 +1,9 @@
+#include "object.hpp"
 #ifdef LWE_OBJECT_HEADER
 
 std::string Object::serialize() const {
-    const Structure& prop = metaclass()->fields();
+
+    const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
         return {};
     }
@@ -24,7 +26,7 @@ std::string Object::serialize() const {
 void Object::deserialize(const std::string& in) {
     char* out = const_cast<char*>(reinterpret_cast<const char*>(this));
 
-    const Structure& prop = metaclass()->fields();
+    const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
         assert(false);
     }
@@ -98,30 +100,39 @@ void Object::deserialize(Object* out, const std::string& in) {
     out->deserialize(in);
 }
 
-template<> MetaClass* MetaClass::get<Object>() {
-    Object object;
-    return object.metaclass();
-}
-
 template<> template<> const Structure& Structure::reflect<Object>() {
     static Structure EMPTY; // default
     return EMPTY;
 }
 
-const char* Object::ObjectMeta::name() const {
+template<> Registered registclass<Object>() {
+    Structure::reflect<Object>();
+    Register<Object>::set<Object>("Object");
+    Register<Class>::set<ObjectMeta>("Object");
+    return Registered::REGISTERED;
+}
+
+const char* ObjectMeta::name() const {
     return "Object";
 }
 
-size_t Object::ObjectMeta::size() const {
+size_t ObjectMeta::size() const {
     return sizeof(Object);
 }
 
-const Structure& Object::ObjectMeta::fields() const {
+const Structure& ObjectMeta::fields() const {
     return Structure::reflect<Object>();
 }
 
-MetaClass* Object::ObjectMeta::base() const {
+Class* ObjectMeta::base() const {
     return nullptr;
 }
+
+Class* Object::meta() const {
+    static Class* metacls = Register<Class>::get("Object");
+    return metacls;
+}
+
+Registered Object_REGISTERED = registclass<Object>();
 
 #endif

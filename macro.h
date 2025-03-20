@@ -133,43 +133,48 @@
  * @brief register metadata inner class
  */
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
-    friend struct MetaClass;                                                                                           \
-    struct TYPE##Meta: MetaClass {                                                                                     \
+public:                                                                                                                \
+    virtual Class* meta() const override {                                                                             \
+        static Class* metacls = Register<Class>::get(#TYPE);                                                           \
+        return metacls;                                                                                                \
+    }                                                                                                                  \
+    using Base = BASE;                                                                                                 \
+private:
+
+#define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
+    struct TYPE##Meta: Class {                                                                                         \
         virtual const char* name() const override {                                                                    \
             return #TYPE;                                                                                              \
         }                                                                                                              \
         virtual size_t size() const override {                                                                         \
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
-        virtual MetaClass* base() const override {                                                                     \
-            return MetaClass::get<BASE>();                                                                             \
+        virtual Class* base() const override {                                                                         \
+            return metaclass<TYPE::Base>();                                                                            \
         }                                                                                                              \
         virtual const Structure& fields() const override;                                                              \
     };                                                                                                                 \
-public:                                                                                                                \
-    virtual MetaClass* metaclass() const override {                                                                    \
-        static TYPE##Meta meta;                                                                                        \
-        return &meta;                                                                                                  \
-    }                                                                                                                  \
-    using Base = BASE
-
-
-#define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
     template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
+    template<> const Object* statics<TYPE>() {                                                                         \
+        static const Object* OBJ = Register<Object>::get(#TYPE);                                                       \
+        return OBJ;                                                                                                    \
+    }                                                                                                                  \
     template<> Registered registclass<TYPE>() {                                                                        \
         Structure::reflect<TYPE>();                                                                                    \
-        MetaClass::registry.insert({ #TYPE, MetaClass::get<TYPE>() });                                                 \
+        Register<Object>::set<TYPE>(#TYPE);                                                                            \
+        Register<Class>::set<TYPE##Meta>(#TYPE);                                                                       \
         return Registered::REGISTERED;                                                                                 \
     }                                                                                                                  \
-    Registered REGISTERED_CLASS_##TYPE = registclass<TYPE>();                                                          \
-    const Structure& TYPE::TYPE##Meta::fields() const {                                                                \
-        return Structure::reflect<TYPE>();                                                                             \
+    Registered TYPE##_RGISTERED = registclass<TYPE>();                                                                 \
+    const Structure& TYPE##Meta::fields() const {                                                                      \
+        static const Structure& REF = Structure::reflect<TYPE>();                                                      \
+        return REF;                                                                                                    \
     }                                                                                                                  \
     template<> template<> const Structure& Structure::reflect<TYPE>() {                                                \
         using CLASS = TYPE;                                                                                            \
         const char* NAME = #TYPE;                                                                                      \
-        auto result = registry.find(NAME);                                                                             \
-        if (result != registry.end()) {                                                                                \
+        auto result = map.find(NAME);                                                                             \
+        if (result != map.end()) {                                                                                \
         	return result->second;                                                                                     \
         }                                                                                                              \
         Structure meta; // {
@@ -184,14 +189,14 @@ public:                                                                         
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
         meta.shrink();                                                                                                 \
-        registry.insert({ NAME, meta });                                                                               \
-        return registry[NAME];                                                                                         \
+        map.insert({ NAME, meta });                                                                               \
+        return map[NAME];                                                                                         \
     }
 
 #define REGISTER_ENUM_BEGIN(TYPE)                                                                                      \
     struct TYPE##Meta;                                                                                                 \
     template<> template<> const Enumerate& Enumerate::reflect<TYPE>();                                                 \
-    struct TYPE##Meta: MetaEnum {                                                                                      \
+    struct TYPE##Meta: Enum {                                                                                          \
         virtual const char* name() const {                                                                             \
             return #TYPE;                                                                                              \
         }                                                                                                              \
@@ -199,33 +204,34 @@ public:                                                                         
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
         virtual const Enumerate& enums() const {                                                                       \
-            return Enumerate::reflect<TYPE>();                                                                         \
+            static const Enumerate& REF = Enumerate::reflect<TYPE>();                                                  \
+            return REF;                                                                                                \
         }                                                                                                              \
     };                                                                                                                 \
-    template<> MetaEnum* metaenum<TYPE>() {                                                                            \
-        static TYPE##Meta DUMMY;                                                                                       \
-        return &DUMMY;                                                                                                 \
+    template<> Enum* metaenum<TYPE>() {                                                                                \
+        static Enum* ENUM = Register<Enum>::get(#TYPE);                                                                \
+        return ENUM;                                                                                                   \
     }                                                                                                                  \
     template<> Registered registenum<TYPE>() {                                                                         \
         Enumerate::reflect<TYPE>();                                                                                    \
-        MetaEnum::registry.insert({ #TYPE, metaenum<TYPE>() });                                                        \
+        Register<Enum>::set<TYPE##Meta>(#TYPE);                                                                        \
         return Registered::REGISTERED;                                                                                 \
     }                                                                                                                  \
-    Registered REGISTERED_FLAG_ENUM_##TYPE = registenum<TYPE>();                                                       \
+    Registered TYPE##_REGISTERED = registenum<TYPE>();                                                                 \
     template<> template<> const Enumerate& Enumerate::reflect<TYPE>() {                                                \
         using enum TYPE;                                                                                               \
         const char* NAME = #TYPE;                                                                                      \
-        auto result = registry.find(NAME);                                                                             \
-        if (result != registry.end()) {                                                                                \
+        auto result = map.find(NAME);                                                                                  \
+        if (result != map.end()) {                                                                                     \
         	return result->second;                                                                                     \
         }                                                                                                              \
         Enumerate meta; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
-        meta.push(Enum{ static_cast<uint64>(VALUE), #VALUE }) // }
+        meta.push(Enumerator{ static_cast<uint64>(VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
         meta.shrink();                                                                                                 \
-        registry.insert({ NAME, meta });                                                                               \
-        return registry[NAME];                                                                                         \
+        map.insert({ NAME, meta });                                                                                    \
+        return map[NAME];                                                                                              \
     }
 
 /**
@@ -233,8 +239,8 @@ public:                                                                         
  */
 #define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
     template<typename T> struct ContainerCode<T, std::void_t<typename T::CONTAINER##Element>> {                        \
-        using enum EType;                                                                                           \
-        static constexpr EType VALUE = ENUM;                                                                         \
+        using enum EType;                                                                                              \
+        static constexpr EType VALUE = ENUM;                                                                           \
     }
 
 /**

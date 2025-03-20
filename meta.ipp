@@ -1,25 +1,6 @@
 #include "meta.hpp"
 #ifdef LWE_META_HEADER
 
-template<typename T> MetaClass* MetaClass::get() {
-    if(std::is_base_of_v<Object, T>) {
-        static T dummy;
-        return dummy.metaclass();
-    }
-    return nullptr;
-}
-
-template<typename T> MetaClass* MetaClass::get(const T&) {
-    return get<T>();
-}
-
-MetaClass* MetaClass::get(const char* in) {
-    if(registry.find(in) == registry.end()) {
-        return nullptr;
-    }
-    return registry[in];
-}
-
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -406,7 +387,7 @@ template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get(cons
 }
 
 template<typename T> const Reflect<T>& Reflect<T>::get(const char* in) {
-    return registry[in];
+    return map[in];
 }
 
 template<typename T> template<typename Arg> void Reflect<T>::push(Arg&& in) {
@@ -424,34 +405,31 @@ template<typename T> template<typename Arg> void Reflect<T>::push(Arg&& in) {
 }
 
 // clang-format off
-// get type enum
 template<typename T> constexpr EType typecode() {
     if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
-    if constexpr(std::is_enum_v<T>)      return EType::ENUM;
-    if constexpr(std::is_pointer_v<T>)   return EType::POINTER;
-    if constexpr(std::is_reference_v<T>) return EType::REFERENCE;
-    if constexpr(std::is_union_v<T>)     return EType::UNION;
-    if constexpr(std::is_class_v<T>)     return EType::CLASS;
-    return EType::UNREGISTERED;
+    if constexpr(std::is_enum_v<T>)                         return EType::ENUM;
+    if constexpr(std::is_pointer_v<T>)                      return EType::POINTER;
+    if constexpr(std::is_reference_v<T>)                    return EType::REFERENCE;
+    if constexpr(std::is_union_v<T>)                        return EType::UNION;
+    if constexpr(std::is_class_v<T>)                        return EType::CLASS;
+    if constexpr(std::is_void_v<T>)                         return EType::VOID;
+    if constexpr(std::is_same_v<T, bool>)                   return EType::BOOL;
+    if constexpr(std::is_same_v<T, signed char>)            return EType::SIGNED_CHAR;
+    if constexpr(std::is_same_v<T, unsigned char>)          return EType::UNSIGNED_CHAR;
+    if constexpr(std::is_same_v<T, char>)                   return EType::CHAR;
+    if constexpr(std::is_same_v<T, signed short>)           return EType::SIGNED_SHORT;
+    if constexpr(std::is_same_v<T, unsigned short>)         return EType::UNSIGNED_SHORT;
+    if constexpr(std::is_same_v<T, signed int>)             return EType::SIGNED_INT;
+    if constexpr(std::is_same_v<T, unsigned int>)           return EType::UNSIGNED_INT;
+    if constexpr(std::is_same_v<T, signed long>)            return EType::SIGNED_LONG;
+    if constexpr(std::is_same_v<T, unsigned long>)          return EType::UNSIGNED_LONG;
+    if constexpr(std::is_same_v<T, wchar_t>)                return EType::WCHAR_T;
+    if constexpr(std::is_same_v<T, float>)                  return EType::FLOAT;
+    if constexpr(std::is_same_v<T, double>)                 return EType::DOUBLE;
+    if constexpr(std::is_same_v<T, long double>)            return EType::LONG_DOUBLE;
+    if constexpr(std::is_same_v<T, std::string>)            return EType::STD_STRING;
+    else                                                    return EType::UNREGISTERED;
 }
-template<> constexpr EType typecode<void>()               { return EType::VOID; }
-template<> constexpr EType typecode<signed int>()         { return EType::SIGNED_INT; }
-template<> constexpr EType typecode<signed char>()        { return EType::SIGNED_CHAR; }
-template<> constexpr EType typecode<signed short>()       { return EType::SIGNED_SHORT; }
-template<> constexpr EType typecode<signed long>()        { return EType::SIGNED_LONG; }
-template<> constexpr EType typecode<signed long long>()   { return EType::SIGNED_LONG_LONG; }
-template<> constexpr EType typecode<unsigned int>()       { return EType::UNSIGNED_INT; }
-template<> constexpr EType typecode<unsigned char>()      { return EType::UNSIGNED_CHAR; }
-template<> constexpr EType typecode<unsigned short>()     { return EType::UNSIGNED_SHORT; }
-template<> constexpr EType typecode<unsigned long>()      { return EType::UNSIGNED_LONG; }
-template<> constexpr EType typecode<unsigned long long>() { return EType::UNSIGNED_LONG_LONG; }
-template<> constexpr EType typecode<bool>()               { return EType::BOOL; }
-template<> constexpr EType typecode<char>()               { return EType::CHAR; }
-template<> constexpr EType typecode<wchar_t>()            { return EType::WCHAR_T; }
-template<> constexpr EType typecode<float>()              { return EType::FLOAT; }
-template<> constexpr EType typecode<double>()             { return EType::DOUBLE; }
-template<> constexpr EType typecode<long double>()        { return EType::LONG_DOUBLE; }
-template<> constexpr EType typecode<string>()             { return EType::STD_STRING; }
 // clang-format on
 
 // call by template
@@ -497,20 +475,90 @@ template<> bool isSTL<EType>(const EType& code) {
     return false;
 }
 
-template<typename T> MetaEnum* metaenum() {
+template<typename T> T* Register<T>::get(const char* in) {
+    return get(string{ in });
+}
+
+template<typename T> T* Register<T>::get(const string& in) {
+    auto result = registry().find(in);
+    if(result != registry().end()) {
+        return result->second;
+    }
     return nullptr;
 }
 
-template<typename T> MetaEnum* metaenum(const T&) {
+template<typename T> template<typename U> void Register<T>::set(const char* in) {
+    set<U>(string{ in });
+}
+
+template<typename T> template<typename U> void Register<T>::set(const string& in) {
+    registry().insert({ in, static_cast<T*>(new U()) });
+}
+
+template<typename T> Register<T>::~Register() {
+    for(auto& it : map) {
+        delete it.second;
+    }
+}
+
+template<typename T> auto Register<T>::registry() -> Map& {
+    static Register<T> statics;
+    return statics.map;
+}
+
+template<typename T> const Object* statics() {
+    return nullptr;
+}
+
+template<typename T> const Object* statics(const T&) {
+    return statics<T>();
+}
+
+const Object* statics(const char* in) {
+    return statics(string{ in });
+}
+
+const Object* statics(const string& in) {
+    if(Object::map.find(in) == Object::map.end()) {
+        return nullptr;
+    }
+    return Object::map[in];
+}
+
+template<typename T> Class* metaclass() {
+    const Object* ptr = statics<T>();
+    if(ptr) {
+        return ptr->meta();
+    }
+    return nullptr;
+}
+
+template<typename T> Class* metaclass(const T&) {
+    return metaclass<T>();
+}
+
+Class* metaclass(const char* in) {
+    return metaclass(string{ in });
+}
+
+Class* metaclass(const string& in) {
+    return Register<Class>::get(in);
+}
+
+template<typename T> Enum* metaenum() {
+    return nullptr;
+}
+
+template<typename T> Enum* metaenum(const T&) {
     return metaenum<T>();
 }
 
-// DOTO: 이거 string을 T로 인식함 특수화 해야됨
-MetaEnum* metaclass(const char* in) {
-    if(MetaEnum::registry.find(in) == MetaEnum::registry.end()) {
-        return nullptr;
-    }
-    return MetaEnum::registry[in];
+Enum* metaenum(const char* in) {
+    return metaenum(string{ in });
+}
+
+Enum* metaenum(const string& in) {
+    return Register<Enum>::get(in);
 }
 
 // clang-format off

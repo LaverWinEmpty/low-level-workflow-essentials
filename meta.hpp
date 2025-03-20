@@ -6,7 +6,7 @@
 
 std::unordered_map<string, std::vector<std::pair<string, uint64>>> enumerate;
 
-enum class EType : int8 {
+enum class EType : uintptr_t {
     UNREGISTERED,
     VOID,
     SIGNED_INT,
@@ -42,7 +42,8 @@ template<typename, typename = std::void_t<>> struct ContainerCode {
 };
 
 /**
- * @brief type code: primitive type has 1 element, but pointer, reference, template, etc has more elements
+ * @brief
+ *
  */
 struct Type {
     template<typename T> static const Type& reflect();
@@ -90,24 +91,6 @@ private:
 
 // clang-format off
 template<typename T> constexpr EType typecode();                     //!< reflect type enum value
-template<> constexpr           EType typecode<void>();               //!< reflect type enum value
-template<> constexpr           EType typecode<signed int>();         //!< reflect type enum value
-template<> constexpr           EType typecode<signed char>();        //!< reflect type enum value
-template<> constexpr           EType typecode<signed short>();       //!< reflect type enum value
-template<> constexpr           EType typecode<signed long>();        //!< reflect type enum value
-template<> constexpr           EType typecode<signed long long>();   //!< reflect type enum value
-template<> constexpr           EType typecode<unsigned int>();       //!< reflect type enum value
-template<> constexpr           EType typecode<unsigned char>();      //!< reflect type enum value
-template<> constexpr           EType typecode<unsigned short>();     //!< reflect type enum value
-template<> constexpr           EType typecode<unsigned long>();      //!< reflect type enum value
-template<> constexpr           EType typecode<unsigned long long>(); //!< reflect type enum value
-template<> constexpr           EType typecode<bool>();               //!< reflect type enum value
-template<> constexpr           EType typecode<char>();               //!< reflect type enum value
-template<> constexpr           EType typecode<wchar_t>();            //!< reflect type enum value
-template<> constexpr           EType typecode<float>();              //!< reflect type enum value
-template<> constexpr           EType typecode<double>();             //!< reflect type enum value
-template<> constexpr           EType typecode<long double>();        //!< reflect type enum value
-template<> constexpr           EType typecode<string>();             //!< reflect type enum value
 
 constexpr const char*            typestring(EType);      //!< reflect type name string by enum
 template<typename T> const char* typestring();            //!< reflect type name string explicit
@@ -129,7 +112,7 @@ struct Field: Variable {
     size_t offset;
 };
 
-struct Enum {
+struct Enumerator {
     uint64      value;
     const char* name;
 };
@@ -176,45 +159,59 @@ private:
     size_t count     = 0;
 
 private:
-    inline static std::unordered_map<const char*, Reflect<T>> registry;
+    inline static std::unordered_map<const char*, Reflect<T>> map;
 };
 
-using Enumerate = Reflect<Enum>;
+using Enumerate = Reflect<Enumerator>;
 using Structure = Reflect<Field>;
 
 enum class Registered : bool {
     REGISTERED = 1
 };
 
-struct MetaClass {
+struct Class {
+    friend class Object;
     template<typename T> friend Registered registclass();
-
-public:
-    template<typename T> static MetaClass* get();
-    template<typename T> static MetaClass* get(const T&);
-    static MetaClass*                      get(const char*);
+    friend Class*                          metaclass(const string&);
 
 public:
     virtual const char*      name() const   = 0;
     virtual size_t           size() const   = 0;
     virtual const Structure& fields() const = 0;
-    virtual MetaClass*       base() const   = 0;
-
-private:
-    inline static std::unordered_map<const char*, MetaClass*> registry;
+    virtual const Class*     base() const   = 0;
 };
 
-struct MetaEnum {
+struct Enum {
     template<typename T> friend Registered registenum();
-    friend MetaEnum*                       metaclass(const char*);
+    friend Enum*                           metaenum(const string&);
 
 public:
     virtual const char*      name() const  = 0;
     virtual size_t           size() const  = 0;
     virtual const Enumerate& enums() const = 0;
+};
+
+template<typename T> class Register {
+public:
+    using Map = std::unordered_map<string, T*>;
+
+public:
+    template<typename U> static void set(const string&);
+    template<typename U> static void set(const char*);
+
+public:
+    static T* get(const char*);
+    static T* get(const string&);
 
 private:
-    inline static std::unordered_map<const char*, MetaEnum*> registry;
+    Register() = default;
+    ~Register();
+
+private:
+    Map map;
+
+private:
+    static Map& registry();
 };
 
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
@@ -224,10 +221,20 @@ template<> bool                     isSTL<EType>(const EType&); //!< check conta
 template<typename T> Registered registclass();
 template<typename T> Registered registenum();
 
-// TODO: class도 이거로 빼는 방식으로 변경 MetaClass::get 삭제
-template<typename T> MetaEnum* metaenum();
-template<typename T> MetaEnum* metaenum(const T&);
-MetaEnum*                      metaclass(const char*);
+template<typename T> const Object* statics();
+template<typename T> const Object* statics(const T&);
+const Object*                      statics(const char*);
+const Object*                      statics(const string&);
+
+template<typename T> Class* metaclass();
+template<typename T> Class* metaclass(const T&);
+Class*                      metaclass(const char*);
+Class*                      metaclass(const string&);
+
+template<typename T> Enum* metaenum();
+template<typename T> Enum* metaenum(const T&);
+Enum*                      metaenum(const char*);
+Enum*                      metaenum(const string&);
 
 template<> struct std::hash<Type> {
     size_t operator()(const Type& obj) const { return obj.hash(); }
