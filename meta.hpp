@@ -185,6 +185,11 @@ public:
     template<typename E> static const char* stringify(E);
     static const char*                      stringify(const string&, uint64);
     static const char*                      stringify(const char*, uint64);
+
+public:
+    template<typename E> static E value(const char*);
+    template<typename E> static E value(const string&);
+    static uint64_t               value(const string&, const string&);
 };
 
 template<typename T> class Register {

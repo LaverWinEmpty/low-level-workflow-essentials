@@ -1,4 +1,3 @@
-#include "object.hpp"
 #ifdef LWE_OBJECT_HEADER
 
 std::string Object::serialize() const {

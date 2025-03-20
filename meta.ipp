@@ -1,4 +1,3 @@
-#include "meta.hpp"
 #ifdef LWE_META_HEADER
 
 // TODO: class, enum name write to Type (const char* -> uintptr)
@@ -596,6 +595,38 @@ const char* Enum::stringify(const string& type, uint64 value) {
 
 const char* Enum::stringify(const char* type, uint64 value) {
     return stringify(string{ type }, value);
+}
+
+template<typename E> E Enum::value(const char* in) {
+    return value(string{ in });
+}
+
+template<typename E> E Enum::value(const string& in) {
+    std::unordered_map<string, E> cache;
+
+    auto result = cache.find(in);
+    if(result != cache.end()) {
+        return result->second;
+    }
+
+    const Enumerate& reflected = Enumerate::get<E>();
+    for(auto i : reflected) {
+        if(i.name == in) {
+            cache[in] = static_cast<E>(i.value);
+            return static_cast<E>(i.value);
+        }
+    }
+    return static_cast<E>(0);
+}
+
+uint64_t Enum::value(const string& type, const string& name) {
+    const Enumerate& reflected = Enumerate::get(type);
+    for(auto i : reflected) {
+        if(i.name == name) {
+            return i.value;
+        }
+    }
+    return 0;
 }
 
 // clang-format off
