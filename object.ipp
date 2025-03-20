@@ -108,7 +108,7 @@ size_t ObjectMeta::size() const {
 }
 
 const Structure& ObjectMeta::fields() const {
-    return Structure::reflect<Object>();
+    return Structure::Reflect<Object>();
 }
 
 Class* ObjectMeta::base() const {
@@ -116,8 +116,8 @@ Class* ObjectMeta::base() const {
 }
 
 Class* Object::meta() const {
-    static Class* metacls = Register<Class>::get("Object");
-    return metacls;
+    static Class* Meta = Register<Class>::Get("Object");
+    return Meta;
 }
 
 Registered Object_REGISTERED = registclass<Object>();

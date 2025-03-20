@@ -41,7 +41,7 @@ enum class EType : uint8 {
  * @brief type info
  */
 struct Type {
-    template<typename T> static const Type& reflect();
+    template<typename T> static const Type& Reflect();
 
 public:
     Type() = default;
@@ -70,7 +70,7 @@ private:
 
 private:
     void                             push(EType);
-    template<typename T> static void reflect(Type*);
+    template<typename T> static void Reflect(Type*);
 
 private:
     hash_t hashed = 0;
@@ -112,25 +112,25 @@ struct Enumerator {
     const char* name;
 };
 
-template<typename T> struct Reflect {
-    template<class C> static const Reflect<T>& reflect();
+template<typename T> struct Traits {
+    template<class C> static const Traits<T>& Reflect();
 
 public:
-    template<typename C> static const Reflect<T>& get();              //!< get registred C type data
-    template<typename C> static const Reflect<T>& get(const C&);      //!< get registred C type data
-    static const Reflect<T>&                      get(const char*);   //!< get registred C type data by name c string
-    static const Reflect<T>&                      get(const string&); //!< get registred C type data by name string
+    template<typename C> static const Traits<T>& Get();              //!< get registred C type data
+    template<typename C> static const Traits<T>& Get(const C&);      //!< get registred C type data
+    static const Traits<T>&                      Get(const char*);   //!< get registred C type data by name c string
+    static const Traits<T>&                      Get(const string&); //!< get registred C type data by name string
 
 public:
-    Reflect() = default;
-    Reflect(const Reflect&);
-    Reflect(Reflect&&) noexcept;
-    Reflect(const std::initializer_list<T>&);
-    ~Reflect();
+    Traits() = default;
+    Traits(const Traits&);
+    Traits(Traits&&) noexcept;
+    Traits(const std::initializer_list<T>&);
+    ~Traits();
 
 public:
-    Reflect& operator=(const Reflect);
-    Reflect& operator=(Reflect&&) noexcept;
+    Traits& operator=(const Traits);
+    Traits& operator=(Traits&&) noexcept;
 
 public:
     const T& operator[](size_t) const;
@@ -150,11 +150,11 @@ private:
     size_t count     = 0;
 
 private:
-    inline static std::unordered_map<string, Reflect<T>> map;
+    inline static std::unordered_map<string, Traits<T>> map;
 };
 
-using Enumerate = Reflect<Enumerator>;
-using Structure = Reflect<Field>;
+using Enumerate = Traits<Enumerator>;
+using Structure = Traits<Field>;
 
 enum class Registered : bool {
     REGISTERED = 1
@@ -182,14 +182,14 @@ public:
     virtual const Enumerate& enums() const = 0;
 
 public:
-    template<typename E> static const char* stringify(E);
-    static const char*                      stringify(const string&, uint64);
-    static const char*                      stringify(const char*, uint64);
+    template<typename E> static const char* String(E);
+    static const char*                      String(const string&, uint64);
+    static const char*                      String(const char*, uint64);
 
 public:
-    template<typename E> static E value(const char*);
-    template<typename E> static E value(const string&);
-    static uint64_t               value(const string&, const string&);
+    template<typename E> static E Value(const char*);
+    template<typename E> static E Value(const string&);
+    static uint64_t               Value(const string&, const string&);
 };
 
 template<typename T> class Register {
@@ -197,12 +197,12 @@ public:
     using Map = std::unordered_map<string, T*>;
 
 public:
-    template<typename U> static void set(const string&);
-    template<typename U> static void set(const char*);
+    template<typename U> static void Set(const string&);
+    template<typename U> static void Set(const char*);
 
 public:
-    static T* get(const char*);
-    static T* get(const string&);
+    static T* Get(const char*);
+    static T* Get(const string&);
 
 private:
     Register() = default;
@@ -212,7 +212,7 @@ private:
     Map map;
 
 private:
-    static Map& registry();
+    static Map& Registry();
 };
 
 template<typename T> Registered registclass();

@@ -17,7 +17,7 @@ public:
     static void deserialize(Object* out, const std::string& in);
 
 private:
-    inline static std::unordered_map<string, const Object*> map;
+    inline static std::unordered_map<string, const Object*> Map;
 };
 
 struct ObjectMeta: Class {

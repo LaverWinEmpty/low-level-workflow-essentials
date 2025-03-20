@@ -45,33 +45,33 @@ void Type::push(EType in) {
     }
 }
 
-template<typename T> static const Type& Type::reflect() {
-    static Type type;
-    if(type.size() == 0) {
-        reflect<T>(&type);
-        for(auto itr : type) {
-            type.hashed = (type.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
+template<typename T> static const Type& Type::Reflect() {
+    static Type Buffer;
+    if(Buffer.size() == 0) {
+        Reflect<T>(&Buffer);
+        for(auto itr : Buffer) {
+            Buffer.hashed = (Buffer.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
         }
     }
-    return type;
+    return Buffer;
 }
 
-template<typename T> static void Type::reflect(Type* out) {
+template<typename T> static void Type::Reflect(Type* out) {
     if constexpr(std::is_const_v<T>) {
         out->push(EType::CONST);
-        reflect<typename std::remove_const_t<T>>(out);
+        Reflect<typename std::remove_const_t<T>>(out);
     }
 
     else if constexpr(isSTL<T>()) {
         out->push(ContainerCode<T>::VALUE);
-        reflect<typename T::value_type>(out);
+        Reflect<typename T::value_type>(out);
     }
 
     else if constexpr(std::is_pointer_v<T>) {
         // POINTER CONST TYPENAME: const typeanme*
         // CONST POINTER TYPENAME: typename* const
         out->push(EType::POINTER);
-        reflect<typename std::remove_pointer_t<T>>(out); // dereference
+        Reflect<typename std::remove_pointer_t<T>>(out); // dereference
     }
 
     else if constexpr(std::is_reference_v<T>) {
@@ -80,10 +80,10 @@ template<typename T> static void Type::reflect(Type* out) {
         if(std::is_const_v<Temp>) {
             out->push(EType::CONST);
             out->push(EType::REFERENCE);
-            reflect<typename std::remove_const_t<Temp>>(out);
+            Reflect<typename std::remove_const_t<Temp>>(out);
         } else {
             out->push(EType::REFERENCE);
-            reflect<Temp>(out); // dereference
+            Reflect<Temp>(out); // dereference
         }
     } else out->push(typecode<T>()); // primitive
 }
@@ -240,13 +240,13 @@ const char* Type::stringify() const {
         return idx + 1;
     };
 
-    static std::unordered_map<size_t, string> map;
-    if(map.find(hashed) == map.end()) {
+    static std::unordered_map<size_t, string> Map;
+    if(Map.find(hashed) == Map.end()) {
         string temp;
         fn(&temp, *this, 0);
-        map.insert({ hashed, temp });
+        Map.insert({ hashed, temp });
     }
-    return map[hashed].c_str();
+    return Map[hashed].c_str();
 }
 
 Type::operator string() const {
@@ -271,7 +271,7 @@ size_t Type::size() const {
     return count;
 }
 
-template<typename T> Reflect<T>::Reflect(const Reflect& in): capacitor(in.capacitor), count(in.count) {
+template<typename T> Traits<T>::Traits(const Traits& in): capacitor(in.capacitor), count(in.count) {
     // set
     capacitor = in.capacitor;
     count     = in.count;
@@ -290,14 +290,13 @@ template<typename T> Reflect<T>::Reflect(const Reflect& in): capacitor(in.capaci
     std::memcpy(data, in.data, sizeof(T) * capacitor);
 }
 
-template<typename T>
-Reflect<T>::Reflect(Reflect&& in) noexcept: data(in.data), count(in.count), capacitor(in.capacitor) {
+template<typename T> Traits<T>::Traits(Traits&& in) noexcept: data(in.data), count(in.count), capacitor(in.capacitor) {
     in.data      = nullptr;
     in.capacitor = 0;
     in.count     = 0;
 }
 
-template<typename T> Reflect<T>::Reflect(const std::initializer_list<T>& in): count(0), capacitor(in.size()) {
+template<typename T> Traits<T>::Traits(const std::initializer_list<T>& in): count(0), capacitor(in.size()) {
     data = static_cast<Field*>(malloc(sizeof(Field) * capacitor));
     if(!data) {
         throw std::bad_alloc();
@@ -307,13 +306,13 @@ template<typename T> Reflect<T>::Reflect(const std::initializer_list<T>& in): co
     }
 }
 
-template<typename T> Reflect<T>::~Reflect() {
+template<typename T> Traits<T>::~Traits() {
     if(data) {
         free(data);
     }
 }
 
-template<typename T> Reflect<T>& Reflect<T>::operator=(const Reflect in) {
+template<typename T> Traits<T>& Traits<T>::operator=(const Traits in) {
     if(data) {
         free(data);
     }
@@ -338,7 +337,7 @@ template<typename T> Reflect<T>& Reflect<T>::operator=(const Reflect in) {
     return *this;
 }
 
-template<typename T> Reflect<T>& Reflect<T>::operator=(Reflect&& in) noexcept {
+template<typename T> Traits<T>& Traits<T>::operator=(Traits&& in) noexcept {
     if(this != &in) {
         if(data) {
             free(data);
@@ -353,23 +352,23 @@ template<typename T> Reflect<T>& Reflect<T>::operator=(Reflect&& in) noexcept {
     return *this;
 }
 
-template<typename T> const T& Reflect<T>::operator[](size_t in) const {
+template<typename T> const T& Traits<T>::operator[](size_t in) const {
     return data[in];
 }
 
-template<typename T> const T* Reflect<T>::begin() const {
+template<typename T> const T* Traits<T>::begin() const {
     return data;
 }
 
-template<typename T> const T* Reflect<T>::end() const {
+template<typename T> const T* Traits<T>::end() const {
     return data + count;
 }
 
-template<typename T> size_t Reflect<T>::size() const {
+template<typename T> size_t Traits<T>::size() const {
     return count;
 }
 
-template<typename T> void Reflect<T>::shrink() {
+template<typename T> void Traits<T>::shrink() {
     T* newly = static_cast<T*>(realloc(data, sizeof(T) * count));
     if(!newly) {
         throw std::bad_alloc();
@@ -378,30 +377,30 @@ template<typename T> void Reflect<T>::shrink() {
     capacitor = count;
 }
 
-template<typename T> template<class C> const Reflect<T>& Reflect<T>::reflect() {
+template<typename T> template<class C> const Traits<T>& Traits<T>::Reflect() {
     // default
-    static Structure EMPTY;
-    return EMPTY;
+    static Structure Empty;
+    return Empty;
 }
 
-template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get() {
-    static Reflect statics = reflect<C>();
-    return statics;
+template<typename T> template<typename C> const Traits<T>& Traits<T>::Get() {
+    static Traits Statics = Traits<C>();
+    return Statics;
 }
 
-template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get(const C&) {
-    return get<C>();
+template<typename T> template<typename C> const Traits<T>& Traits<T>::Get(const C&) {
+    return Get<C>();
 }
 
-template<typename T> const Reflect<T>& Reflect<T>::get(const char* in) {
-    return get(string{ in });
+template<typename T> const Traits<T>& Traits<T>::Get(const char* in) {
+    return Get(string{ in });
 }
 
-template<typename T> inline const Reflect<T>& Reflect<T>::get(const string& in) {
+template<typename T> const Traits<T>& Traits<T>::Get(const string& in) {
     return map[in];
 }
 
-template<typename T> template<typename Arg> void Reflect<T>::push(Arg&& in) {
+template<typename T> template<typename Arg> void Traits<T>::push(Arg&& in) {
     if(count >= capacitor) {
         capacitor += 256;
         T* newly   = static_cast<T*>(realloc(data, sizeof(T) * capacitor));
@@ -459,31 +458,31 @@ const char* typestring(const Type& in) {
 }
 
 template<typename T> const Type& typeof() {
-    return Type::reflect<T>();
+    return Type::Reflect<T>();
 }
 
 template<typename T> const Type& typeof(const T&) {
-    return Type::reflect<T>();
+    return Type::Reflect<T>();
 }
 
-template<typename T> T* Register<T>::get(const char* in) {
-    return get(string{ in });
+template<typename T> T* Register<T>::Get(const char* in) {
+    return Get(string{ in });
 }
 
-template<typename T> T* Register<T>::get(const string& in) {
-    auto result = registry().find(in);
-    if(result != registry().end()) {
+template<typename T> T* Register<T>::Get(const string& in) {
+    auto result = Registry().find(in);
+    if(result != Registry().end()) {
         return result->second;
     }
     return nullptr;
 }
 
-template<typename T> template<typename U> void Register<T>::set(const char* in) {
-    set<U>(string{ in });
+template<typename T> template<typename U> void Register<T>::Set(const char* in) {
+    Set<U>(string{ in });
 }
 
-template<typename T> template<typename U> void Register<T>::set(const string& in) {
-    registry().insert({ in, static_cast<T*>(new U()) });
+template<typename T> template<typename U> void Register<T>::Set(const string& in) {
+    Registry().insert({ in, static_cast<T*>(new U()) });
 }
 
 template<typename T> Register<T>::~Register() {
@@ -492,16 +491,16 @@ template<typename T> Register<T>::~Register() {
     }
 }
 
-template<typename T> auto Register<T>::registry() -> Map& {
+template<typename T> auto Register<T>::Registry() -> Map& {
     static Register<T> statics;
     return statics.map;
 }
 
 template<typename T> Registered registclass() {
     // default, other class -> template specialization
-    Structure::reflect<Object>();
-    Register<Object>::set<Object>("Object");
-    Register<Class>::set<ObjectMeta>("Object");
+    Structure::Reflect<Object>();
+    Register<Object>::Set<Object>("Object");
+    Register<Class>::Set<ObjectMeta>("Object");
     return Registered::REGISTERED;
 }
 
@@ -510,7 +509,7 @@ template<typename T> const Object* statics() {
     if constexpr(!std::is_same_v<T, Object>) {
         return nullptr;
     }
-    static const Object* statics = Register<Object>::get("Object");
+    static const Object* statics = Register<Object>::Get("Object");
     return statics;
 }
 
@@ -523,10 +522,10 @@ const Object* statics(const char* in) {
 }
 
 const Object* statics(const string& in) {
-    if(Object::map.find(in) == Object::map.end()) {
+    if(Object::Map.find(in) == Object::Map.end()) {
         return nullptr;
     }
-    return Object::map[in];
+    return Object::Map[in];
 }
 
 template<typename T> Class* metaclass() {
@@ -546,7 +545,7 @@ Class* metaclass(const char* in) {
 }
 
 Class* metaclass(const string& in) {
-    return Register<Class>::get(in);
+    return Register<Class>::Get(in);
 }
 
 template<typename T> Enum* metaenum() {
@@ -562,10 +561,10 @@ Enum* metaenum(const char* in) {
 }
 
 Enum* metaenum(const string& in) {
-    return Register<Enum>::get(in);
+    return Register<Enum>::Get(in);
 }
 
-template<typename E> const char* Enum::stringify(E in) {
+template<typename E> const char* Enum::String(E in) {
     static std::unordered_map<E, const char*> cache;
 
     auto result = cache.find(in);
@@ -573,7 +572,7 @@ template<typename E> const char* Enum::stringify(E in) {
         return result->second;
     }
 
-    const Enumerate& reflected = Enumerate::get<E>();
+    const Enumerate& reflected = Enumerate::Get<E>();
     for(auto i : reflected) {
         if(i.value == static_cast<uint64>(in)) {
             cache[in] = i.name;
@@ -583,8 +582,8 @@ template<typename E> const char* Enum::stringify(E in) {
     return "";
 }
 
-const char* Enum::stringify(const string& type, uint64 value) {
-    const Enumerate& reflected = Enumerate::get(type);
+const char* Enum::String(const string& type, uint64 value) {
+    const Enumerate& reflected = Enumerate::Get(type);
     for(auto i : reflected) {
         if(i.value == value) {
             return i.name;
@@ -593,15 +592,15 @@ const char* Enum::stringify(const string& type, uint64 value) {
     return "";
 }
 
-const char* Enum::stringify(const char* type, uint64 value) {
-    return stringify(string{ type }, value);
+const char* Enum::String(const char* type, uint64 value) {
+    return String(string{ type }, value);
 }
 
-template<typename E> E Enum::value(const char* in) {
-    return value(string{ in });
+template<typename E> E Enum::Value(const char* in) {
+    return Value(string{ in });
 }
 
-template<typename E> E Enum::value(const string& in) {
+template<typename E> E Enum::Value(const string& in) {
     std::unordered_map<string, E> cache;
 
     auto result = cache.find(in);
@@ -609,7 +608,7 @@ template<typename E> E Enum::value(const string& in) {
         return result->second;
     }
 
-    const Enumerate& reflected = Enumerate::get<E>();
+    const Enumerate& reflected = Enumerate::Get<E>();
     for(auto i : reflected) {
         if(i.name == in) {
             cache[in] = static_cast<E>(i.value);
@@ -619,8 +618,8 @@ template<typename E> E Enum::value(const string& in) {
     return static_cast<E>(0);
 }
 
-uint64_t Enum::value(const string& type, const string& name) {
-    const Enumerate& reflected = Enumerate::get(type);
+uint64_t Enum::Value(const string& type, const string& name) {
+    const Enumerate& reflected = Enumerate::Get(type);
     for(auto i : reflected) {
         if(i.name == name) {
             return i.value;
