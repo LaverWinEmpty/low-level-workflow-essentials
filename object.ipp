@@ -100,18 +100,6 @@ void Object::deserialize(Object* out, const std::string& in) {
     out->deserialize(in);
 }
 
-template<> template<> const Structure& Structure::reflect<Object>() {
-    static Structure EMPTY; // default
-    return EMPTY;
-}
-
-template<> Registered registclass<Object>() {
-    Structure::reflect<Object>();
-    Register<Object>::set<Object>("Object");
-    Register<Class>::set<ObjectMeta>("Object");
-    return Registered::REGISTERED;
-}
-
 const char* ObjectMeta::name() const {
     return "Object";
 }

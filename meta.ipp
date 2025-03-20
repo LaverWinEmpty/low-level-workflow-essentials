@@ -1,6 +1,8 @@
 #include "meta.hpp"
 #ifdef LWE_META_HEADER
 
+// TODO: class, enum name write to Type (const char* -> uintptr)
+
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -89,7 +91,7 @@ template<typename T> static void Type::reflect(Type* out) {
 
 Type::Type(const Type& in): count(in.count), hashed(in.hashed) {
     if(in.count < STACK) {
-        std::memcpy(stack, in.stack, count);
+        std::memcpy(stack, in.stack, sizeof(EType) * count);
     } else {
         heap = static_cast<EType*>(malloc(sizeof(EType) * in.capacitor));
         if(!heap) {
@@ -97,7 +99,7 @@ Type::Type(const Type& in): count(in.count), hashed(in.hashed) {
             throw std::bad_alloc();
         }
         capacitor = in.capacitor;
-        std::memcpy(heap, in.heap, count);
+        std::memcpy(heap, in.heap, sizeof(EType) * count);
     }
 }
 
@@ -194,9 +196,9 @@ hash_t Type::hash() const {
 
 EType Type::type() const {
     if(count < STACK) {
-        return *stack;
+        return stack[0] == EType::CONST ? stack[1] : stack[0];
     }
-    return *heap;
+    return heap[0] == EType::CONST ? heap[1] : heap[0];
 }
 
 const char* Type::stringify() const {
@@ -377,6 +379,12 @@ template<typename T> void Reflect<T>::shrink() {
     capacitor = count;
 }
 
+template<typename T> template<class C> const Reflect<T>& Reflect<T>::reflect() {
+    // default
+    static Structure EMPTY;
+    return EMPTY;
+}
+
 template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get() {
     static Reflect statics = reflect<C>();
     return statics;
@@ -387,6 +395,10 @@ template<typename T> template<typename C> const Reflect<T>& Reflect<T>::get(cons
 }
 
 template<typename T> const Reflect<T>& Reflect<T>::get(const char* in) {
+    return get(string{ in });
+}
+
+template<typename T> inline const Reflect<T>& Reflect<T>::get(const string& in) {
     return map[in];
 }
 
@@ -506,8 +518,21 @@ template<typename T> auto Register<T>::registry() -> Map& {
     return statics.map;
 }
 
+template<typename T> Registered registclass() {
+    // default, other class -> template specialization
+    Structure::reflect<Object>();
+    Register<Object>::set<Object>("Object");
+    Register<Class>::set<ObjectMeta>("Object");
+    return Registered::REGISTERED;
+}
+
 template<typename T> const Object* statics() {
-    return nullptr;
+    // default, other class -> specialization
+    if constexpr(!std::is_same_v<T, Object>) {
+        return nullptr;
+    }
+    static const Object* statics = Register<Object>::get("Object");
+    return statics;
 }
 
 template<typename T> const Object* statics(const T&) {
@@ -561,6 +586,38 @@ Enum* metaenum(const string& in) {
     return Register<Enum>::get(in);
 }
 
+template<typename E> const char* Enum::stringify(E in) {
+    static std::unordered_map<E, const char*> cache;
+
+    auto result = cache.find(in);
+    if(result != cache.end()) {
+        return result->second;
+    }
+
+    const Enumerate& reflected = Enumerate::get<E>();
+    for(auto i : reflected) {
+        if(i.value == static_cast<uint64>(in)) {
+            cache[in] = i.name;
+            return i.name;
+        }
+    }
+    return "";
+}
+
+const char* Enum::stringify(const string& type, uint64 value) {
+    const Enumerate& reflected = Enumerate::get(type);
+    for(auto i : reflected) {
+        if(i.value == value) {
+            return i.name;
+        }
+    }
+    return "";
+}
+
+const char* Enum::stringify(const char* type, uint64 value) {
+    return stringify(string{ type }, value);
+}
+
 // clang-format off
 constexpr const char* typestring(EType code) {
     switch(code) {
@@ -592,9 +649,7 @@ constexpr const char* typestring(EType code) {
     case EType::CONST:              return "const";
     case EType::ENUM:               return "enum";
     }
-
-    // error
-    return "";
+    return ""; // error
 }
 
 // clang-format on

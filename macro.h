@@ -173,8 +173,8 @@ private:
     template<> template<> const Structure& Structure::reflect<TYPE>() {                                                \
         using CLASS = TYPE;                                                                                            \
         const char* NAME = #TYPE;                                                                                      \
-        auto result = map.find(NAME);                                                                             \
-        if (result != map.end()) {                                                                                \
+        auto result = map.find(NAME);                                                                                  \
+        if (result != map.end()) {                                                                                     \
         	return result->second;                                                                                     \
         }                                                                                                              \
         Structure meta; // {
@@ -189,8 +189,8 @@ private:
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
         meta.shrink();                                                                                                 \
-        map.insert({ NAME, meta });                                                                               \
-        return map[NAME];                                                                                         \
+        map.insert({ NAME, meta });                                                                                    \
+        return map[NAME];                                                                                              \
     }
 
 #define REGISTER_ENUM_BEGIN(TYPE)                                                                                      \

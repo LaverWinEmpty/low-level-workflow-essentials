@@ -6,7 +6,7 @@
 
 std::unordered_map<string, std::vector<std::pair<string, uint64>>> enumerate;
 
-enum class EType : uintptr_t {
+enum class EType : uint8 {
     UNREGISTERED,
     VOID,
     SIGNED_INT,
@@ -121,14 +121,10 @@ template<typename T> struct Reflect {
     template<class C> static const Reflect<T>& reflect();
 
 public:
-    template<typename C> static const Reflect<T>& get();
-    template<typename C> static const Reflect<T>& get(const C&);
-    static const Reflect<T>&                      get(const char*);
-
-public:
-    template<typename C> bool flag() const;
-    template<typename C> bool flag(const C&) const;
-    bool                      flag(const char*) const;
+    template<typename C> static const Reflect<T>& get();              //!< get registred C type data
+    template<typename C> static const Reflect<T>& get(const C&);      //!< get registred C type data
+    static const Reflect<T>&                      get(const char*);   //!< get registred C type data by name c string
+    static const Reflect<T>&                      get(const string&); //!< get registred C type data by name string
 
 public:
     Reflect() = default;
@@ -159,7 +155,7 @@ private:
     size_t count     = 0;
 
 private:
-    inline static std::unordered_map<const char*, Reflect<T>> map;
+    inline static std::unordered_map<string, Reflect<T>> map;
 };
 
 using Enumerate = Reflect<Enumerator>;
@@ -189,6 +185,11 @@ public:
     virtual const char*      name() const  = 0;
     virtual size_t           size() const  = 0;
     virtual const Enumerate& enums() const = 0;
+
+public:
+    template<typename E> static const char* stringify(E);
+    static const char*                      stringify(const string&, uint64);
+    static const char*                      stringify(const char*, uint64);
 };
 
 template<typename T> class Register {
