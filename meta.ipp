@@ -1,8 +1,6 @@
 #include "meta.hpp"
 #ifdef LWE_META_HEADER
 
-// TODO: class, enum name write to Type (const char* -> uintptr)
-
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -84,7 +82,7 @@ template<typename T> static void Type::reflect(Type* out) {
         // POINTER CONST TYPENAME: const typeanme*
         // CONST POINTER TYPENAME: typename* const
         out->push(EType::POINTER);
-        deserialize<typename std::remove_pointer_t<T>>(out); // dereference
+        reflect<typename std::remove_pointer_t<T>>(out); // dereference
     }
 
     else if constexpr(std::is_class_v<T> || std::is_enum_v<T>) {
