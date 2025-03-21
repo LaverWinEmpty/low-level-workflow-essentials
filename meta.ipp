@@ -290,7 +290,8 @@ template<typename T> Reflector<T>::Reflector(const Reflector& in): capacitor(in.
     std::memcpy(data, in.data, sizeof(T) * capacitor);
 }
 
-template<typename T> Reflector<T>::Reflector(Reflector&& in) noexcept: data(in.data), count(in.count), capacitor(in.capacitor) {
+template<typename T>
+Reflector<T>::Reflector(Reflector&& in) noexcept: data(in.data), count(in.count), capacitor(in.capacitor) {
     in.data      = nullptr;
     in.capacitor = 0;
     in.count     = 0;
@@ -491,7 +492,7 @@ template<typename T> Registry<T>::~Registry() {
     }
 }
 
-template<typename T> auto Registry<T>::instance() -> Map& {
+template<typename T> std::unordered_map<string, T*>& Registry<T>::instance() {
     static Registry<T> statics;
     return statics.map;
 }
@@ -504,28 +505,25 @@ template<typename T> Registered registclass() {
     return Registered::REGISTERED;
 }
 
-template<typename T> const Object* statics() {
+template<typename T> Object* statics() {
     // default, other class -> specialization
     if constexpr(!std::is_same_v<T, Object>) {
         return nullptr;
     }
-    static const Object* statics = Registry<Object>::find("Object");
+    static Object* statics = Registry<Object>::find("Object");
     return statics;
 }
 
-template<typename T> const Object* statics(const T&) {
+template<typename T> Object* statics(const T&) {
     return statics<T>();
 }
 
-const Object* statics(const char* in) {
+Object* statics(const char* in) {
     return statics(string{ in });
 }
 
-const Object* statics(const string& in) {
-    if(Object::map.find(in) == Object::map.end()) {
-        return nullptr;
-    }
-    return Object::map[in];
+Object* statics(const string& in) {
+    return Registry<Object>::find(in);
 }
 
 template<typename T> Class* metaclass() {

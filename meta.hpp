@@ -112,7 +112,10 @@ struct Enumerator {
     const char* name;
 };
 
+/// @brief container of class fiedls and enum values list reflector
+/// @tparam T class, enum
 template<typename T> struct Reflector {
+    /// @tparam C constructor: type info to create
     template<class C> static const Reflector<T>& reflect();
 
 public:
@@ -160,10 +163,9 @@ enum class Registered : bool {
     REGISTERED = 1
 };
 
+/// @brief class metadata
 struct Class {
-    friend class Object;
     template<typename T> friend Registered registclass();
-    friend Class*                          metaclass(const string&);
 
 public:
     virtual const char*      name() const   = 0;
@@ -172,9 +174,9 @@ public:
     virtual const Class*     base() const   = 0;
 };
 
+/// @brief enum metadata
 struct Enum {
     template<typename T> friend Registered registenum();
-    friend Enum*                           metaenum(const string&);
 
 public:
     virtual const char*      name() const  = 0;
@@ -192,12 +194,13 @@ public:
     static uint64_t               parse(const string&, const string&);
 };
 
+/// @brief static object registry
+/// @tparam T metadata, static class
 template<typename T> class Registry {
 public:
-    using Map = std::unordered_map<string, T*>;
-
-public:
+    /// @tparam U base of T
     template<typename U> static void add(const string&);
+    /// @tparam U base of T
     template<typename U> static void add(const char*);
 
 public:
@@ -211,29 +214,32 @@ public:
     ~Registry();
 
 private:
-    Map map;
+    std::unordered_map<string, T*> map;
 
 private:
-    static Map& instance();
+    static std::unordered_map<string, T*>& instance();
 };
 
+/// @brief  pre-registered metadata of typename T, return value is unused
 template<typename T> Registered registclass();
+/// @brief  pre-registered metadata of typename T, return value is unused
 template<typename T> Registered registenum();
 
-template<typename T> const Object* statics();
-template<typename T> const Object* statics(const T&);
-const Object*                      statics(const char*);
-const Object*                      statics(const string&);
+class Object;
+template<typename T> Object* statics();              //!< get static class
+template<typename T> Object* statics(const T&);      //!< get static class
+Object*                      statics(const char*);   //!< get static class
+Object*                      statics(const string&); //!< get static class
 
-template<typename T> Class* metaclass();
-template<typename T> Class* metaclass(const T&);
-Class*                      metaclass(const char*);
-Class*                      metaclass(const string&);
+template<typename T> Class* metaclass();              //!< get class field list
+template<typename T> Class* metaclass(const T&);      //!< get class field list
+Class*                      metaclass(const char*);   //!< get class field list
+Class*                      metaclass(const string&); //!< get class field list
 
-template<typename T> Enum* metaenum();
-template<typename T> Enum* metaenum(const T&);
-Enum*                      metaenum(const char*);
-Enum*                      metaenum(const string&);
+template<typename T> Enum* metaenum();              //!< get enum value list
+template<typename T> Enum* metaenum(const T&);      //!< get enum value list
+Enum*                      metaenum(const char*);   //!< get enum value list
+Enum*                      metaenum(const string&); //!< get enum value list
 
 template<> struct std::hash<Type> {
     size_t operator()(const Type& obj) const { return obj.hash(); }

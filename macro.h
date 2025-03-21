@@ -155,8 +155,8 @@ private:
         virtual const Structure& fields() const override;                                                              \
     };                                                                                                                 \
     template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
-    template<> const Object* statics<TYPE>() {                                                                         \
-        static const Object* OBJ = Registry<Object>::find(#TYPE);                                                       \
+    template<> Object* statics<TYPE>() {                                                                               \
+        static Object* OBJ = Registry<Object>::find(#TYPE);                                                            \
         return OBJ;                                                                                                    \
     }                                                                                                                  \
     template<> Registered registclass<TYPE>() {                                                                        \
