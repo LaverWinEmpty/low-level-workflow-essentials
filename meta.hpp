@@ -37,7 +37,7 @@ enum class EType : uint8 {
 
 /// @brief type info
 struct Type {
-    template<typename T> static const Type& deserialize();
+    template<typename T> static const Type& reflect();
 
 public:
     Type() = default;
@@ -55,7 +55,7 @@ public:
     size_t       size() const;
     hash_t       hash() const;
     EType        type() const;
-    const char*  serialize() const;
+    const char*  stringify() const;
 
 public:
     explicit operator string() const;
@@ -65,8 +65,9 @@ private:
     static constexpr size_t STACK = (sizeof(size_t) + sizeof(EType*));
 
 private:
+    void                             shrink();
     void                             push(EType);
-    template<typename T> static void deserialize(Type*);
+    template<typename T> static void reflect(Type*);
 
 private:
     hash_t hashed = 0;
@@ -78,24 +79,6 @@ private:
         };
         EType stack[STACK] = { EType::UNREGISTERED };
     };
-};
-
-/// @brief variable info
-struct Variable {
-    Type        type;
-    const char* name;
-    size_t      size;
-};
-
-/// @brief member variable info
-struct Field: Variable {
-    size_t offset;
-};
-
-/// @brief enum info
-struct Enumerator {
-    uint64      value;
-    const char* name;
 };
 
 /// @brief container of class fiedls and enum values list reflector
@@ -142,12 +125,26 @@ private:
     inline static std::unordered_map<string, Reflector<T>> map;
 };
 
+/// @brief variable info
+struct Variable {
+    Type        type;
+    const char* name;
+    size_t      size;
+};
+
+/// @brief member variable info
+struct Field: Variable {
+    size_t offset;
+};
+
+/// @brief enum info
+struct Enumerator {
+    uint64      value;
+    const char* name;
+};
+
 using Enumerate = Reflector<Enumerator>;
 using Structure = Reflector<Field>;
-
-enum class Registered : bool {
-    REGISTERED = 1
-};
 
 /// @brief class metadata
 struct Class {
@@ -198,6 +195,11 @@ private:
 
 private:
     static std::unordered_map<string, T*>& instance();
+};
+
+/// unused type
+enum class Registered : bool {
+    REGISTERED = 1
 };
 
 /// @brief  pre-registered metadata of typename T, return value is unused

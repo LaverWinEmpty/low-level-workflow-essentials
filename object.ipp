@@ -14,7 +14,7 @@ std::string Object::stringfy() const {
     size_t loop = prop.size() - 1;
     buffer.append("{ ");
     for(size_t i = 0; i < loop; ++i) {
-        ::serialize(&buffer, ptr + prop[i].offset, prop[i].type);
+        serialize(&buffer, ptr + prop[i].offset, prop[i].type);
         buffer.append(", ");
     }
     serialize(&buffer, ptr + prop[loop].offset, prop[loop].type);
@@ -94,7 +94,7 @@ void Object::parse(const std::string& in) {
                 ++len;
             }
             deserialize(out + prop[i].offset, in.substr(begin, len), prop[i].type); // ignore ',' or ' '
-            begin += 3;                                                               // pass <, > or < ]>
+            begin += 3;                                                             // pass <, > or < ]>
             len    = 0;
         }
     }

@@ -212,7 +212,7 @@ public:                                                                         
             return REF;                                                                                                \
         }                                                                                                              \
     };                                                                                                                 \
-    template<> Enum* enumof<TYPE>() {                                                                                \
+    template<> Enum* enumof<TYPE>() {                                                                                  \
         static Enum* ENUM = Registry<Enum>::find(#TYPE);                                                               \
         return ENUM;                                                                                                   \
     }                                                                                                                  \

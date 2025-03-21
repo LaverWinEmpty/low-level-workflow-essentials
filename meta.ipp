@@ -1,3 +1,4 @@
+#include "meta.hpp"
 #ifdef LWE_META_HEADER
 
 // TODO: class, enum name write to Type (const char* -> uintptr)
@@ -45,26 +46,38 @@ void Type::push(EType in) {
     }
 }
 
-template<typename T> static const Type& Type::deserialize() {
-    static Type Buffer;
-    if(Buffer.size() == 0) {
-        deserialize<T>(&Buffer);
-        for(auto itr : Buffer) {
-            Buffer.hashed = (Buffer.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
+void Type::shrink() {
+    if(count > STACK) {
+        EType* newly = static_cast<EType*>(realloc(heap, sizeof(EType) * count));
+        if(!newly) {
+            throw std::bad_alloc();
         }
+        heap      = newly;
+        capacitor = count;
     }
-    return Buffer;
 }
 
-template<typename T> static void Type::deserialize(Type* out) {
+template<typename T> static const Type& Type::reflect() {
+    static Type buffer;
+    if(buffer.size() == 0) {
+        reflect<T>(&buffer);
+        buffer.shrink();
+        for(auto itr : buffer) {
+            buffer.hashed = (buffer.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
+        }
+    }
+    return buffer;
+}
+
+template<typename T> static void Type::reflect(Type* out) {
     if constexpr(std::is_const_v<T>) {
         out->push(EType::CONST);
-        deserialize<typename std::remove_const_t<T>>(out);
+        reflect<typename std::remove_const_t<T>>(out);
     }
 
     else if constexpr(isSTL<T>()) {
         out->push(ContainerCode<T>::VALUE);
-        deserialize<typename T::value_type>(out);
+        reflect<typename T::value_type>(out);
     }
 
     else if constexpr(std::is_pointer_v<T>) {
@@ -74,16 +87,51 @@ template<typename T> static void Type::deserialize(Type* out) {
         deserialize<typename std::remove_pointer_t<T>>(out); // dereference
     }
 
+    else if constexpr(std::is_class_v<T> || std::is_enum_v<T>) {
+        out->push(EType::CLASS);
+
+        // get type info
+        const char* str = nullptr;
+        if constexpr(std::is_class_v<T>) {
+            Class* meta = classof<T>();
+            if(meta) {
+                str = meta->name();
+            }
+        } else if constexpr(std::is_enum_v<T>) {
+            Enum* meta = enumof<T>();
+            if(meta) {
+                str = meta->name();
+            }
+        }
+
+        // calculate size
+        uint64 len = 0;
+        if(str) {
+            len = strlen(str);
+        }
+        // store
+        const char* ptr = reinterpret_cast<const char*>(&len);
+        for(int i = 0; i < sizeof(len); ++i) {
+            out->push(static_cast<EType>(*ptr)); // size
+            ++ptr;
+        }
+        // get name
+        for(int i = 0; i < len; ++i) {
+            out->push(static_cast<EType>(*str)); // name
+            ++str;
+        }
+    }
+
     else if constexpr(std::is_reference_v<T>) {
         using Temp = typename std::remove_reference_t<T>;
         // CONST REFERENCE TYPENAME
         if(std::is_const_v<Temp>) {
             out->push(EType::CONST);
             out->push(EType::REFERENCE);
-            deserialize<typename std::remove_const_t<Temp>>(out);
+            reflect<typename std::remove_const_t<Temp>>(out);
         } else {
             out->push(EType::REFERENCE);
-            deserialize<Temp>(out); // dereference
+            reflect<Temp>(out); // dereference
         }
     } else out->push(typecode<T>()); // primitive
 }
@@ -200,7 +248,7 @@ EType Type::type() const {
     return heap[0] == EType::CONST ? heap[1] : heap[0];
 }
 
-const char* Type::serialize() const {
+const char* Type::stringify() const {
     std::function<size_t(string*, const Type&, size_t)> fn = [&fn](string* out, const Type& in, size_t idx) {
         if(idx >= in.size()) {
             return idx;
@@ -222,6 +270,21 @@ const char* Type::serialize() const {
                 out->append("const ");
                 fn(out, in, idx + 1);
             }
+        }
+        // class or enum
+        if(in[idx] == EType::CLASS || in[idx] == EType::ENUM) {
+            uint64 len;
+            char*  ptr = reinterpret_cast<char*>(&len);
+            for(int i = 0; i < sizeof(len); ++i) {
+                ptr[i] = static_cast<uint8>(in[idx + 1 + i]); // read size
+            }
+            if(len) {
+                const char* ptr = reinterpret_cast<const char*>(&in[idx + 1 + sizeof(len)]);
+                out->append(ptr, len);
+                return idx + 1 + sizeof(len) + len;
+            }
+            out->append(typestring(in[idx])); // size 0 == unregistered type
+            return idx + 1 + sizeof(len);
         }
         // primitive
         else {
@@ -250,7 +313,7 @@ const char* Type::serialize() const {
 }
 
 Type::operator string() const {
-    return serialize(); // copy
+    return stringify(); // copy
 }
 
 const EType* Type::begin() const {
@@ -455,15 +518,15 @@ template<typename T> const char* typestring(const T&) {
 }
 
 const char* typestring(const Type& in) {
-    return in.serialize();
+    return in.stringify();
 }
 
 template<typename T> const Type& typeof() {
-    return Type::deserialize<T>();
+    return Type::reflect<T>();
 }
 
 template<typename T> const Type& typeof(const T&) {
-    return Type::deserialize<T>();
+    return Type::reflect<T>();
 }
 
 template<typename T> T* Registry<T>::find(const char* in) {
