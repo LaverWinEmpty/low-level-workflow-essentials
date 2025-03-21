@@ -347,7 +347,7 @@ template<typename T, size_t SVO> index_t Deque<T, SVO>::clamp(index_t in) const 
 }
 
 template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexcept {
-    in = Common::align(in);
+    in = common::align(in);
     if(in == capacitor) {
         return true;
     }
@@ -375,10 +375,9 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexc
 
     // free
     if(container != stack) {
-        if (capacitor > MIN) {
+        if(capacitor > MIN) {
             free(container);
-        }
-        else container = newly; // ctor not called
+        } else container = newly; // ctor not called
     }
 
     // set

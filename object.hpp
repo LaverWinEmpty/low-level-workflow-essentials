@@ -2,11 +2,20 @@
 #define LWE_OBJECT_HEADER
 
 #include "meta.hpp"
+#include "pool.hpp"
 
 LWE_BEGIN
 
-//! @brief
+/**
+ * @brief serializable object: template, array not support
+ */
 class Object {
+    template<typename T> friend Object* create();
+    friend void                         destroy(Object*);
+
+public:
+    virtual ~Object();
+
 public:
     virtual Class* meta() const;
 
@@ -20,6 +29,18 @@ public:
     bool                      isof(const Class*) const;  //!< check same type of derived by meta class
     bool                      isof(const char*) const;   //!< check same type of derived by name
     bool                      isof(const string&) const; //!< check same type of derived by name
+
+private:
+    struct Pool {
+        ~Pool() {
+            for(auto& p : map) delete p.second;
+        }
+        std::unordered_map<size_t, mem::Pool*> map;
+    };
+    static std::unordered_map<size_t, mem::Pool*>& pool() {
+        static std::unordered_map<size_t, mem::Pool*> instance;
+        return instance;
+    }
 };
 
 struct ObjectMeta: Class {
@@ -28,6 +49,9 @@ struct ObjectMeta: Class {
     virtual const Structure& fields() const override;
     virtual Class*           base() const override;
 };
+
+template<typename T> Object* create();
+void                         destroy(Object*);
 
 LWE_END
 #endif

@@ -22,13 +22,7 @@
  * pop_front: shift
  **************************************************************************************************/
 
-#include <cstdlib>
-#include <stdexcept>
-#include "common.hpp"
 #include "container.hpp"
-#include "serialize.hpp"
-
-#include "iostream"
 
 LWE_BEGIN
 
@@ -41,7 +35,7 @@ private:
     template<typename, size_t> friend struct Deque;
 
 private:
-    static constexpr size_t MIN = SVO < DEF_SVO ? DEF_SVO : Common::align(SVO);
+    static constexpr size_t MIN = SVO < DEF_SVO ? DEF_SVO : common::align(SVO);
 
 public:
     class Iterator; //!< iterator

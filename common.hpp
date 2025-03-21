@@ -6,7 +6,7 @@
 
 LWE_BEGIN
 
-namespace Common {
+namespace common {
 
 //! @brief check power of 2
 inline constexpr bool aligned(uint64 in) noexcept {
@@ -92,7 +92,7 @@ template<typename T> inline void memfree(T* in) noexcept {
     free(*(reinterpret_cast<void**>(in) - 1));
 }
 
-} // namespace Common
+} // namespace common
 
 LWE_END
 #endif

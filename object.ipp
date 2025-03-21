@@ -1,7 +1,23 @@
-#include "object.hpp"
 #ifdef LWE_OBJECT_HEADER
 
 LWE_BEGIN
+
+Object::~Object() {}
+
+template<typename T> Object* create() {
+    size_t size   = classof<T>()->size();
+    auto   result = Object::pool().find(size);
+    if(result == Object::pool().end()) {
+        Object::pool()[size] = new mem::Pool(size, 1); // not aligned
+    }
+    return result.second->allocate<T>();
+}
+
+void destroy(Object* in) {
+    size_t size = in->meta()->size();
+    in->~Object();
+    Object::pool()[size]->deallocate<void>(in);
+}
 
 std::string Object::stringfy() const {
     const Structure& prop = meta()->fields();
