@@ -104,7 +104,7 @@ template<typename T> bool Object::isA() const {
     const Class* cls = classof<T>();
     if(cls) {
         const Class* self = meta();
-        while(cls) {
+        while(self) {
             if(cls == self) {
                 return true;
             }
@@ -122,7 +122,7 @@ bool Object::isA(const string& in) const {
     const Class* cls = classof(in);
     if(cls) {
         const Class* self = meta();
-        while(cls) {
+        while(self) {
             if(cls == self) {
                 return true;
             }
