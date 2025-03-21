@@ -14,20 +14,20 @@ using namespace config;
 
 struct Container {
     virtual ~Container() noexcept {}
-    virtual string serialize() const          = 0;
-    virtual void   deserialize(const string&) = 0;
+    virtual string stringify() const          = 0;
+    virtual void   parse(const string&) = 0;
 
 protected:
     /**
-     * @brief serialize default
+     * @brief stringify default
      */
-    template<typename Derived> static string serialize(const Derived*);
+    template<typename Derived> static string stringify(const Derived*);
 public:
     /**
-     * @brief deserialize default
+     * @brief parse default
      * @note  NEED push(const T&) / push (T&&)
      */
-    template<typename Derived> static Derived deserialize(const string&);
+    template<typename Derived> static Derived parse(const string&);
 };
 
 } // namespace stl

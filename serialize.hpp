@@ -15,7 +15,7 @@ template<> bool        deserialize<bool>(const string&);                 //!< st
 template<> string      deserialize<string>(const string&);               //!< string to string
 void                   deserialize(LWE::stl::Container*, const string&); //!< string to container
 
-void serialize(string*, const void*, const EType&);   // runtime deserialize
-void deserialize(void*, const string&, const EType&); // runtime serialize
+void serialize(string*, const void*, const EType&);   // runtime parse
+void deserialize(void*, const string&, const EType&); // runtime stringify
 
 #endif

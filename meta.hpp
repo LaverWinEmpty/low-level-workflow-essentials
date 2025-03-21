@@ -164,14 +164,14 @@ struct Enum {
     virtual const Enumerate& enums() const = 0;
 
 public:
-    template<typename E> static const char* stringify(E);
-    static const char*                      stringify(const string&, uint64);
-    static const char*                      stringify(const char*, uint64);
+    template<typename E> static const char* serialize(E);
+    static const char*                      serialize(const string&, uint64);
+    static const char*                      serialize(const char*, uint64);
 
 public:
-    template<typename E> static E parse(const char*);
-    template<typename E> static E parse(const string&);
-    static uint64_t               parse(const string&, const string&);
+    template<typename E> static E deserialize(const char*);
+    template<typename E> static E deserialize(const string&);
+    static uint64_t               deserialize(const string&, const string&);
 };
 
 /// @brief static object registry

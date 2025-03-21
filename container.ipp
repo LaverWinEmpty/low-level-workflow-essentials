@@ -3,7 +3,7 @@
 LWE_BEGIN
 namespace stl {
 
-template<typename Derived> string Container::serialize(const Derived* in) {
+template<typename Derived> string Container::stringify(const Derived* in) {
     std::string out;
 
     // CRTP begin / end
@@ -14,7 +14,7 @@ template<typename Derived> string Container::serialize(const Derived* in) {
         out.append("[");
         // for each
         while(true) {
-            ::serialize(&out, &*curr, typecode<typename Derived::value_type>());
+            serialize(&out, &*curr, typecode<typename Derived::value_type>());
             ++curr;
             if(curr != last) {
                 out.append(", ");
@@ -25,7 +25,7 @@ template<typename Derived> string Container::serialize(const Derived* in) {
     return out;
 }
 
-template<typename Derived> Derived stl::Container::deserialize(const string& in) {
+template<typename Derived> Derived stl::Container::parse(const string& in) {
     using Element = typename Derived::value_type;
     if(in == "[]") {
         return Derived{}; // empty
@@ -44,7 +44,7 @@ template<typename Derived> Derived stl::Container::deserialize(const string& in)
             if(in[i] == '\"' && in[i + 1] == ',', in[i - 1] != '\\') {
                 Element data;
                 // len + 1: with '\"'
-                ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
                 i     += 3; // pass <", >
                 begin  = i; // next position
                 len    = 0; // next length
@@ -57,7 +57,7 @@ template<typename Derived> Derived stl::Container::deserialize(const string& in)
             if(in[i] == ']' && in[i + 1] == ',' && in[i - 1] != '\\') {
                 Element data;
                 // len + 1: with ']'
-                ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
                 i     += 3; // pass <], >
                 begin  = i; // next position
                 len    = 0; // next length
@@ -68,7 +68,7 @@ template<typename Derived> Derived stl::Container::deserialize(const string& in)
         else if constexpr(std::is_same_v<Element, Object> || std::is_base_of_v<Object, Element>) {
             if(in[i] == '}' && in[i + 1] == ',' && in[i - 1] != '\\') {
                 Element data;
-                ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+                deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
                 i     += 2; // pass <, >
                 begin  = i; // next position
                 len    = 0; // next length
@@ -78,7 +78,7 @@ template<typename Derived> Derived stl::Container::deserialize(const string& in)
 
         else if(in[i] == ',') {
             Element data;
-            ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+            deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
             i     += 2; // pass <, >
             begin  = i; // next position
             len    = 0; // next length
@@ -88,7 +88,7 @@ template<typename Derived> Derived stl::Container::deserialize(const string& in)
 
     // insert last data
     Element data;
-    ::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+    deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
     out.push(std::move(data));
     return std::move(out);
 }
@@ -97,7 +97,7 @@ template<typename Derived> Derived stl::Container::deserialize(const string& in)
 LWE_END
 
 template<typename T> constexpr bool isSTL() {
-    return std::is_base_of_v<LWE::stl::Container, T>&& ContainerCode<T>::VALUE != EType::UNREGISTERED;
+    return std::is_base_of_v<LWE::stl::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
 };
 
 template<typename T> constexpr bool isSTL(const T&) {
@@ -109,9 +109,9 @@ template<> bool isSTL<EType>(const EType& code) {
     // if(name[0] == 'S' && name[1] == 'T' && name[2] == 'L' && name[3] == '_') {
     //     return true; // read 4 byte
     // }
-    switch (code) {
-    case EType::STL_DEQUE:
-        return true;
+    switch(code) {
+        case EType::STL_DEQUE:
+            return true;
     }
     return false;
 }

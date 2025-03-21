@@ -40,7 +40,7 @@ template<> string serialize<string>(const string& in) {
 
 // container to string
 template<> string serialize<LWE::stl::Container>(const LWE::stl::Container& in) {
-    return in.serialize();
+    return in.stringify();
 }
 
 // string to primitive type
@@ -106,10 +106,10 @@ template<> string deserialize<string>(const string& in) {
 
 // string to container
 void deserialize(LWE::stl::Container* out, const string& in) {
-    out->deserialize(in);
+    out->parse(in);
 }
 
-// runtime serialize
+// runtime stringify
 void serialize(std::string* out, const void* in, const EType& type) {
     switch (type) {
     // skip
@@ -119,7 +119,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
 
     case EType::CLASS:  
-        out->append(reinterpret_cast<const Object*>(in)->serialize());
+        out->append(reinterpret_cast<const Object*>(in)->stringfy());
         break;
 
     case EType::POINTER: {
@@ -155,7 +155,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
     // wchar
     case EType::WCHAR_T:
         //TODO: fix
-        // serialize<wchar_t>(out, in);
+        // stringify<wchar_t>(out, in);
         break;
 
     // short
@@ -192,7 +192,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
     
     case EType::ENUM:
-        // out->append(static_cast<const EInterface*>(in)->serialize());
+        // out->append(static_cast<const EInterface*>(in)->stringify());
         break;
 
     // function
@@ -210,7 +210,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
     }
 }
 
-// runtime deserialize
+// runtime parse
 void deserialize(void* out, const std::string& in, const EType& type) {
     switch (type) {
     case EType::UNREGISTERED:
@@ -218,7 +218,7 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
 
     case EType::CLASS: 
-        Object::deserialize(static_cast<Object*>(out), in);
+        Object::parse(static_cast<Object*>(out), in);
         break;
 
     case EType::POINTER: {
@@ -257,7 +257,7 @@ void deserialize(void* out, const std::string& in, const EType& type) {
     // wchar
     case EType::WCHAR_T:
     // TODO: fix
-        // deserialize<wchar_t>(static_cast<wchar_t*>(out), in, inout);
+        // parse<wchar_t>(static_cast<wchar_t*>(out), in, inout);
         break;
 
     // short
@@ -294,7 +294,7 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
 
     case EType::ENUM:
-        // static_cast<EInterface*>(out)->deserialize(in);
+        // static_cast<EInterface*>(out)->parse(in);
         break;
 
     // function
@@ -308,7 +308,7 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
 
     case EType::STL_DEQUE:
-        static_cast<LWE::stl::Container*>(out)->deserialize(in);
+        static_cast<LWE::stl::Container*>(out)->parse(in);
         break;
     }
 }

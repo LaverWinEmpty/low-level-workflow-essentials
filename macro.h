@@ -252,11 +252,11 @@ public:                                                                         
  */
 #define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
     using CONTAINER##Element = ELEMENT;                                                                                \
-    virtual void deserialize(const string& in) override {                                                              \
-        *this = Container::deserialize<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                             \
+    virtual void parse(const string& in) override {                                                                    \
+        *this = Container::parse<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                                   \
     }                                                                                                                  \
-    virtual std::string serialize() const override {                                                                   \
-        return Container::serialize<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(this);                               \
+    virtual std::string stringify() const override {                                                                   \
+        return Container::stringify<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(this);                               \
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 

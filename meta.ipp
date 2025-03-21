@@ -564,7 +564,7 @@ Enum* enumof(const string& in) {
     return Registry<Enum>::find(in);
 }
 
-template<typename E> const char* Enum::stringify(E in) {
+template<typename E> const char* Enum::serialize(E in) {
     static std::unordered_map<E, const char*> cache;
 
     auto result = cache.find(in);
@@ -582,7 +582,7 @@ template<typename E> const char* Enum::stringify(E in) {
     return "";
 }
 
-const char* Enum::stringify(const string& type, uint64 value) {
+const char* Enum::serialize(const string& type, uint64 value) {
     const Enumerate& reflected = Enumerate::find(type);
     for(auto i : reflected) {
         if(i.value == value) {
@@ -592,15 +592,15 @@ const char* Enum::stringify(const string& type, uint64 value) {
     return "";
 }
 
-const char* Enum::stringify(const char* type, uint64 value) {
-    return stringify(string{ type }, value);
+const char* Enum::serialize(const char* type, uint64 value) {
+    return serialize(string{ type }, value);
 }
 
-template<typename E> E Enum::parse(const char* in) {
-    return parse(string{ in });
+template<typename E> E Enum::deserialize(const char* in) {
+    return deserialize(string{ in });
 }
 
-template<typename E> E Enum::parse(const string& in) {
+template<typename E> E Enum::deserialize(const string& in) {
     std::unordered_map<string, E> cache;
 
     auto result = cache.find(in);
@@ -618,7 +618,7 @@ template<typename E> E Enum::parse(const string& in) {
     return static_cast<E>(0);
 }
 
-uint64_t Enum::parse(const string& type, const string& name) {
+uint64_t Enum::deserialize(const string& type, const string& name) {
     const Enumerate& reflected = Enumerate::find(type);
     for(auto i : reflected) {
         if(i.name == name) {

@@ -1,7 +1,7 @@
+#include "object.hpp"
 #ifdef LWE_OBJECT_HEADER
 
-std::string Object::serialize() const {
-
+std::string Object::stringfy() const {
     const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
         return {};
@@ -17,12 +17,12 @@ std::string Object::serialize() const {
         ::serialize(&buffer, ptr + prop[i].offset, prop[i].type);
         buffer.append(", ");
     }
-    ::serialize(&buffer, ptr + prop[loop].offset, prop[loop].type);
+    serialize(&buffer, ptr + prop[loop].offset, prop[loop].type);
     buffer.append(" }");
     return buffer;
 }
 
-void Object::deserialize(const std::string& in) {
+void Object::parse(const std::string& in) {
     char* out = const_cast<char*>(reinterpret_cast<const char*>(this));
 
     // empty
@@ -49,7 +49,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             // len + 1: with ']'
-            ::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
+            deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
             begin += (len + 3); // pass <], >
             len    = 0;
         }
@@ -63,7 +63,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             // len + 1: with '\"'
-            ::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
+            deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
             begin += (len + 3); // pass <", >
             len    = 0;
         }
@@ -78,7 +78,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             // len + 1: with '}'
-            ::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
+            deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
             begin += (len + 3); // pass <}, >
             len    = 0;
         }
@@ -93,14 +93,14 @@ void Object::deserialize(const std::string& in) {
                 }
                 ++len;
             }
-            ::deserialize(out + prop[i].offset, in.substr(begin, len), prop[i].type); // ignore ',' or ' '
+            deserialize(out + prop[i].offset, in.substr(begin, len), prop[i].type); // ignore ',' or ' '
             begin += 3;                                                               // pass <, > or < ]>
             len    = 0;
         }
     }
 }
 
-template<typename T> bool Object::isA() const {
+template<typename T> bool Object::isof() const {
     const Class* cls = classof<T>();
     if(cls) {
         const Class* self = meta();
@@ -114,11 +114,23 @@ template<typename T> bool Object::isA() const {
     return false;
 }
 
-bool Object::isA(const char* in) const {
-    return isA(string{ in });
+bool Object::isof(const Class* in) const {
+    const Class* self = meta();
+    while(self) {
+        if(in == self) {
+            return true;
+        }
+        self = self->base();
+    }
+    return false;
 }
 
-bool Object::isA(const string& in) const {
+bool Object::isof(const char* in) const {
+
+    return isof(string{ in });
+}
+
+bool Object::isof(const string& in) const {
     const Class* cls = classof(in);
     if(cls) {
         const Class* self = meta();
@@ -132,8 +144,8 @@ bool Object::isA(const string& in) const {
     return false;
 }
 
-void Object::deserialize(Object* out, const std::string& in) {
-    out->deserialize(in);
+void Object::parse(Object* out, const std::string& in) {
+    out->parse(in);
 }
 
 const char* ObjectMeta::name() const {

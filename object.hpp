@@ -9,14 +9,15 @@ public:
     virtual Class* meta() const;
 
 public:
-    std::string serialize() const;
-    void        deserialize(const std::string& in);
-    static void deserialize(Object* out, const std::string& in);
+    std::string stringfy() const;
+    void        parse(const std::string& in);
+    static void parse(Object* out, const std::string& in);
 
 public:
-    template<typename T> bool isA() const;
-    bool                      isA(const char*) const;
-    bool                      isA(const string&) const;
+    template<typename T> bool isof() const;              //!< check same type of derived by template
+    bool                      isof(const Class*) const;  //!< check same type of derived by meta class
+    bool                      isof(const char*) const;   //!< check same type of derived by name
+    bool                      isof(const string&) const; //!< check same type of derived by name
 };
 
 struct ObjectMeta: Class {
