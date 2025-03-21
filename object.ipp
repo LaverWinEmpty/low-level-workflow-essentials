@@ -9,8 +9,9 @@ template<typename T> Object* create() {
     auto   result = Object::pool().find(size);
     if(result == Object::pool().end()) {
         Object::pool()[size] = new mem::Pool(size, 1); // not aligned
+        return Object::pool()[size]->allocate<T>();
     }
-    return result.second->allocate<T>();
+    return result->second->allocate<T>();
 }
 
 void destroy(Object* in) {
