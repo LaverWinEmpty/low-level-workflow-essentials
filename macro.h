@@ -134,14 +134,19 @@
  */
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
 public:                                                                                                                \
-    virtual Class* meta() const override {                                                                             \
-        static Class* metacls = Registry<Class>::find(#TYPE);                                                           \
-        return metacls;                                                                                                \
-    }                                                                                                                  \
-    using Base = BASE;                                                                                                 \
-private:
+    virtual Class* meta() const override;                                                                              \
+    friend struct TYPE##Meta;                                                                                          \
+    using Base = BASE
 
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
+    template<> Class* classof<TYPE>() {                                                                                \
+        static Class* META = Registry<Class>::find(#TYPE);                                                             \
+        return META;                                                                                                   \
+    }                                                                                                                  \
+    template<> Object* statics<TYPE>() {                                                                               \
+        static Object* OBJ = Registry<Object>::find(#TYPE);                                                            \
+        return OBJ;                                                                                                    \
+    }                                                                                                                  \
     struct TYPE##Meta: Class {                                                                                         \
         virtual const char* name() const override {                                                                    \
             return #TYPE;                                                                                              \
@@ -150,15 +155,14 @@ private:
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
         virtual Class* base() const override {                                                                         \
-            return classof<TYPE::Base>();                                                                            \
+            return classof<TYPE::Base>();                                                                              \
         }                                                                                                              \
         virtual const Structure& fields() const override;                                                              \
     };                                                                                                                 \
-    template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
-    template<> Object* statics<TYPE>() {                                                                               \
-        static Object* OBJ = Registry<Object>::find(#TYPE);                                                            \
-        return OBJ;                                                                                                    \
+    Class* TYPE::meta() const {                                                                                        \
+        return classof<TYPE>();                                                                                        \
     }                                                                                                                  \
+    template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
     template<> Registered registclass<TYPE>() {                                                                        \
         Structure::reflect<TYPE>();                                                                                    \
         Registry<Object>::add<TYPE>(#TYPE);                                                                            \

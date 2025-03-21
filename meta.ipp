@@ -527,11 +527,13 @@ Object* statics(const string& in) {
 }
 
 template<typename T> Class* classof() {
-    const Object* ptr = statics<T>();
-    if(ptr) {
-        return ptr->meta();
+    // default, other class -> template specialization
+    if constexpr(!std::is_same_v<T, Object>) {
+        return nullptr;
     }
-    return nullptr;
+
+    static Class* meta = Registry<Class>::find("ObjectMeta");
+    return meta;
 }
 
 template<typename T> Class* classof(const T&) {

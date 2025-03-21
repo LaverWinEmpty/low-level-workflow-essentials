@@ -26,7 +26,7 @@ void Object::deserialize(const std::string& in) {
     char* out = const_cast<char*>(reinterpret_cast<const char*>(this));
 
     // empty
-    if (in == "{}") {
+    if(in == "{}") {
         return;
     }
 
@@ -100,6 +100,20 @@ void Object::deserialize(const std::string& in) {
     }
 }
 
+template<typename T> bool Object::isA() const {
+    Class* cls = classof<T>();
+    if(cls) {
+        Class* self = meta();
+        while(cls) {
+            if(cls == self) {
+                return true;
+            }
+            cls = cls->base();
+        }
+    }
+    return false;
+}
+
 void Object::deserialize(Object* out, const std::string& in) {
     out->deserialize(in);
 }
@@ -121,8 +135,7 @@ Class* ObjectMeta::base() const {
 }
 
 Class* Object::meta() const {
-    static Class* Meta = Registry<Class>::find("Object");
-    return Meta;
+    return classof<Object>();
 }
 
 Registered Object_REGISTERED = registclass<Object>();

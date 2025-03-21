@@ -12,6 +12,9 @@ public:
     std::string serialize() const;
     void        deserialize(const std::string& in);
     static void deserialize(Object* out, const std::string& in);
+
+public:
+    template<typename T> bool isA() const;
 };
 
 struct ObjectMeta: Class {
