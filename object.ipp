@@ -114,6 +114,24 @@ template<typename T> bool Object::isA() const {
     return false;
 }
 
+bool Object::isA(const char* in) const {
+    return isA(string{ in });
+}
+
+bool Object::isA(const string& in) const {
+    const Class* cls = classof(in);
+    if(cls) {
+        const Class* self = meta();
+        while(cls) {
+            if(cls == self) {
+                return true;
+            }
+            self = self->base();
+        }
+    }
+    return false;
+}
+
 void Object::deserialize(Object* out, const std::string& in) {
     out->deserialize(in);
 }

@@ -15,6 +15,8 @@ public:
 
 public:
     template<typename T> bool isA() const;
+    bool                      isA(const char*) const;
+    bool                      isA(const string&) const;
 };
 
 struct ObjectMeta: Class {
