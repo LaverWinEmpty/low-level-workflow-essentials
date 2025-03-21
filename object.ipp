@@ -5,6 +5,10 @@ LWE_BEGIN
 Object::~Object() {}
 
 template<typename T> Object* create() {
+    if (!std::is_base_of_v<Object, T>) {
+        assert(false);
+        return nullptr;
+    }
     size_t size   = classof<T>()->size();
     auto   result = Object::pool().find(size);
     if(result == Object::pool().end()) {
