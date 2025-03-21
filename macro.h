@@ -135,7 +135,7 @@
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
 public:                                                                                                                \
     virtual Class* meta() const override {                                                                             \
-        static Class* metacls = Register<Class>::Get(#TYPE);                                                           \
+        static Class* metacls = Registry<Class>::find(#TYPE);                                                           \
         return metacls;                                                                                                \
     }                                                                                                                  \
     using Base = BASE;                                                                                                 \
@@ -154,23 +154,23 @@ private:
         }                                                                                                              \
         virtual const Structure& fields() const override;                                                              \
     };                                                                                                                 \
-    template<> template<> const Structure& Structure::Reflect<TYPE>();                                                 \
+    template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
     template<> const Object* statics<TYPE>() {                                                                         \
-        static const Object* OBJ = Register<Object>::Get(#TYPE);                                                       \
+        static const Object* OBJ = Registry<Object>::find(#TYPE);                                                       \
         return OBJ;                                                                                                    \
     }                                                                                                                  \
     template<> Registered registclass<TYPE>() {                                                                        \
-        Structure::Reflect<TYPE>();                                                                                    \
-        Register<Object>::Set<TYPE>(#TYPE);                                                                            \
-        Register<Class>::Set<TYPE##Meta>(#TYPE);                                                                       \
+        Structure::reflect<TYPE>();                                                                                    \
+        Registry<Object>::add<TYPE>(#TYPE);                                                                            \
+        Registry<Class>::add<TYPE##Meta>(#TYPE);                                                                       \
         return Registered::REGISTERED;                                                                                 \
     }                                                                                                                  \
     Registered TYPE##_RGISTERED = registclass<TYPE>();                                                                 \
     const Structure& TYPE##Meta::fields() const {                                                                      \
-        static const Structure& REF = Structure::Reflect<TYPE>();                                                      \
+        static const Structure& REF = Structure::reflect<TYPE>();                                                      \
         return REF;                                                                                                    \
     }                                                                                                                  \
-    template<> template<> const Structure& Structure::Reflect<TYPE>() {                                                \
+    template<> template<> const Structure& Structure::reflect<TYPE>() {                                                \
         using CLASS = TYPE;                                                                                            \
         const char* NAME = #TYPE;                                                                                      \
         auto result = map.find(NAME);                                                                                  \
@@ -195,7 +195,7 @@ private:
 
 #define REGISTER_ENUM_BEGIN(TYPE)                                                                                      \
     struct TYPE##Meta;                                                                                                 \
-    template<> template<> const Enumerate& Enumerate::Reflect<TYPE>();                                                 \
+    template<> template<> const Enumerate& Enumerate::reflect<TYPE>();                                                 \
     struct TYPE##Meta: Enum {                                                                                          \
         virtual const char* name() const {                                                                             \
             return #TYPE;                                                                                              \
@@ -204,21 +204,21 @@ private:
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
         virtual const Enumerate& enums() const {                                                                       \
-            static const Enumerate& REF = Enumerate::Reflect<TYPE>();                                                  \
+            static const Enumerate& REF = Enumerate::reflect<TYPE>();                                                  \
             return REF;                                                                                                \
         }                                                                                                              \
     };                                                                                                                 \
     template<> Enum* metaenum<TYPE>() {                                                                                \
-        static Enum* ENUM = Register<Enum>::Get(#TYPE);                                                                \
+        static Enum* ENUM = Registry<Enum>::find(#TYPE);                                                               \
         return ENUM;                                                                                                   \
     }                                                                                                                  \
     template<> Registered registenum<TYPE>() {                                                                         \
-        Enumerate::Reflect<TYPE>();                                                                                    \
-        Register<Enum>::Set<TYPE##Meta>(#TYPE);                                                                        \
+        Enumerate::reflect<TYPE>();                                                                                    \
+        Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                                        \
         return Registered::REGISTERED;                                                                                 \
     }                                                                                                                  \
     Registered TYPE##_REGISTERED = registenum<TYPE>();                                                                 \
-    template<> template<> const Enumerate& Enumerate::Reflect<TYPE>() {                                                \
+    template<> template<> const Enumerate& Enumerate::reflect<TYPE>() {                                                \
         using enum TYPE;                                                                                               \
         const char* NAME = #TYPE;                                                                                      \
         auto result = map.find(NAME);                                                                                  \

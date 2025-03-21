@@ -41,7 +41,7 @@ enum class EType : uint8 {
  * @brief type info
  */
 struct Type {
-    template<typename T> static const Type& Reflect();
+    template<typename T> static const Type& deserialize();
 
 public:
     Type() = default;
@@ -59,7 +59,7 @@ public:
     size_t       size() const;
     hash_t       hash() const;
     EType        type() const;
-    const char*  stringify() const;
+    const char*  serialize() const;
 
 public:
     explicit operator string() const;
@@ -70,7 +70,7 @@ private:
 
 private:
     void                             push(EType);
-    template<typename T> static void Reflect(Type*);
+    template<typename T> static void deserialize(Type*);
 
 private:
     hash_t hashed = 0;
@@ -112,25 +112,25 @@ struct Enumerator {
     const char* name;
 };
 
-template<typename T> struct Traits {
-    template<class C> static const Traits<T>& Reflect();
+template<typename T> struct Reflector {
+    template<class C> static const Reflector<T>& reflect();
 
 public:
-    template<typename C> static const Traits<T>& Get();              //!< get registred C type data
-    template<typename C> static const Traits<T>& Get(const C&);      //!< get registred C type data
-    static const Traits<T>&                      Get(const char*);   //!< get registred C type data by name c string
-    static const Traits<T>&                      Get(const string&); //!< get registred C type data by name string
+    template<typename C> static const Reflector<T>& find();              //!< get registred C type data
+    template<typename C> static const Reflector<T>& find(const C&);      //!< get registred C type data
+    static const Reflector<T>&                      find(const char*);   //!< get registred C type data by name c string
+    static const Reflector<T>&                      find(const string&); //!< get registred C type data by name string
 
 public:
-    Traits() = default;
-    Traits(const Traits&);
-    Traits(Traits&&) noexcept;
-    Traits(const std::initializer_list<T>&);
-    ~Traits();
+    Reflector() = default;
+    Reflector(const Reflector&);
+    Reflector(Reflector&&) noexcept;
+    Reflector(const std::initializer_list<T>&);
+    ~Reflector();
 
 public:
-    Traits& operator=(const Traits);
-    Traits& operator=(Traits&&) noexcept;
+    Reflector& operator=(const Reflector);
+    Reflector& operator=(Reflector&&) noexcept;
 
 public:
     const T& operator[](size_t) const;
@@ -150,11 +150,11 @@ private:
     size_t count     = 0;
 
 private:
-    inline static std::unordered_map<string, Traits<T>> map;
+    inline static std::unordered_map<string, Reflector<T>> map;
 };
 
-using Enumerate = Traits<Enumerator>;
-using Structure = Traits<Field>;
+using Enumerate = Reflector<Enumerator>;
+using Structure = Reflector<Field>;
 
 enum class Registered : bool {
     REGISTERED = 1
@@ -182,37 +182,39 @@ public:
     virtual const Enumerate& enums() const = 0;
 
 public:
-    template<typename E> static const char* String(E);
-    static const char*                      String(const string&, uint64);
-    static const char*                      String(const char*, uint64);
+    template<typename E> static const char* stringify(E);
+    static const char*                      stringify(const string&, uint64);
+    static const char*                      stringify(const char*, uint64);
 
 public:
-    template<typename E> static E Value(const char*);
-    template<typename E> static E Value(const string&);
-    static uint64_t               Value(const string&, const string&);
+    template<typename E> static E parse(const char*);
+    template<typename E> static E parse(const string&);
+    static uint64_t               parse(const string&, const string&);
 };
 
-template<typename T> class Register {
+template<typename T> class Registry {
 public:
     using Map = std::unordered_map<string, T*>;
 
 public:
-    template<typename U> static void Set(const string&);
-    template<typename U> static void Set(const char*);
+    template<typename U> static void add(const string&);
+    template<typename U> static void add(const char*);
 
 public:
-    static T* Get(const char*);
-    static T* Get(const string&);
+    static T* find(const char*);
+    static T* find(const string&);
 
 private:
-    Register() = default;
-    ~Register();
+    Registry() = default;
+
+public:
+    ~Registry();
 
 private:
     Map map;
 
 private:
-    static Map& Registry();
+    static Map& instance();
 };
 
 template<typename T> Registered registclass();
