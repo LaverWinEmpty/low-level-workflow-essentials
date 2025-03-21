@@ -101,14 +101,14 @@ void Object::deserialize(const std::string& in) {
 }
 
 template<typename T> bool Object::isA() const {
-    Class* cls = classof<T>();
+    const Class* cls = classof<T>();
     if(cls) {
-        Class* self = meta();
+        const Class* self = meta();
         while(cls) {
             if(cls == self) {
                 return true;
             }
-            cls = cls->base();
+            self = self->base();
         }
     }
     return false;

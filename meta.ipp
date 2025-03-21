@@ -532,7 +532,7 @@ template<typename T> Class* classof() {
         return nullptr;
     }
 
-    static Class* meta = Registry<Class>::find("ObjectMeta");
+    static Class* meta = Registry<Class>::find("Object");
     return meta;
 }
 
