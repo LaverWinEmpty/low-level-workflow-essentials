@@ -2,10 +2,8 @@
 
 LWE_BEGIN
 
-Object::~Object() {}
-
-template<typename T> Object* create() {
-    if (!std::is_base_of_v<Object, T>) {
+template<typename T> T* create() {
+    if constexpr(!std::is_base_of_v<Object, T>) {
         assert(false);
         return nullptr;
     }
@@ -18,9 +16,12 @@ template<typename T> Object* create() {
     return result->second->allocate<T>();
 }
 
-void destroy(Object* in) {
+template<typename T> void destroy(T* in) {
+    if constexpr (!std::is_base_of_v<Object, T>) {
+        assert(false);
+    }
     size_t size = in->meta()->size();
-    in->~Object();
+    static_cast<Object*>(in)->~Object();
     Object::pool()[size]->deallocate<void>(in);
 }
 
@@ -122,6 +123,8 @@ void Object::parse(const std::string& in) {
         }
     }
 }
+
+Object::~Object() {}
 
 template<typename T> bool Object::isof() const {
     const Class* cls = classof<T>();

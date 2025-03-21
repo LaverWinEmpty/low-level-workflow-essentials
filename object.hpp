@@ -10,8 +10,8 @@ LWE_BEGIN
  * @brief serializable object: template, array not support
  */
 class Object {
-    template<typename T> friend Object* create();
-    friend void                         destroy(Object*);
+    template<typename T> friend T*   create();
+    template<typename T> friend void destroy(T*);
 
 public:
     virtual ~Object();
@@ -50,8 +50,8 @@ struct ObjectMeta: Class {
     virtual Class*           base() const override;
 };
 
-template<typename T> Object* create();
-void                         destroy(Object*);
+template<typename T> T*   create();
+template<typename T> void destroy(T*);
 
 LWE_END
 #endif
