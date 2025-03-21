@@ -94,7 +94,6 @@ template<typename Derived> Derived stl::Container::parse(const string& in) {
 }
 
 } // namespace stl
-LWE_END
 
 template<typename T> constexpr bool isSTL() {
     return std::is_base_of_v<LWE::stl::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
@@ -116,4 +115,5 @@ template<> bool isSTL<EType>(const EType& code) {
     return false;
 }
 
+LWE_END
 #endif

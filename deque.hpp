@@ -30,8 +30,6 @@
 
 #include "iostream"
 
-REGISTER_CONTAINER(Deque, STL_DEQUE);
-
 LWE_BEGIN
 
 namespace stl {
@@ -205,10 +203,11 @@ private:
     Iterator iterator;
 };
 
-LWE_END
 } // namespace stl
 
-// REGISTER_CONTAINER(Deque, STL_DEQUE);
+REGISTER_CONTAINER(Deque, STL_DEQUE);
+
+LWE_END
 
 #include "deque.ipp"
 #endif

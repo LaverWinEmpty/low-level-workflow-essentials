@@ -3,6 +3,8 @@
 
 #include "meta.hpp"
 
+LWE_BEGIN
+
 //! @brief
 class Object {
 public:
@@ -27,4 +29,5 @@ struct ObjectMeta: Class {
     virtual Class*           base() const override;
 };
 
+LWE_END
 #endif

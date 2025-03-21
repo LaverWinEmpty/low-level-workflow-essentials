@@ -1,6 +1,7 @@
 #include "meta.hpp"
 #ifdef LWE_META_HEADER
 
+LWE_BEGIN
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -722,6 +723,7 @@ constexpr const char* typestring(EType code) {
     }
     return ""; // error
 }
-
 // clang-format on
+
+LWE_END
 #endif

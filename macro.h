@@ -134,57 +134,57 @@
  */
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
 public:                                                                                                                \
-    virtual Class* meta() const override;                                                                              \
+    virtual LWE::Class* meta() const override;                                                                         \
     friend struct TYPE##Meta;                                                                                          \
     using Base = BASE
 
 #define REGISTER_FIELD_BEGIN(TYPE)                                                                                     \
-    template<> Class* classof<TYPE>() {                                                                                \
-        static Class* META = Registry<Class>::find(#TYPE);                                                             \
+    template<> LWE::Class* LWE::classof<TYPE>() {                                                                      \
+        static LWE::Class* META = LWE::Registry<Class>::find(#TYPE);                                                   \
         return META;                                                                                                   \
     }                                                                                                                  \
-    template<> Object* statics<TYPE>() {                                                                               \
-        static Object* OBJ = Registry<Object>::find(#TYPE);                                                            \
+    template<> LWE::Object* LWE::statics<TYPE>() {                                                                     \
+        static LWE::Object* OBJ = LWE::Registry<Object>::find(#TYPE);                                                  \
         return OBJ;                                                                                                    \
     }                                                                                                                  \
-    struct TYPE##Meta: Class {                                                                                         \
+    struct TYPE##Meta: LWE::Class {                                                                                    \
         virtual const char* name() const override {                                                                    \
             return #TYPE;                                                                                              \
         }                                                                                                              \
         virtual size_t size() const override {                                                                         \
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
-        virtual Class* base() const override {                                                                         \
+        virtual LWE::Class* base() const override {                                                                    \
             return classof<TYPE::Base>();                                                                              \
         }                                                                                                              \
-        virtual const Structure& fields() const override;                                                              \
+        virtual const LWE::Structure& fields() const override;                                                         \
     };                                                                                                                 \
-    Class* TYPE::meta() const {                                                                                        \
+    LWE::Class* TYPE::meta() const {                                                                                   \
         return classof<TYPE>();                                                                                        \
     }                                                                                                                  \
-    template<> template<> const Structure& Structure::reflect<TYPE>();                                                 \
-    template<> Registered registclass<TYPE>() {                                                                        \
-        Structure::reflect<TYPE>();                                                                                    \
-        Registry<Object>::add<TYPE>(#TYPE);                                                                            \
-        Registry<Class>::add<TYPE##Meta>(#TYPE);                                                                       \
-        return Registered::REGISTERED;                                                                                 \
+    template<> template<> const LWE::Structure& LWE::Structure::reflect<TYPE>();                                       \
+    template<> LWE::Registered LWE::registclass<TYPE>() {                                                              \
+        LWE::Structure::reflect<TYPE>();                                                                               \
+        LWE::Registry<Object>::add<TYPE>(#TYPE);                                                                       \
+        LWE::Registry<Class>::add<TYPE##Meta>(#TYPE);                                                                  \
+        return LWE::Registered::REGISTERED;                                                                            \
     }                                                                                                                  \
-    Registered TYPE##_RGISTERED = registclass<TYPE>();                                                                 \
-    const Structure& TYPE##Meta::fields() const {                                                                      \
-        static const Structure& REF = Structure::reflect<TYPE>();                                                      \
+    LWE::Registered TYPE##_RGISTERED = registclass<TYPE>();                                                            \
+    const LWE::Structure& TYPE##Meta::fields() const {                                                                 \
+        static const LWE::Structure& REF = LWE::Structure::reflect<TYPE>();                                            \
         return REF;                                                                                                    \
     }                                                                                                                  \
-    template<> template<> const Structure& Structure::reflect<TYPE>() {                                                \
+    template<> template<> const LWE::Structure& LWE::Structure::reflect<TYPE>() {                                      \
         using CLASS = TYPE;                                                                                            \
         const char* NAME = #TYPE;                                                                                      \
         auto result = map.find(NAME);                                                                                  \
         if (result != map.end()) {                                                                                     \
         	return result->second;                                                                                     \
         }                                                                                                              \
-        Structure meta; // {
+        LWE::Structure meta; // {
 #define REGISTER_FIELD(FIELD)                                                                                          \
         meta.push(                                                                                                     \
-                Field {                                                                                                \
+                LWE::Field {                                                                                           \
                     typeof<decltype(CLASS::FIELD)>(),                                                                  \
                     #FIELD,                                                                                            \
                     sizeof(CLASS::FIELD),                                                                              \
@@ -199,39 +199,39 @@ public:                                                                         
 
 #define REGISTER_ENUM_BEGIN(TYPE)                                                                                      \
     struct TYPE##Meta;                                                                                                 \
-    template<> template<> const Enumerate& Enumerate::reflect<TYPE>();                                                 \
-    struct TYPE##Meta: Enum {                                                                                          \
+    template<> template<> const LWE::Enumerate& LWE::Enumerate::reflect<TYPE>();                                       \
+    struct TYPE##Meta: LWE::Enum {                                                                                     \
         virtual const char* name() const {                                                                             \
             return #TYPE;                                                                                              \
         }                                                                                                              \
         virtual size_t size() const {                                                                                  \
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
-        virtual const Enumerate& enums() const {                                                                       \
+        virtual const LWE::Enumerate& enums() const {                                                                  \
             static const Enumerate& REF = Enumerate::reflect<TYPE>();                                                  \
             return REF;                                                                                                \
         }                                                                                                              \
     };                                                                                                                 \
-    template<> Enum* enumof<TYPE>() {                                                                                  \
-        static Enum* ENUM = Registry<Enum>::find(#TYPE);                                                               \
+    template<> LWE::Enum* LWE::enumof<TYPE>() {                                                                        \
+        static LWE::Enum* ENUM = LWE::Registry<Enum>::find(#TYPE);                                                     \
         return ENUM;                                                                                                   \
     }                                                                                                                  \
-    template<> Registered registenum<TYPE>() {                                                                         \
-        Enumerate::reflect<TYPE>();                                                                                    \
-        Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                                        \
-        return Registered::REGISTERED;                                                                                 \
+    template<> LWE::Registered LWE::registenum<TYPE>() {                                                               \
+        LWE::Enumerate::reflect<TYPE>();                                                                               \
+        LWE::Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                                   \
+        return LWE::Registered::REGISTERED;                                                                            \
     }                                                                                                                  \
-    Registered TYPE##_REGISTERED = registenum<TYPE>();                                                                 \
-    template<> template<> const Enumerate& Enumerate::reflect<TYPE>() {                                                \
+    LWE::Registered TYPE##_REGISTERED = LWE::registenum<TYPE>();                                                       \
+    template<> template<> const LWE::Enumerate& LWE::Enumerate::reflect<TYPE>() {                                      \
         using enum TYPE;                                                                                               \
         const char* NAME = #TYPE;                                                                                      \
         auto result = map.find(NAME);                                                                                  \
         if (result != map.end()) {                                                                                     \
         	return result->second;                                                                                     \
         }                                                                                                              \
-        Enumerate meta; // {
+        LWE::Enumerate meta; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
-        meta.push(Enumerator{ static_cast<uint64>(VALUE), #VALUE }) // }
+        meta.push(LWE::Enumerator{ static_cast<uint64>(VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
         meta.shrink();                                                                                                 \
         map.insert({ NAME, meta });                                                                                    \

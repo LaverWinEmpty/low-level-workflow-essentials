@@ -1,6 +1,8 @@
 #include "object.hpp"
 #ifdef LWE_OBJECT_HEADER
 
+LWE_BEGIN
+
 std::string Object::stringfy() const {
     const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
@@ -170,4 +172,5 @@ Class* Object::meta() const {
 
 Registered Object_REGISTERED = registclass<Object>();
 
+LWE_END
 #endif

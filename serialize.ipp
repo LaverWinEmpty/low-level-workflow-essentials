@@ -1,5 +1,6 @@
 #ifdef LWE_SERIALIZE_HEADER
 
+LWE_BEGIN
 // clang-format off
 
 // primitive type to string
@@ -313,4 +314,5 @@ void deserialize(void* out, const std::string& in, const EType& type) {
     }
 }
 
+LWE_END
 #endif

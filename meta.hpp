@@ -4,6 +4,7 @@
 #include "hal.hpp"
 #include "common.hpp"
 
+LWE_BEGIN
 /// @brief type codes
 enum class EType : uint8 {
     UNREGISTERED,
@@ -234,8 +235,9 @@ template<typename T> Enum* enumof(const T&);      //!< get enum value list
 Enum*                      enumof(const char*);   //!< get enum value list
 Enum*                      enumof(const string&); //!< get enum value list
 
-template<> struct std::hash<Type> {
-    size_t operator()(const Type& obj) const { return obj.hash(); }
-};
+LWE_END
 
+template<> struct std::hash<LWE::Type> {
+    size_t operator()(const LWE::Type& obj) const { return obj.hash(); }
+};
 #endif

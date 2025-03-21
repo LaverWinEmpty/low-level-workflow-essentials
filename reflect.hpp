@@ -11,6 +11,7 @@
 #include "object.ipp"
 #include "container.ipp"
 
+LWE_BEGIN
 REGISTER_ENUM_BEGIN(EType) {
     REGISTER_ENUM(UNREGISTERED);
     REGISTER_ENUM(VOID);
@@ -41,5 +42,5 @@ REGISTER_ENUM_BEGIN(EType) {
     REGISTER_ENUM(CONST);
 }
 REGISTER_ENUM_END;
-
+LWE_END
 #endif
