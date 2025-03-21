@@ -82,6 +82,7 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, N>& Deque<T, SVO>::
 
 template<typename T, size_t SVO> template<size_t N> Deque<T, N>& Deque<T, SVO>::operator=(Deque<T, N>&& in) {
     if(this != &in) {
+        // counter == stack == not allocated
         if(in.container == in.stack) {
             if(!reallocate(in.counter)) {
                 throw std::bad_alloc();
@@ -316,15 +317,15 @@ template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_b
     emplace(0, std::forward<U>(in));
 }
 
-template<typename T, size_t SVO> template<typename U> inline void Deque<T, SVO>::push_front(U&& in) {
+template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_front(U&& in) {
     unshift(std::forward<U>(in));
 }
 
-template<typename T, size_t SVO> inline void Deque<T, SVO>::pop_back() {
+template<typename T, size_t SVO> void Deque<T, SVO>::pop_back() {
     pop();
 }
 
-template<typename T, size_t SVO> inline void Deque<T, SVO>::pop_front() {
+template<typename T, size_t SVO> void Deque<T, SVO>::pop_front() {
     shift();
 }
 
@@ -374,7 +375,10 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexc
 
     // free
     if(container != stack) {
-        free(container);
+        if (capacitor > MIN) {
+            free(container);
+        }
+        else container = newly; // ctor not called
     }
 
     // set

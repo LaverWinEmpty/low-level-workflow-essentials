@@ -4,9 +4,7 @@
 #include "hal.hpp"
 #include "common.hpp"
 
-/**
- * @brief type codes
- */
+/// @brief type codes
 enum class EType : uint8 {
     UNREGISTERED,
     VOID,
@@ -37,9 +35,7 @@ enum class EType : uint8 {
     CONST,
 };
 
-/**
- * @brief type info
- */
+/// @brief type info
 struct Type {
     template<typename T> static const Type& deserialize();
 
@@ -84,29 +80,19 @@ private:
     };
 };
 
-// clang-format off
-template<typename T> constexpr EType typecode(); //!< get type code
-
-constexpr const char*            typestring(EType);      //!< reflect type name string by enum
-template<typename T> const char* typestring();            //!< reflect type name string explicit
-template<typename T> const char* typestring(const T&);    //!< reflect type name string implicit
-const char*                      typestring(const Type&); //!< reflect type name
-
-template<typename T> const Type& typeof();         //!< reflect typeinfo by template
-template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
-template<typename T> void        typeof(Type*);    //!< pirvate
-// clang-format on
-
+/// @brief variable info
 struct Variable {
     Type        type;
     const char* name;
     size_t      size;
 };
 
+/// @brief member variable info
 struct Field: Variable {
     size_t offset;
 };
 
+/// @brief enum info
 struct Enumerator {
     uint64      value;
     const char* name;
@@ -165,9 +151,6 @@ enum class Registered : bool {
 
 /// @brief class metadata
 struct Class {
-    template<typename T> friend Registered registclass();
-
-public:
     virtual const char*      name() const   = 0;
     virtual size_t           size() const   = 0;
     virtual const Structure& fields() const = 0;
@@ -176,9 +159,6 @@ public:
 
 /// @brief enum metadata
 struct Enum {
-    template<typename T> friend Registered registenum();
-
-public:
     virtual const char*      name() const  = 0;
     virtual size_t           size() const  = 0;
     virtual const Enumerate& enums() const = 0;
@@ -225,21 +205,32 @@ template<typename T> Registered registclass();
 /// @brief  pre-registered metadata of typename T, return value is unused
 template<typename T> Registered registenum();
 
+template<typename T> constexpr EType typecode(); //!< get type code
+
+constexpr const char*            typestring(EType);       //!< reflect type name string by enum
+template<typename T> const char* typestring();            //!< reflect type name string explicit
+template<typename T> const char* typestring(const T&);    //!< reflect type name string implicit
+const char*                      typestring(const Type&); //!< reflect type name
+
+template<typename T> const Type& typeof();         //!< reflect typeinfo by template
+template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
+template<typename T> void typeof(Type*);           //!< pirvate
+
 class Object;
 template<typename T> Object* statics();              //!< get static class
 template<typename T> Object* statics(const T&);      //!< get static class
 Object*                      statics(const char*);   //!< get static class
 Object*                      statics(const string&); //!< get static class
 
-template<typename T> Class* metaclass();              //!< get class field list
-template<typename T> Class* metaclass(const T&);      //!< get class field list
-Class*                      metaclass(const char*);   //!< get class field list
-Class*                      metaclass(const string&); //!< get class field list
+template<typename T> Class* classof();              //!< get class field list
+template<typename T> Class* classof(const T&);      //!< get class field list
+Class*                      classof(const char*);   //!< get class field list
+Class*                      classof(const string&); //!< get class field list
 
-template<typename T> Enum* metaenum();              //!< get enum value list
-template<typename T> Enum* metaenum(const T&);      //!< get enum value list
-Enum*                      metaenum(const char*);   //!< get enum value list
-Enum*                      metaenum(const string&); //!< get enum value list
+template<typename T> Enum* enumof();              //!< get enum value list
+template<typename T> Enum* enumof(const T&);      //!< get enum value list
+Enum*                      enumof(const char*);   //!< get enum value list
+Enum*                      enumof(const string&); //!< get enum value list
 
 template<> struct std::hash<Type> {
     size_t operator()(const Type& obj) const { return obj.hash(); }

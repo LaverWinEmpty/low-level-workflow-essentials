@@ -25,6 +25,11 @@ std::string Object::serialize() const {
 void Object::deserialize(const std::string& in) {
     char* out = const_cast<char*>(reinterpret_cast<const char*>(this));
 
+    // empty
+    if (in == "{}") {
+        return;
+    }
+
     const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
         assert(false);

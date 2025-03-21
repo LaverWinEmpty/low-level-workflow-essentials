@@ -526,7 +526,7 @@ Object* statics(const string& in) {
     return Registry<Object>::find(in);
 }
 
-template<typename T> Class* metaclass() {
+template<typename T> Class* classof() {
     const Object* ptr = statics<T>();
     if(ptr) {
         return ptr->meta();
@@ -534,31 +534,31 @@ template<typename T> Class* metaclass() {
     return nullptr;
 }
 
-template<typename T> Class* metaclass(const T&) {
-    return metaclass<T>();
+template<typename T> Class* classof(const T&) {
+    return classof<T>();
 }
 
-Class* metaclass(const char* in) {
-    return metaclass(string{ in });
+Class* classof(const char* in) {
+    return classof(string{ in });
 }
 
-Class* metaclass(const string& in) {
+Class* classof(const string& in) {
     return Registry<Class>::find(in);
 }
 
-template<typename T> Enum* metaenum() {
+template<typename T> Enum* enumof() {
     return nullptr;
 }
 
-template<typename T> Enum* metaenum(const T&) {
-    return metaenum<T>();
+template<typename T> Enum* enumof(const T&) {
+    return enumof<T>();
 }
 
-Enum* metaenum(const char* in) {
-    return metaenum(string{ in });
+Enum* enumof(const char* in) {
+    return enumof(string{ in });
 }
 
-Enum* metaenum(const string& in) {
+Enum* enumof(const string& in) {
     return Registry<Enum>::find(in);
 }
 

@@ -150,7 +150,7 @@ private:
             return sizeof(TYPE);                                                                                       \
         }                                                                                                              \
         virtual Class* base() const override {                                                                         \
-            return metaclass<TYPE::Base>();                                                                            \
+            return classof<TYPE::Base>();                                                                            \
         }                                                                                                              \
         virtual const Structure& fields() const override;                                                              \
     };                                                                                                                 \
@@ -208,7 +208,7 @@ private:
             return REF;                                                                                                \
         }                                                                                                              \
     };                                                                                                                 \
-    template<> Enum* metaenum<TYPE>() {                                                                                \
+    template<> Enum* enumof<TYPE>() {                                                                                \
         static Enum* ENUM = Registry<Enum>::find(#TYPE);                                                               \
         return ENUM;                                                                                                   \
     }                                                                                                                  \
