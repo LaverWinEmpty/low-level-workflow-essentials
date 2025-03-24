@@ -27,15 +27,14 @@
 LWE_BEGIN
 
 namespace stl {
-
-template<typename T, size_t SVO = DEF_SVO> struct Deque: Container {
+template<typename T, size_t SVO = 0> struct Deque: Container {
     CONTAINER_BODY(Deque, T, SVO);
 
 private:
     template<typename, size_t> friend struct Deque;
 
 private:
-    static constexpr size_t MIN = SVO < DEF_SVO ? DEF_SVO : common::align(SVO);
+    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : common::align(SVO));
 
 public:
     class Iterator; //!< iterator
@@ -118,14 +117,28 @@ private:
     bool reallocate(size_t) noexcept; //!< call realloc function
 
 private:
+    // stack wrapped structure for SVO specialized
+    template <size_t, typename = void> struct Stack;
+    template <size_t SVO> struct Stack<SVO, std::enable_if_t<SVO != 0>> {
+        operator T* () noexcept { return stack; }
+        operator const T* () const noexcept { return stack; }
+    private:
+        T stack[SVO]; // SVO is not 0, declaration
+    };
+    template <std::size_t SVO> struct Stack<SVO, std::enable_if_t<SVO == 0>> {
+        operator T* () noexcept { return nullptr; }
+        operator const T* () const noexcept { return nullptr; }
+    };
+    
+private:
     union {
-        T stack[MIN]; //!< small
+        Stack<MIN> stack; // stack, union for uninitialize
     };
     T*      container = stack; //!< container
-    size_t  capacitor = MIN;   //!< size: container
-    index_t counter   = 0;     //!< size: element
-    index_t head      = 0;     //!< index: front / bottom
-    index_t tail      = -1;    //!< index: rear / top
+    size_t  capacitor = MIN;         //!< size: container
+    index_t counter   = 0;           //!< size: element
+    index_t head      = 0;           //!< index: front / bottom
+    index_t tail      = -1;          //!< index: rear / top
 };
 
 template<typename T, size_t SVO> class Deque<T, SVO>::Iterator {

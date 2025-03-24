@@ -225,7 +225,7 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::resize(size_t in) noexcept 
     // fill
     if(in > counter) {
         for(index_t i = counter; i < in; ++i) {
-            container[relative(i)] = T();
+            new(container + relative(i)) T{};
         }
     }
     counter = in; // set
@@ -347,7 +347,12 @@ template<typename T, size_t SVO> index_t Deque<T, SVO>::clamp(index_t in) const 
 }
 
 template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexcept {
-    in = common::align(in);
+    if (in < DEF_SVO) {
+        in = DEF_SVO; // set default min
+    }
+    else in = common::align(in);
+
+    // no reallocation required
     if(in == capacitor) {
         return true;
     }
