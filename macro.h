@@ -1,6 +1,6 @@
 
-#ifndef LWE_MACRO_HEADER
-#define LWE_MACRO_HEADER
+#ifndef LWE_MACRO
+#define LWE_MACRO
 
 // namespace
 #define LWE       lwe
@@ -156,6 +156,9 @@ public:                                                                         
         }                                                                                                              \
         virtual LWE::Class* base() const override {                                                                    \
             return classof<TYPE::Base>();                                                                              \
+        }                                                                                                              \
+        virtual LWE::Object* statics() const override {                                                                \
+            return LWE::statics<TYPE>();                                                                               \
         }                                                                                                              \
         virtual const LWE::Structure& fields() const override;                                                         \
     };                                                                                                                 \

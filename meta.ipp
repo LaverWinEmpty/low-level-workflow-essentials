@@ -1,5 +1,5 @@
 #include "meta.hpp"
-#ifdef LWE_META_HEADER
+#ifdef LWE_META
 
 LWE_BEGIN
 void Type::push(EType in) {

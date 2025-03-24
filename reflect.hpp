@@ -1,5 +1,5 @@
-#ifndef LWE_INLINE_HEADER
-#define LWE_INLINE_HEADER
+#ifndef LWE_REFLECT
+#define LWE_REFLECT
 
 #include "meta.hpp"
 #include "container.hpp"

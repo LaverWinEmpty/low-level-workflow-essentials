@@ -1,4 +1,4 @@
-#ifdef LWE_CONTAINER_HEADER
+#ifdef LWE_CONTAINER
 
 LWE_BEGIN
 namespace stl {

@@ -1,5 +1,5 @@
-#ifndef LWE_THREAD_LOCK_HEADER
-#define LWE_THREAD_LOCK_HEADER
+#ifndef LWE_THREAD_LOCK
+#define LWE_THREAD_LOCK
 
 #include "common.hpp"
 

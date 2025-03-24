@@ -1,4 +1,4 @@
-#ifdef LWE_LOCK_HEADER
+#ifdef LWE_LOCK
 
 LWE_BEGIN
 namespace Thread {

@@ -1,4 +1,4 @@
-#ifdef LWE_MEM_POOL_HEADER
+#ifdef LWE_MEM_POOL
 LWE_BEGIN
 namespace mem {
 

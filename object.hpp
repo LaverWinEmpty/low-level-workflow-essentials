@@ -1,5 +1,5 @@
-#ifndef LWE_OBJECT_HEADER
-#define LWE_OBJECT_HEADER
+#ifndef LWE_OBJECT
+#define LWE_OBJECT
 
 #include "meta.hpp"
 #include "pool.hpp"
@@ -12,6 +12,8 @@ LWE_BEGIN
 class Object {
     template<typename T> friend T*   create();
     template<typename T> friend void destroy(T*);
+    friend Object*                   create(const Class*);
+    friend void                      destroy(Object*);
 
 public:
     virtual ~Object();
@@ -48,6 +50,7 @@ struct ObjectMeta: Class {
     virtual size_t           size() const override;
     virtual const Structure& fields() const override;
     virtual Class*           base() const override;
+    virtual Object*          statics() const override;
 };
 
 template<typename T> T*   create();

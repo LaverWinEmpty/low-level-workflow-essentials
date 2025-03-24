@@ -1,4 +1,4 @@
-#ifdef LWE_CONTAINER_DEQUE_HEADER
+#ifdef LWE_CONTAINER_DEQUE
 LWE_BEGIN
 
 namespace stl {
@@ -347,10 +347,9 @@ template<typename T, size_t SVO> index_t Deque<T, SVO>::clamp(index_t in) const 
 }
 
 template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexcept {
-    if (in < DEF_SVO) {
+    if(in < DEF_SVO) {
         in = DEF_SVO; // set default min
-    }
-    else in = common::align(in);
+    } else in = common::align(in);
 
     // no reallocation required
     if(in == capacitor) {

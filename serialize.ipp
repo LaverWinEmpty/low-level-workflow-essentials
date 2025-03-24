@@ -1,4 +1,4 @@
-#ifdef LWE_SERIALIZE_HEADER
+#ifdef LWE_SERIALIZE
 
 LWE_BEGIN
 // clang-format off

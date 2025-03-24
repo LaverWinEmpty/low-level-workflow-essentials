@@ -1,5 +1,5 @@
-#ifndef LWE_CONTAINER_DEQUE_HEADER
-#define LWE_CONTAINER_DEQUE_HEADER
+#ifndef LWE_CONTAINER_DEQUE
+#define LWE_CONTAINER_DEQUE
 
 /**************************************************************************************************
  * circulation container
@@ -23,6 +23,7 @@
  **************************************************************************************************/
 
 #include "container.hpp"
+#include "stack.hpp"
 
 LWE_BEGIN
 
@@ -117,22 +118,8 @@ private:
     bool reallocate(size_t) noexcept; //!< call realloc function
 
 private:
-    // stack wrapped structure for SVO specialization
-    template<size_t, typename = void> struct Stack;
-    template<size_t SVO> struct Stack<SVO, std::enable_if_t<SVO != 0>> {
-        inline operator T*() noexcept { return stack; }
-        inline operator const T*() const noexcept { return stack; }
-    private:
-        T stack[SVO]; // declare if SVO is not 0
-    };
-    template<std::size_t SVO> struct Stack<SVO, std::enable_if_t<SVO == 0>> {
-        inline operator T*() noexcept { return nullptr; }
-        inline operator const T*() const noexcept { return nullptr; }
-    };
-
-private:
     union {
-        Stack<MIN> stack; // stack, union for uninitialize
+        mem::Stack<T, MIN> stack; // stack, union for uninitialize
     };
     T*      container = stack; //!< container
     size_t  capacitor = MIN;   //!< size: container

@@ -1,6 +1,24 @@
-#ifdef LWE_OBJECT_HEADER
+#ifdef LWE_OBJECT
 
 LWE_BEGIN
+
+Object* create(const Class* in) {
+    size_t size   = in->size();
+    auto   result = Object::pool().find(size);
+    if(result == Object::pool().end()) {
+        Object::pool()[size] = new mem::Pool(size, 1); // not aligned
+    }
+    Object* obj = static_cast<Object*>(result->second->allocate());
+    // TODO: create initializer
+    std::memcmp(obj, in->statics(), size);
+    return obj;
+}
+
+void destroy(Object* in) {
+    size_t size = in->meta()->size();
+    in->~Object();
+    Object::pool()[size]->deallocate<void>(in);
+}
 
 template<typename T> T* create() {
     if constexpr(!std::is_base_of_v<Object, T>) {
@@ -17,11 +35,11 @@ template<typename T> T* create() {
 }
 
 template<typename T> void destroy(T* in) {
-    if constexpr (!std::is_base_of_v<Object, T>) {
+    if constexpr(!std::is_base_of_v<Object, T>) {
         assert(false);
     }
     size_t size = in->meta()->size();
-    static_cast<Object*>(in)->~Object();
+    in->~T();
     Object::pool()[size]->deallocate<void>(in);
 }
 
@@ -188,6 +206,10 @@ const Structure& ObjectMeta::fields() const {
 
 Class* ObjectMeta::base() const {
     return nullptr;
+}
+
+Object* ObjectMeta::statics() const {
+    return LWE::statics<Object>();
 }
 
 Class* Object::meta() const {

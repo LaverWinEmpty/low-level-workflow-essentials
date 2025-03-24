@@ -1,6 +1,6 @@
 
-#ifndef LWE_COMMON_HEADER
-#define LWE_COMMON_HEADER
+#ifndef LWE_COMMON
+#define LWE_COMMON
 
 #include "hal.hpp "
 

@@ -1,5 +1,5 @@
-#ifndef LWE_MEM_ALLOCATOR_HEADER
-#define LWE_MEM_ALLOCATOR_HEADER
+#ifndef LWE_MEM_ALLOCATOR
+#define LWE_MEM_ALLOCATOR
 
 #include "pool.hpp"
 

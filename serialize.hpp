@@ -1,5 +1,5 @@
-#ifndef LWE_SERIALIZE_HEADER
-#define LWE_SERIALIZE_HEADER
+#ifndef LWE_SERIALIZE
+#define LWE_SERIALIZE
 
 #include <sstream>
 #include <iomanip>

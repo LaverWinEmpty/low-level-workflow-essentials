@@ -1,5 +1,5 @@
-#ifndef LWE_MEM_POOL_HEADER
-#define LWE_MEM_POOL_HEADER
+#ifndef LWE_MEM_POOL
+#define LWE_MEM_POOL
 
 #include "lock.hpp"
 #include "deque.hpp"

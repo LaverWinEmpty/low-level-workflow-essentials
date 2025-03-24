@@ -1,5 +1,5 @@
-#ifndef LWE_HAL_HEADER
-#define LWE_HAL_HEADER
+#ifndef LWE_HAL
+#define LWE_HAL
 
 #ifdef _POSIX_VERSION
 #    include <sys/types.h>
@@ -57,7 +57,6 @@ using namespace LWE::HAL;
  * using standard library
  **************************************************************************************************/
 
-using std::function;
 using std::string;
 
 using std::nullopt;

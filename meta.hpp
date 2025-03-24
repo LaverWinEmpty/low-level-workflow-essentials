@@ -1,10 +1,12 @@
-#ifndef LWE_META_HEADER
-#define LWE_META_HEADER
+#ifndef LWE_META
+#define LWE_META
 
 #include "hal.hpp"
 #include "common.hpp"
 
 LWE_BEGIN
+class Object;
+
 /// @brief type codes
 enum class EType : uint8 {
     UNREGISTERED,
@@ -149,10 +151,11 @@ using Structure = Reflector<Field>;
 
 /// @brief class metadata
 struct Class {
-    virtual const char*      name() const   = 0;
-    virtual size_t           size() const   = 0;
-    virtual const Structure& fields() const = 0;
-    virtual const Class*     base() const   = 0;
+    virtual const char*      name() const    = 0;
+    virtual size_t           size() const    = 0;
+    virtual const Structure& fields() const  = 0;
+    virtual const Class*     base() const    = 0;
+    virtual const Object*    statics() const = 0;
 };
 
 /// @brief enum metadata
@@ -219,7 +222,6 @@ template<typename T> const Type& typeof();         //!< reflect typeinfo by temp
 template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
 template<typename T> void typeof(Type*);           //!< pirvate
 
-class Object;
 template<typename T> Object* statics();              //!< get static class
 template<typename T> Object* statics(const T&);      //!< get static class
 Object*                      statics(const char*);   //!< get static class

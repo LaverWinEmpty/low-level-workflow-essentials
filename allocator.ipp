@@ -1,5 +1,4 @@
-#include "allocator.hpp"
-
+#ifdef LWE_MEM_ALLOCATOR
 LWE_BEGIN
 namespace MEM {
 
@@ -100,3 +99,4 @@ Thread::Lock                           Allocator::Manager::lock;
 
 } // namespace MEM
 LWE_END
+#endif
