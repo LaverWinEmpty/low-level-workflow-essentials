@@ -118,27 +118,27 @@ private:
 
 private:
     // stack wrapped structure for SVO specialization
-    template <size_t, typename = void> struct Stack;
-    template <size_t SVO> struct Stack<SVO, std::enable_if_t<SVO != 0>> {
-        operator T* () noexcept { return stack; }
-        operator const T* () const noexcept { return stack; }
+    template<size_t, typename = void> struct Stack;
+    template<size_t SVO> struct Stack<SVO, std::enable_if_t<SVO != 0>> {
+        inline operator T*() noexcept { return stack; }
+        inline operator const T*() const noexcept { return stack; }
     private:
-        T stack[SVO]; // SVO is not 0, declaration
+        T stack[SVO]; // declare if SVO is not 0
     };
-    template <std::size_t SVO> struct Stack<SVO, std::enable_if_t<SVO == 0>> {
-        operator T* () noexcept { return nullptr; }
-        operator const T* () const noexcept { return nullptr; }
+    template<std::size_t SVO> struct Stack<SVO, std::enable_if_t<SVO == 0>> {
+        inline operator T*() noexcept { return nullptr; }
+        inline operator const T*() const noexcept { return nullptr; }
     };
-    
+
 private:
     union {
         Stack<MIN> stack; // stack, union for uninitialize
     };
     T*      container = stack; //!< container
-    size_t  capacitor = MIN;         //!< size: container
-    index_t counter   = 0;           //!< size: element
-    index_t head      = 0;           //!< index: front / bottom
-    index_t tail      = -1;          //!< index: rear / top
+    size_t  capacitor = MIN;   //!< size: container
+    index_t counter   = 0;     //!< size: element
+    index_t head      = 0;     //!< index: front / bottom
+    index_t tail      = -1;    //!< index: rear / top
 };
 
 template<typename T, size_t SVO> class Deque<T, SVO>::Iterator {
