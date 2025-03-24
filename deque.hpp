@@ -117,7 +117,7 @@ private:
     bool reallocate(size_t) noexcept; //!< call realloc function
 
 private:
-    // stack wrapped structure for SVO specialized
+    // stack wrapped structure for SVO specialization
     template <size_t, typename = void> struct Stack;
     template <size_t SVO> struct Stack<SVO, std::enable_if_t<SVO != 0>> {
         operator T* () noexcept { return stack; }
