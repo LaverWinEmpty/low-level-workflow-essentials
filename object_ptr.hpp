@@ -45,11 +45,13 @@ template<typename T> class Ptr {
     };
 
 public:
+    Ptr() = default;
+
     Ptr(T* in) {
-        group = new Handler();
-        id    = new Node();   // set
-        group->push(id);      // add
-        group->instance = in; // create
+        group = new Handler(); // new
+        id    = new Node();    // set
+        group->push(id);       // add
+        group->instance = in;  // create
     }
 
     Ptr(const Ptr& in): group(in.group) {
@@ -60,6 +62,22 @@ public:
     Ptr(Ptr&& in) noexcept: id(in.id), group(in.group) {
         in.id    = 0;
         in.group = nullptr;
+    }
+
+    Ptr& operator=(T* in) {
+        Handler* newly = new Handler(); // new
+        if(group != nullptr) {
+            group->pop(id);
+            id->prev = nullptr;
+            id->next = nullptr;
+        } else {
+            id = new Node(); // new
+        }
+        newly->push(id);      // add
+        newly->instance = in; // create
+
+        group = newly;
+        return this;
     }
 
     Ptr& operator=(const Ptr& in) {
@@ -80,12 +98,14 @@ public:
     }
 
     ~Ptr() {
-        if(group->count == 1) {
-            delete group->instance;
-            delete group;
-        } else {
-            group->pop(id);
-            delete id;
+        if(group != nullptr) {
+            if(group->count == 1) {
+                delete group->instance; // delete
+                delete group;           // delete
+            } else {
+                group->pop(id); // unlink
+            }
+            delete id; // delete
         }
     }
 
