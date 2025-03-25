@@ -7,86 +7,115 @@
 
 LWE_BEGIN
 
-class ObjectPtr {
-    struct Handler {
-        size_t                     owner;
-        Object*                    ptr;
-        std::unordered_set<size_t> ref;
+// TODO: thread-safty
+// TODO: new -> use pool
+template<typename T> class Ptr {
+    struct Node {
+        Node* next = nullptr;
+        Node* prev = nullptr;
+    };
+    class Handler {
+    public:
+        T*     instance = nullptr;
+        Node*  head     = nullptr;
+        Node*  owner    = nullptr;
+        size_t count    = 0;
+
+    public:
+        void push(Node* in) {
+            if(count == 0) {
+                head  = in;
+                owner = in;
+            } else {
+                in->next   = head; // set next
+                head->prev = in;   // set previous
+                head       = in;   // push front
+            }
+            ++count;
+        }
+
+        void pop(Node* out) {
+            if(out->prev) out->prev->next = out->next; // pop front
+            if(out->next) out->next->prev = out->prev; // pop front
+            if(owner == out) {
+                owner = head; // new owner
+            }
+            --count;
+        }
     };
 
 public:
-    ObjectPtr() { id = sid++; }
-
-public:
-    template<typename T> ObjectPtr(T* in) {
-        handler        = new Handler();
-        id             = sid++;
-        handler->owner = id;
-        handler->ptr   = in;
-        handler->ref.insert(id);
+    Ptr(T* in) {
+        group = new Handler();
+        id    = new Node();   // set
+        group->push(id);      // add
+        group->instance = in; // create
     }
 
-    ObjectPtr(const ObjectPtr& in) {
-        id      = sid++;         // new
-        handler = in.handler;    // reference
-        handler->ref.insert(id); // add reference table
+    Ptr(const Ptr& in): group(in.group) {
+        id = new Node(); // set
+        group->push(id); // add
     }
 
-    ObjectPtr(ObjectPtr&& in) {
-        id         = in.id;      // move
-        handler    = in.handler; // move
-        in.handler = nullptr;    // lost
-        in.id      = 0;          // lost
+    Ptr(Ptr&& in) noexcept: id(in.id), group(in.group) {
+        in.id    = 0;
+        in.group = nullptr;
     }
 
-public:
-    operator const Object*() const {
-        return handler->ptr; // get const
+    Ptr& operator=(const Ptr& in) {
+        group = in.group;   // ref
+        id    = new Node(); // set
+        group->push(id);    // add
+        return *this;
     }
 
-    /// @brief copy on write
-    Object* operator->() {
-        if(handler->ref.size() != 1) {
-            handler->ref.erase(id);
-            // change owner
-            if(handler->owner == id) {
-                auto itr = handler->ref.begin();
-                if(*itr == id) {
-                    ++itr; // begin == this -> next
-                }
-                handler->owner = *itr; // new owner (random)
-            }
-
-            Class*  cls  = handler->ptr->meta();         // get meta
-            Object* temp = create(handler->ptr->meta()); // new
-
-            handler      = new Handler(); // new
-            handler->ptr = temp;          // new
-            handler->ref.insert(id);      // add
-            handler->owner = id;          // set owner
-
-            return handler->ptr;
-        } else return handler->ptr; // owner is this only
+    Ptr& operator=(Ptr&& in) noexcept {
+        if(this != &in) {
+            id       = in.id;    // move
+            group    = in.group; // move
+            in.id    = nullptr;  // reset
+            in.group = nullptr;  // reset
+        }
+        return *this;
     }
 
-    /// @brief copy on write
-    Object& operator*() { return *operator->(); }
-
-public:
-    ~ObjectPtr() {
-        handler->ref.erase(id);
-        if(handler->ref.size() == 0) {
-            destroy(handler->ptr);
+    ~Ptr() {
+        if(group->count == 1) {
+            delete group->instance;
+            delete group;
+        } else {
+            group->pop(id);
+            delete id;
         }
     }
 
+    const T* operator->() const { return group->instance; }
+
+    const T& operator*() const { return *group->instance; }
+
+    T* operator->() { return group->instance; }
+
+    T& operator*() { return *operator->(); }
+
+    /// @brief clone and unshare for fork
+    void detach() {
+        if(group->count <= 1) {
+            return;
+        }
+
+        Handler* newly  = new Handler();           // new
+        newly->instance = new T(*group->instance); // copy
+
+        id->next = nullptr; // unlink
+        id->prev = nullptr; // unlink
+        newly->push(id);    // move
+        group->pop(id);     // move
+        group = newly;      // set
+    }
 
 private:
-    Handler* handler = nullptr;
-    size_t   id      = -1; // plan to change to be unique
-
-private:
-    inline static size_t sid = 0; // plan to change to be lock-free manager
+    Handler* group = nullptr;
+    Node*    id    = nullptr;
 };
 
 LWE_END
