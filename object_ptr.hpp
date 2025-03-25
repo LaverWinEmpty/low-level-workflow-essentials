@@ -77,7 +77,7 @@ public:
         newly->instance = in; // create
 
         group = newly;
-        return this;
+        return *this;
     }
 
     Ptr& operator=(const Ptr& in) {
