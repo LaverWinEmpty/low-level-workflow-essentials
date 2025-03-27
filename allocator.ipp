@@ -95,7 +95,7 @@ Allocator* Allocator::Manager::instance(size_t size) {
 }
 
 std::unordered_map<size_t, Allocator*> Allocator::Manager::map;
-Thread::Lock                           Allocator::Manager::lock;
+thread::Lock                           Allocator::Manager::lock;
 
 } // namespace MEM
 LWE_END

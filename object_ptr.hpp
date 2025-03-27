@@ -1,7 +1,7 @@
 #ifndef LWE_OBJECT_PTR
 #define LWE_OBJECT_PTR
 
-#include "reflect.hpp"
+#include "lock.hpp"
 
 // TODO:
 
@@ -22,25 +22,32 @@ template<typename T> class Ptr {
         size_t count    = 0;
 
     public:
+        thread::Lock lock;
+
+    public:
         void push(Node* in) {
-            if(count == 0) {
-                head  = in;
-                owner = in;
-            } else {
-                in->next   = head; // set next
-                head->prev = in;   // set previous
-                head       = in;   // push front
+            LOCKGUARD(lock) {
+                if(count == 0) {
+                    head  = in;
+                    owner = in;
+                } else {
+                    in->next   = head; // set next
+                    head->prev = in;   // set previous
+                    head       = in;   // push front
+                }
+                ++count;
             }
-            ++count;
         }
 
         void pop(Node* out) {
-            if(out->prev) out->prev->next = out->next; // pop front
-            if(out->next) out->next->prev = out->prev; // pop front
-            if(owner == out) {
-                owner = head; // new owner
+            LOCKGUARD(lock) {
+                if(out->prev) out->prev->next = out->next; // pop front
+                if(out->next) out->next->prev = out->prev; // pop front
+                if(owner == out) {
+                    owner = head; // new owner
+                }
+                --count;
             }
-            --count;
         }
     };
 
@@ -100,8 +107,13 @@ public:
     ~Ptr() {
         if(group != nullptr) {
             if(group->count == 1) {
-                delete group->instance; // delete
-                delete group;           // delete
+                LOCKGUARD(group->lock) {
+                    // double-checked
+                    if(group->count == 1) {
+                        delete group->instance; // delete
+                        delete group;           // delete
+                    }
+                }
             } else {
                 group->pop(id); // unlink
             }

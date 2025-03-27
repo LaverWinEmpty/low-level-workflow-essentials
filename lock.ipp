@@ -1,7 +1,7 @@
 #ifdef LWE_LOCK
 
 LWE_BEGIN
-namespace Thread {
+namespace thread {
 
 Lock::Lock(int backoff, Function function): BACKOFF(backoff), delegate(function), owner(NOBODY), locked(0) {}
 
@@ -62,6 +62,6 @@ void Lock::unlock() {
     }
 }
 
-} // namespace Thread
+} // namespace thread
 LWE_END
 #endif

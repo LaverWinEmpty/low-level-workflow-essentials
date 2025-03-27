@@ -4,7 +4,7 @@
 #include "common.hpp"
 
 LWE_BEGIN
-namespace Thread {
+namespace thread {
 
 /**
  * @brief spin lock
@@ -37,7 +37,7 @@ public:
     int                          locked; //!< lock counter
 };
 
-} // namespace Thread
+} // namespace thread
 LWE_END
 
 #include "lock.ipp"
