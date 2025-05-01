@@ -1,6 +1,7 @@
 #ifdef LWE_UTIL_UUID
 
 LWE_BEGIN
+
 namespace util {
 
 UUID::UUID() : ptr(new String) {
