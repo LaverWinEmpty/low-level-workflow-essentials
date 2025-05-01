@@ -55,12 +55,12 @@ inline static constexpr uint64 align(uint64 in, uint64 unit) noexcept {
  * @return void* allocated pointer
  */
 template<typename T = void> inline T* memalloc(size_t size, size_t alignment = 0) noexcept {
-    void* ptr = nullptr;
-    void* out = nullptr;
+    void* ptr = nullptr; // real address
+    void* out = nullptr; // user address
 
     if(alignment <= 1) {
         ptr = malloc(size + sizeof(void*)); // add space for metadata;
-        out = ptr;
+        out = reinterpret_cast<void*>(reinterpret_cast<uintptr>(ptr) + 1); // make space void*
     }
 
     else {
