@@ -171,7 +171,6 @@ bool Object::isof(const Class* in) const {
 }
 
 bool Object::isof(const char* in) const {
-
     return isof(string{ in });
 }
 
