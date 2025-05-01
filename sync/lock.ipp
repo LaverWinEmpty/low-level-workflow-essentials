@@ -1,7 +1,7 @@
-#ifdef LWE_LOCK
+#ifdef LWE_THREAD_LOCK
 
 LWE_BEGIN
-namespace thread {
+namespace sync {
 
 Lock::Lock(int backoff, Function function): BACKOFF(backoff), delegate(function), owner(NOBODY), locked(0) {}
 

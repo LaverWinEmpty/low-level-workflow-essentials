@@ -1,6 +1,7 @@
 #ifdef LWE_SERIALIZE
 
 LWE_BEGIN
+namespace meta {
 // clang-format off
 
 // primitive type to string
@@ -40,7 +41,7 @@ template<> string serialize<string>(const string& in) {
 }
 
 // container to string
-template<> string serialize<LWE::stl::Container>(const LWE::stl::Container& in) {
+template<> string serialize<Container>(const Container& in) {
     return in.stringify();
 }
 
@@ -106,7 +107,7 @@ template<> string deserialize<string>(const string& in) {
 }
 
 // string to container
-void deserialize(LWE::stl::Container* out, const string& in) {
+void deserialize(Container* out, const string& in) {
     out->parse(in);
 }
 
@@ -206,7 +207,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
 
     case EType::STL_DEQUE:
-        out->append(serialize(*static_cast<const LWE::stl::Container*>(in)));
+        out->append(serialize(*static_cast<const Container*>(in)));
         break;
     }
 }
@@ -309,10 +310,11 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
 
     case EType::STL_DEQUE:
-        static_cast<LWE::stl::Container*>(out)->parse(in);
+        static_cast<Container*>(out)->parse(in);
         break;
     }
 }
 
+}
 LWE_END
 #endif

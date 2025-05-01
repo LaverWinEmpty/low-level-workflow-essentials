@@ -1,18 +1,18 @@
 #ifndef LWE_REFLECT
 #define LWE_REFLECT
 
-#include "meta.hpp"
-#include "container.hpp"
-#include "object.hpp"
-#include "serialize.hpp"
+#include "meta/meta.hpp"
+#include "meta/object.hpp"
+#include "meta/serialize.hpp"
+#include "meta/container.hpp"
 
-#include "meta.ipp"
-#include "serialize.ipp"
-#include "object.ipp"
-#include "container.ipp"
+#include "meta/meta.ipp"
+#include "meta/object.ipp"
+#include "meta/serialize.ipp"
+#include "meta/container.ipp"
 
 LWE_BEGIN
-REGISTER_ENUM_BEGIN(EType) {
+REGISTER_ENUM_BEGIN(EType, meta) {
     REGISTER_ENUM(UNREGISTERED);
     REGISTER_ENUM(VOID);
     REGISTER_ENUM(SIGNED_INT);
@@ -42,5 +42,6 @@ REGISTER_ENUM_BEGIN(EType) {
     REGISTER_ENUM(CONST);
 }
 REGISTER_ENUM_END;
+
 LWE_END
 #endif

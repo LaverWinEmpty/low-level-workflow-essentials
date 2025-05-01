@@ -22,17 +22,19 @@
  * pop_front: shift
  **************************************************************************************************/
 
-#include "container.hpp"
-#include "stack.hpp"
+#include "config.hpp"
+#include "../common/hal.hpp"
+#include "../meta/container.hpp"
+#include "../mem/stack.hpp"
 
 LWE_BEGIN
 
 namespace stl {
-template<typename T, size_t SVO = 0> struct Deque: Container {
+template<typename T, size_t SVO = 0> class Deque: public meta::Container {
     CONTAINER_BODY(Deque, T, SVO);
 
 private:
-    template<typename, size_t> friend struct Deque;
+    template<typename, size_t> friend class Deque;
 
 private:
     static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : common::align(SVO));
@@ -197,10 +199,10 @@ private:
     Iterator iterator;
 };
 
-} // namespace stl
 
 REGISTER_CONTAINER(Deque, STL_DEQUE);
 
+} // namespace stl
 LWE_END
 
 #include "deque.ipp"

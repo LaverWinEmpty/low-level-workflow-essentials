@@ -1,7 +1,7 @@
 #ifdef LWE_CONTAINER
 
 LWE_BEGIN
-namespace stl {
+namespace meta {
 
 template<typename Derived> string Container::stringify(const Derived* in) {
     std::string out;
@@ -25,7 +25,7 @@ template<typename Derived> string Container::stringify(const Derived* in) {
     return out;
 }
 
-template<typename Derived> Derived stl::Container::parse(const string& in) {
+template<typename Derived> Derived Container::parse(const string& in) {
     using Element = typename Derived::value_type;
     if(in == "[]") {
         return Derived{}; // empty
@@ -93,10 +93,9 @@ template<typename Derived> Derived stl::Container::parse(const string& in) {
     return std::move(out);
 }
 
-} // namespace stl
 
 template<typename T> constexpr bool isSTL() {
-    return std::is_base_of_v<LWE::stl::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
+    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
 };
 
 template<typename T> constexpr bool isSTL(const T&) {
@@ -115,5 +114,6 @@ template<> bool isSTL<EType>(const EType& code) {
     return false;
 }
 
+} // namespace meta
 LWE_END
 #endif

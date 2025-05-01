@@ -2,9 +2,10 @@
 #define LWE_OBJECT
 
 #include "meta.hpp"
-#include "pool.hpp"
+#include "../mem/pool.hpp"
 
 LWE_BEGIN
+namespace meta {
 
 /**
  * @brief serializable object: template, array not support
@@ -56,5 +57,6 @@ struct ObjectMeta: Class {
 template<typename T> T*   create();
 template<typename T> void destroy(T*);
 
+} // namespace meta
 LWE_END
 #endif

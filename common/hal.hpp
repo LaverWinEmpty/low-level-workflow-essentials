@@ -13,7 +13,7 @@
 #include "macro.h"
 
 LWE_BEGIN
-namespace HAL {
+namespace hal {
 
 using int8    = int8_t;        //!< signed
 using int16   = int16_t;       //!< signed
@@ -51,7 +51,7 @@ using ssize_t = std::make_signed_t<size_t>;
 } // namespace HAL
 LWE_END
 
-using namespace LWE::HAL;
+using namespace LWE::hal;
 
 /**************************************************************************************************
  * using standard library

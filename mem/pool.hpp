@@ -1,8 +1,8 @@
 #ifndef LWE_MEM_POOL
 #define LWE_MEM_POOL
 
-#include "lock.hpp"
-#include "deque.hpp"
+#include "../sync/lock.hpp"
+#include "../stl/deque.hpp"
 
 /*******************************************************************************
  * pool structure

@@ -1,6 +1,7 @@
 #ifdef LWE_OBJECT
 
 LWE_BEGIN
+namespace meta {
 
 Object* create(const Class* in) {
     size_t size   = in->size();
@@ -209,7 +210,8 @@ Class* ObjectMeta::base() const {
 }
 
 Object* ObjectMeta::statics() const {
-    return LWE::statics<Object>();
+    // return statics<Object>();
+    return nullptr;
 }
 
 Class* Object::meta() const {
@@ -218,5 +220,6 @@ Class* Object::meta() const {
 
 Registered Object_REGISTERED = registclass<Object>();
 
+}
 LWE_END
 #endif

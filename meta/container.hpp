@@ -1,16 +1,10 @@
 #ifndef LWE_CONTAINER
 #define LWE_CONTAINER
 
-#include "meta.hpp"
+#include "../meta/meta.hpp"
 
 LWE_BEGIN
-
-namespace stl {
-
-namespace config {
-static constexpr size_t DEF_SVO = 8; //!< default small vector optimization size
-} // namespace config
-using namespace config;
+namespace meta {
 
 struct Container {
     virtual ~Container() noexcept {}
@@ -30,16 +24,16 @@ public:
     template<typename Derived> static Derived parse(const string&);
 };
 
-} // namespace stl
-
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
 template<> bool                     isSTL<EType>(const EType&); //!< check container type code
+
 
 // get container type code structur
 template<typename, typename = std::void_t<>> struct ContainerCode {
     static constexpr EType VALUE = EType::UNREGISTERED;
 };
 
+} // namespace meta
 LWE_END
 #endif

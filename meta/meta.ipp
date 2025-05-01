@@ -2,6 +2,8 @@
 #ifdef LWE_META
 
 LWE_BEGIN
+namespace meta {
+
 void Type::push(EType in) {
     size_t next = count + 1;
 
@@ -247,7 +249,7 @@ EType Type::type() const {
     return heap[0] == EType::CONST ? heap[1] : heap[0];
 }
 
-const char* Type::stringify() const {
+const char* Type::operator*() const {
     std::function<size_t(string*, const Type&, size_t)> fn = [&fn](string* out, const Type& in, size_t idx) {
         if(idx >= in.size()) {
             return idx;
@@ -312,7 +314,7 @@ const char* Type::stringify() const {
 }
 
 Type::operator string() const {
-    return stringify(); // copy
+    return this->operator*(); // copy
 }
 
 const EType* Type::begin() const {
@@ -479,29 +481,29 @@ template<typename T> template<typename Arg> void Reflector<T>::push(Arg&& in) {
 
 // clang-format off
 template<typename T> constexpr EType typecode() {
-    if constexpr(std::is_base_of_v<LWE::stl::Container, T>) return ContainerCode<T>::VALUE;
-    if constexpr(std::is_enum_v<T>)                         return EType::ENUM;
-    if constexpr(std::is_pointer_v<T>)                      return EType::POINTER;
-    if constexpr(std::is_reference_v<T>)                    return EType::REFERENCE;
-    if constexpr(std::is_union_v<T>)                        return EType::UNION;
-    if constexpr(std::is_class_v<T>)                        return EType::CLASS;
-    if constexpr(std::is_void_v<T>)                         return EType::VOID;
-    if constexpr(std::is_same_v<T, bool>)                   return EType::BOOL;
-    if constexpr(std::is_same_v<T, signed char>)            return EType::SIGNED_CHAR;
-    if constexpr(std::is_same_v<T, unsigned char>)          return EType::UNSIGNED_CHAR;
-    if constexpr(std::is_same_v<T, char>)                   return EType::CHAR;
-    if constexpr(std::is_same_v<T, signed short>)           return EType::SIGNED_SHORT;
-    if constexpr(std::is_same_v<T, unsigned short>)         return EType::UNSIGNED_SHORT;
-    if constexpr(std::is_same_v<T, signed int>)             return EType::SIGNED_INT;
-    if constexpr(std::is_same_v<T, unsigned int>)           return EType::UNSIGNED_INT;
-    if constexpr(std::is_same_v<T, signed long>)            return EType::SIGNED_LONG;
-    if constexpr(std::is_same_v<T, unsigned long>)          return EType::UNSIGNED_LONG;
-    if constexpr(std::is_same_v<T, wchar_t>)                return EType::WCHAR_T;
-    if constexpr(std::is_same_v<T, float>)                  return EType::FLOAT;
-    if constexpr(std::is_same_v<T, double>)                 return EType::DOUBLE;
-    if constexpr(std::is_same_v<T, long double>)            return EType::LONG_DOUBLE;
-    if constexpr(std::is_same_v<T, std::string>)            return EType::STD_STRING;
-    else                                                    return EType::UNREGISTERED;
+    if constexpr(std::is_base_of_v<LWE::meta::Container, T>) return ContainerCode<T>::VALUE;
+    if constexpr(std::is_enum_v<T>)                          return EType::ENUM;
+    if constexpr(std::is_pointer_v<T>)                       return EType::POINTER;
+    if constexpr(std::is_reference_v<T>)                     return EType::REFERENCE;
+    if constexpr(std::is_union_v<T>)                         return EType::UNION;
+    if constexpr(std::is_class_v<T>)                         return EType::CLASS;
+    if constexpr(std::is_void_v<T>)                          return EType::VOID;
+    if constexpr(std::is_same_v<T, bool>)                    return EType::BOOL;
+    if constexpr(std::is_same_v<T, signed char>)             return EType::SIGNED_CHAR;
+    if constexpr(std::is_same_v<T, unsigned char>)           return EType::UNSIGNED_CHAR;
+    if constexpr(std::is_same_v<T, char>)                    return EType::CHAR;
+    if constexpr(std::is_same_v<T, signed short>)            return EType::SIGNED_SHORT;
+    if constexpr(std::is_same_v<T, unsigned short>)          return EType::UNSIGNED_SHORT;
+    if constexpr(std::is_same_v<T, signed int>)              return EType::SIGNED_INT;
+    if constexpr(std::is_same_v<T, unsigned int>)            return EType::UNSIGNED_INT;
+    if constexpr(std::is_same_v<T, signed long>)             return EType::SIGNED_LONG;
+    if constexpr(std::is_same_v<T, unsigned long>)           return EType::UNSIGNED_LONG;
+    if constexpr(std::is_same_v<T, wchar_t>)                 return EType::WCHAR_T;
+    if constexpr(std::is_same_v<T, float>)                   return EType::FLOAT;
+    if constexpr(std::is_same_v<T, double>)                  return EType::DOUBLE;
+    if constexpr(std::is_same_v<T, long double>)             return EType::LONG_DOUBLE;
+    if constexpr(std::is_same_v<T, std::string>)             return EType::STD_STRING;
+    else                                                     return EType::UNREGISTERED;
 }
 // clang-format on
 
@@ -517,7 +519,7 @@ template<typename T> const char* typestring(const T&) {
 }
 
 const char* typestring(const Type& in) {
-    return in.stringify();
+    return *in;
 }
 
 template<typename T> const Type& typeof() {
@@ -725,5 +727,6 @@ constexpr const char* typestring(EType code) {
 }
 // clang-format on
 
+}
 LWE_END
 #endif

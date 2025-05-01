@@ -1,10 +1,12 @@
 #ifndef LWE_META
 #define LWE_META
 
-#include "hal.hpp"
-#include "common.hpp"
+#include "../common/hal.hpp"
 
 LWE_BEGIN
+
+namespace meta {
+
 class Object;
 
 /// @brief type codes
@@ -52,13 +54,19 @@ public:
     Type& operator=(Type&&) noexcept;
 
 public:
+    /// @note [0] is main type
+    /// e.g.
+    /// [0] DEQUE [1] INT == Deque<int> 
     const EType& operator[](size_t) const;
     const EType* begin() const;
     const EType* end() const;
     size_t       size() const;
     hash_t       hash() const;
     EType        type() const;
-    const char*  stringify() const;
+
+public:
+    //! @brief IS TO STRING NOT DEREFERENCE
+    const char* operator*() const;
 
 public:
     explicit operator string() const;
@@ -85,7 +93,8 @@ private:
 };
 
 /// @brief container of class fiedls and enum values list reflector
-/// @tparam T class, enum
+/// @note  Relfector<MyClass> == MyClass reflector class
+/// @tparam T class or enum
 template<typename T> struct Reflector {
     /// @tparam C constructor: type info to create
     template<class C> static const Reflector<T>& reflect();
@@ -176,7 +185,8 @@ public:
 };
 
 /// @brief static object registry
-/// @tparam T metadata, static class
+/// @note  Registry<Class> == metadata registry
+/// @tparam T ONLY Class(class metadata) or Object(static instance)
 template<typename T> class Registry {
 public:
     /// @tparam U base of T
@@ -220,7 +230,7 @@ const char*                      typestring(const Type&); //!< reflect type name
 
 template<typename T> const Type& typeof();         //!< reflect typeinfo by template
 template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
-template<typename T> void typeof(Type*);           //!< pirvate
+template<typename T> void        typeof(Type*);    //!< pirvate
 
 template<typename T> Object* statics();              //!< get static class
 template<typename T> Object* statics(const T&);      //!< get static class
@@ -237,9 +247,10 @@ template<typename T> Enum* enumof(const T&);      //!< get enum value list
 Enum*                      enumof(const char*);   //!< get enum value list
 Enum*                      enumof(const string&); //!< get enum value list
 
+} // namespace meta
 LWE_END
 
-template<> struct std::hash<LWE::Type> {
-    size_t operator()(const LWE::Type& obj) const { return obj.hash(); }
+template<> struct std::hash<LWE::meta::Type> {
+    size_t operator()(const LWE::meta::Type& obj) const { return obj.hash(); }
 };
 #endif

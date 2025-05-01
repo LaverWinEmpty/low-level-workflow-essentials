@@ -1,3 +1,6 @@
+#ifndef LWE_STD
+#define LWE_STD
+
 #include <string>
 #include <functional>
 #include <optional>
@@ -13,3 +16,7 @@
 #include <chrono>
 #include <cassert>
 #include <mutex>
+#include <sstream>
+#include <iomanip>
+
+#endif

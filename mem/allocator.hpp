@@ -3,8 +3,6 @@
 
 #include "pool.hpp"
 
-#include <unordered_map>
-
 LWE_BEGIN
 
 namespace mem {

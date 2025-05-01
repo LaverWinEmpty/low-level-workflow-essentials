@@ -1,10 +1,10 @@
 #ifndef LWE_THREAD_LOCK
 #define LWE_THREAD_LOCK
 
-#include "common.hpp"
+#include "../common/common.hpp"
 
 LWE_BEGIN
-namespace thread {
+namespace sync {
 
 /**
  * @brief spin lock

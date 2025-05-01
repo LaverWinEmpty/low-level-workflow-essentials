@@ -1,4 +1,3 @@
-
 class Noncopy {
 private:
     Noncopy(const Noncopy&)            = delete;

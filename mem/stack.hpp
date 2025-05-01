@@ -1,14 +1,13 @@
 #ifndef LWE_MEM_STACK
 #define LWE_MEM_STACK
-#include "hal.hpp"
+
+#include "../common/hal.hpp"
 
 LWE_BEGIN
 
 /**
  * @brief MEMORY stack, not container
- *
  */
-
 namespace mem {
 
 // local array template util
