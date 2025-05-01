@@ -3,6 +3,8 @@
 LWE_BEGIN
 namespace meta {
 
+sync::Lock Object::lock;
+
 Object* create(const Class* in) {
     size_t size   = in->size();
     auto   result = Object::pool().find(size);
@@ -26,22 +28,30 @@ template<typename T> T* create() {
         assert(false);
         return nullptr;
     }
-    size_t size   = classof<T>()->size();
-    auto   result = Object::pool().find(size);
-    if(result == Object::pool().end()) {
-        Object::pool()[size] = new mem::Pool(size, 1); // not aligned
-        return Object::pool()[size]->allocate<T>();
+
+    T* ptr = nullptr;
+    LOCKGUARD(Object::lock) {
+        size_t size   = classof<T>()->size();
+        auto   result = Object::pool().find(size);
+        if(result == Object::pool().end()) {
+            Object::pool()[size] = new mem::Pool(size);
+            return Object::pool()[size]->allocate<T>();
+        }
+        ptr = result->second->allocate<T>();
     }
-    return result->second->allocate<T>();
+    return ptr;
 }
 
 template<typename T> void destroy(T* in) {
     if constexpr(!std::is_base_of_v<Object, T>) {
         assert(false);
     }
-    size_t size = in->meta()->size();
-    in->~T();
-    Object::pool()[size]->deallocate<void>(in);
+
+    LOCKGUARD(Object::lock) {
+        size_t size = in->meta()->size();
+        in->~T();
+        Object::pool()[size]->deallocate<void>(in);
+    }
 }
 
 std::string Object::stringfy() const {
