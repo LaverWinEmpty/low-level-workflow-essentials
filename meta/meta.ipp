@@ -89,16 +89,18 @@ template<typename T> static void Type::reflect(Type* out) {
     }
 
     else if constexpr(std::is_class_v<T> || std::is_enum_v<T>) {
-        out->push(EType::CLASS);
 
         // get type info
         const char* str = nullptr;
         if constexpr(std::is_class_v<T>) {
+            out->push(EType::CLASS);
             Class* meta = classof<T>();
             if(meta) {
                 str = meta->name();
             }
-        } else if constexpr(std::is_enum_v<T>) {
+        }
+        else if constexpr(std::is_enum_v<T>) {
+            out->push(EType::ENUM);
             Enum* meta = enumof<T>();
             if(meta) {
                 str = meta->name();
