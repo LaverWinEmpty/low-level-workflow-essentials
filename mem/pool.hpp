@@ -14,26 +14,26 @@
  *
  * 192                 256                384         512 | << address
  * ^                   ^                  ^           ^   |
- * ├───────┬────┬──────┼──────┬────┬──────┼──────┬────┤   |
- * │ block │    │ meta │ data │    │ meta │ data │    │   |
- * └───────┼────┼──────┴──────┼────┼──────┴──────┼────┤   |
- *         └ 16 ┤             ├ 24 ┤             ├ 32 ┘   | << padding
- *              └ ─  chunk  ─ ┘    └ ─  chunk  ─ ┘
+ * +-------+----+------+------+----+------+------+----+   |
+ * | block |    | meta | data |    | meta | data |    |   |
+ * +-------+----+------+------+----+------+------+----+   |
+ *         | 16 |             | 24 |             | 32 |   | << padding
+ *              +--- chunk ---+    +--- chunk ---+
  *
  * total: 320 byte (64 + 128 * 2)
  *
  * - block : block header (struct) like node
- *   ├─[ 8 byte]: next chunk pointer
- *   ├─[ 8 byte]: next block pointer
- *   ├─[ 8 byte]: prev block pointer
- *   ├─[ 8 byte]: outer pool pointer
- *   ├─[ 8 byte]: using chunk count
- *   └─[16 byte]: padding
+ *   |-[ 8 byte]: next chunk pointer
+ *   |-[ 8 byte]: next block pointer
+ *   |-[ 8 byte]: prev block pointer
+ *   |-[ 8 byte]: outer pool pointer
+ *   |-[ 8 byte]: using chunk count
+ *   +-[16 byte]: padding
  *
  * - chunk: not a struct, abstract object for dynamic chunk size.
- *   ├─[ 8 byte]: outer block address (meta)
- *   ├─[96 byte]: actual usable space  (data)
- *   └─[24 byte]: padding
+ *   |-[ 8 byte]: outer block address (meta)
+ *   |-[96 byte]: actual usable space  (data)
+ *   +-[24 byte]: padding
  *
  * NOTE: align is intended for SIMD use and increases capacity.
  * block header padding reason: to ensures alignment for chunk start addresses.

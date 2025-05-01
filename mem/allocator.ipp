@@ -1,6 +1,6 @@
 #ifdef LWE_MEM_ALLOCATOR
 LWE_BEGIN
-namespace MEM {
+namespace mem {
 
 template<typename T, size_t ALIGN, size_t COUNT>
 Allocator typename Allocator::Statics<T, ALIGN, COUNT>::allocator{ sizeof(T), ALIGN, COUNT };
@@ -95,7 +95,7 @@ Allocator* Allocator::Manager::instance(size_t size) {
 }
 
 std::unordered_map<size_t, Allocator*> Allocator::Manager::map;
-thread::Lock                           Allocator::Manager::lock;
+sync::Lock                             Allocator::Manager::lock;
 
 } // namespace MEM
 LWE_END

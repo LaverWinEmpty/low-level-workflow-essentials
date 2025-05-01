@@ -24,8 +24,8 @@
 
 #include "config.hpp"
 #include "../common/hal.hpp"
-#include "../meta/container.hpp"
 #include "../mem/stack.hpp"
+#include "../meta/container.ipp"
 
 LWE_BEGIN
 

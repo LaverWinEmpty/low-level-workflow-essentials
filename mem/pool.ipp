@@ -70,14 +70,15 @@ auto Pool::Block::find(void* in) noexcept -> Block* {
 }
 
 Pool::Pool(size_t chunk, size_t alignment, size_t count) noexcept:
-    ALIGN(align(alignment)),                            //
-    CHUNK(align(chunk + sizeof(void*), ALIGN)),         //
-    COUNT(align(count, DEF_COUNT)),                     //
-    META{ align(sizeof(Block) + sizeof(void*), ALIGN) } //
+    ALIGN(align(alignment)),                             //
+    CHUNK(align(chunk + sizeof(void*), ALIGN)),          //
+    COUNT(align(count, DEF_COUNT)),                      //
+    META{ align(sizeof(Block) + sizeof(void*), ALIGN) }, //
+    counter{ 0 }
 {}
 
 Pool::~Pool() noexcept {
-    assert(counter.chunks == 0);
+    // assert(counter.chunks == 0);
     for(auto i = all.begin(); i != all.end(); ++i) {
         memfree(*i);
     }

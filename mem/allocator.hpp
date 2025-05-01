@@ -38,7 +38,7 @@ public:
         static Allocator* instance(size_t in);
     private:
         static std::unordered_map<size_t, Allocator*> map;
-        static thread::Lock                           lock;
+        static sync::Lock                             lock;
     };
 
 public:
@@ -59,7 +59,7 @@ public:
     ~Allocator() noexcept = default;
 
 private:
-    thread::Lock lock;
+    sync::Lock lock;
 };
 
 } // namespace mem
