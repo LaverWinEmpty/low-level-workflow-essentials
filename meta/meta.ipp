@@ -186,7 +186,7 @@ public:
 
 /// @brief static object registry
 /// @note  Registry<Class> == metadata registry
-/// @tparam T ONLY Class(class metadata) or Object(static instance)
+/// @tparam T: Enum (enum metadata) or Class(class metadata) or Object(static instance)
 template<typename T> class Registry {
 public:
     /// @tparam U base of T
