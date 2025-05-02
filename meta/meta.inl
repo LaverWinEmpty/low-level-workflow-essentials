@@ -181,7 +181,7 @@ Type::~Type() {
     }
 }
 
-Type& Type::operator=(const Type in) {
+Type& Type::operator=(const Type& in) {
     EType* dest = count < STACK ? stack : heap; // allocated: use heap
     if(in.count < STACK) {
         std::memcpy(dest, in.stack, in.count); // copy stack

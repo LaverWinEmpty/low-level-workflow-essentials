@@ -50,7 +50,7 @@ public:
     Type(Type&&) noexcept;
     Type(EType);
     ~Type();
-    Type& operator=(const Type);
+    Type& operator=(const Type&);
     Type& operator=(Type&&) noexcept;
 
 public:
