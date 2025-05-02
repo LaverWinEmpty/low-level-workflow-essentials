@@ -280,6 +280,7 @@ public:                                                                         
  * @brief default container serializer and deserializer override
  */
 #define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
+public:                                                                                                                \
 	friend lwe::meta::Container;                                                                                       \
     using CONTAINER##Element = ELEMENT;                                                                                \
     virtual void parse(const string& in) override {                                                                    \
