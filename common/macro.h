@@ -145,8 +145,8 @@
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
 public:                                                                                                                \
 	friend lwe::meta::Structure;                                                                                       \
-    virtual LWE::meta::Class* meta() const override;                                                                   \
     friend struct TYPE##Meta;                                                                                          \
+    virtual LWE::meta::Class* meta() const override;                                                                   \
     using Base = BASE
 
 #define REGISTER_FIELD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
@@ -280,6 +280,7 @@ public:                                                                         
  * @brief default container serializer and deserializer override
  */
 #define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
+	friend lwe::meta::Container;                                                                                       \
     using CONTAINER##Element = ELEMENT;                                                                                \
     virtual void parse(const string& in) override {                                                                    \
         *this = Container::parse<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                                   \
