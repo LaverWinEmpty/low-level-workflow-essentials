@@ -1,3 +1,7 @@
+#include "macro.hpp"
+
+LWE_BEGIN
+
 class Noncopy {
 private:
     Noncopy(const Noncopy&)            = delete;
@@ -10,11 +14,9 @@ private:
     Nomove& operator=(Nomove&&) = delete;
 };
 
-enum Uninitializer {
+enum class Uninitialized {
     UNINIT
 };
+using enum Uninitialized;
 
-class Noinit {
-public:
-    Noinit(Uninitializer) {}
-};
+LWE_END

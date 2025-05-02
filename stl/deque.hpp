@@ -23,9 +23,9 @@
  **************************************************************************************************/
 
 #include "config.hpp"
-#include "../common/hal.hpp"
+#include "../base/sys.hpp"
 #include "../mem/stack.hpp"
-#include "../meta/container.ipp"
+#include "../meta/container.hxx"
 
 LWE_BEGIN
 
@@ -37,7 +37,7 @@ private:
     template<typename, size_t> friend class Deque;
 
 private:
-    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : common::align(SVO));
+    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : sys::align(SVO));
 
 public:
     class Iterator; //!< iterator

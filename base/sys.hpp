@@ -1,15 +1,16 @@
 
-#ifndef LWE_COMMON
-#define LWE_COMMON
+#ifndef LWE_GLOBAL_SYS
+#define LWE_GLOBAL_SYS
 
-#include "hal.hpp "
+#include "std.hpp"
+#include "macro.hpp"
 
 LWE_BEGIN
 
-namespace common {
+namespace sys {
 
 //! @brief check power of 2
-inline constexpr bool aligned(uint64 in) noexcept {
+inline constexpr bool aligned(uint64_t in) noexcept {
     return in && !(in & (in - 1));
 }
 
@@ -92,7 +93,9 @@ template<typename T> inline void memfree(T* in) noexcept {
     free(*(reinterpret_cast<void**>(in) - 1));
 }
 
-} // namespace common
+} // namespace sys
+
+using namespace sys;
 
 LWE_END
 #endif

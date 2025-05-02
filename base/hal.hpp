@@ -1,5 +1,5 @@
-#ifndef LWE_HAL
-#define LWE_HAL
+#ifndef LWE_COMMON_HAL
+#define LWE_COMMON_HAL
 
 #ifdef _POSIX_VERSION
 #    include <sys/types.h>
@@ -10,7 +10,7 @@
 #include <optional>
 
 #include "std.hpp"
-#include "macro.h"
+#include "macro.hpp"
 
 LWE_BEGIN
 namespace hal {
@@ -48,7 +48,7 @@ using ssize_t = ::ssize_t;
 using ssize_t = std::make_signed_t<size_t>;
 #endif
 
-} // namespace HAL
+} // namespace hal
 LWE_END
 
 using namespace LWE::hal;
@@ -62,4 +62,11 @@ using std::string;
 using std::nullopt;
 using std::nullopt_t;
 template<typename T> using opt = std::optional<T>;
+
+
+LWE_BEGIN
+namespace common {
+
+}
+LWE_END
 #endif

@@ -1,7 +1,7 @@
 #ifndef LWE_THREAD_LOCK
 #define LWE_THREAD_LOCK
 
-#include "../common/common.hpp"
+#include "../base/sys.hpp"
 
 LWE_BEGIN
 namespace sync {

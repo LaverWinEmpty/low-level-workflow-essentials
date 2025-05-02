@@ -1,21 +1,21 @@
 #ifndef LWE_REFLECT
 #define LWE_REFLECT
 
+#include "meta/meta.hxx"
+#include "meta/object.hxx"
+#include "meta/serialize.hxx"
+#include "meta/container.hxx"
+
 #include "meta/meta.ipp"
 #include "meta/object.ipp"
 #include "meta/serialize.ipp"
 #include "meta/container.ipp"
 
-#include "meta/meta.inl"
-#include "meta/object.inl"
-#include "meta/serialize.inl"
-#include "meta/container.inl"
-
 LWE_BEGIN
 /*
  * @brief object class
  */
-    using meta::Object;
+using meta::Object;
 
 /*
  * @brief meta class
