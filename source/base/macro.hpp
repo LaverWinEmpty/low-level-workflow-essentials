@@ -140,7 +140,7 @@
 #define GET_MACRO_9(a, b, c, d, e, f, g, h, i, NAME, ...) NAME //! for macro overloading, param count 0 ~ 9
 
 /*
- * @brief register metadata inner class
+ * @brief class body for register
  */
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
 public:                                                                                                                \
@@ -149,13 +149,16 @@ public:                                                                         
     virtual LWE::meta::Class* meta() const override;                                                                   \
     using Base = BASE
 
+ /*
+  * @breif register class field (Type Name, Scope Name)
+  */
 #define REGISTER_FIELD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
         Macro__register_field_begin_scoped,\
         Macro__register_field_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_implementation(TYPE, )
-#define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_implementation(TYPE, SCOPE::)
-#define Macro__register_field_begin_implementation(TYPE, SCOPE)                                                        \
+#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, , )
+#define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::, SCOPE##_)
+#define Macro__register_field_begin_detail(TYPE, SCOPE, SCOPE_NAME)                                                    \
     template<> LWE::meta::Class* LWE::meta::classof<SCOPE TYPE>() {                                                    \
         static LWE::meta::Class* META = nullptr;                                                                       \
         if(!META) META = LWE::meta::Registry<LWE::meta::Class>::find(#TYPE);                                           \
@@ -191,7 +194,7 @@ public:                                                                         
         LWE::meta::Registry<LWE::meta::Class>::add<TYPE##Meta>(#TYPE);                                                 \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \
-    LWE::meta::Registered TYPE##_RGISTERED = LWE::meta::registclass<SCOPE TYPE>();                                     \
+    LWE::meta::Registered SCOPE_NAME##TYPE##_FIELD_REGISTERED = LWE::meta::registclass<SCOPE TYPE>();                  \
     const LWE::meta::Structure& TYPE##Meta::fields() const {                                                           \
         static const LWE::meta::Structure& REF = LWE::meta::Structure::reflect<SCOPE TYPE>();                          \
         return REF;                                                                                                    \
@@ -219,13 +222,36 @@ public:                                                                         
         return map[NAME];                                                                                              \
     }
 
+  /*
+   * @brief register class method (Type Name, Function Name)
+   */
+#define REGISTER_METHOD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
+        Macro__register_method_begin_scoped,\
+        Macro__register_method_begin_global \
+    )(__VA_ARGS__)
+#define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, , )
+#define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::, SCOPE##_)
+#define Macro__register_method_begin_detail(TYPE, SCOPE, SCOPE_NAME)\
+    template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();\
+    LWE::meta::Registered SCOPE_NAME##TYPE##_METHOD_REGISTERED = LWE::meta::registmethod<SCOPE TYPE>();\
+    template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>() {\
+        using CLASS = SCOPE TYPE;\ // {
+#define REGISTER_METHOD(Name)\
+            registry.registerMethod(#Name, createMethodLambda(&CLASS::Name)) // }
+#define REGISTER_METHOD_END \
+        return LWE::meta::Registered::REGISTERED;\
+    }
+
+/*
+ * @breif register enum (Type Name, Scope Name)
+ */
 #define REGISTER_ENUM_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
         Macro__register_enum_begin_scoped,\
         Macro__register_enum_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_enum_begin_global(TYPE)        Macro__register_enum_begin_implementation(TYPE, )
-#define Macro__register_enum_begin_scoped(TYPE, SCOPE) Macro__register_enum_begin_implementation(TYPE, SCOPE::)
-#define Macro__register_enum_begin_implementation(TYPE, SCOPE)                                                         \
+#define Macro__register_enum_begin_global(TYPE)        Macro__register_enum_begin_detail(TYPE, , )
+#define Macro__register_enum_begin_scoped(TYPE, SCOPE) Macro__register_enum_begin_detail(TYPE, SCOPE::, SCOPE##_)
+#define Macro__register_enum_begin_detail(TYPE, SCOPE, SCOPE_NAME)                                                     \
     struct TYPE##Meta;                                                                                                 \
     template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>();                     \
     struct TYPE##Meta: LWE::meta::Enum {                                                                               \
@@ -250,7 +276,7 @@ public:                                                                         
         LWE::meta::Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                             \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \
-    LWE::meta::Registered TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                                     \
+    LWE::meta::Registered SCOPE_NAME##TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                         \
     template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>() {                    \
         using enum SCOPE TYPE;                                                                                         \
         const char* NAME = #TYPE;                                                                                      \
@@ -260,7 +286,7 @@ public:                                                                         
         }                                                                                                              \
         LWE::meta::Enumerate meta; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
-        meta.push(LWE::meta::Enumerator{ static_cast<uint64>(VALUE), #VALUE }) // }
+            meta.push(LWE::meta::Enumerator{ static_cast<uint64>(VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
         meta.shrink();                                                                                                 \
         map.insert({ NAME, meta });                                                                                    \
