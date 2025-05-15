@@ -184,31 +184,93 @@ public:
     static uint64_t               deserialize(const string&, const string&);
 };
 
-/// @brief static object registry
-/// @note  Registry<Class> == metadata registry
-/// @tparam T: Enum (enum metadata) or Class(class metadata) or Object(static instance)
-template<typename T> class Registry {
-public:
-    /// @tparam U base of T
-    template<typename U> static void add(const string&);
-    /// @tparam U base of T
-    template<typename U> static void add(const char*);
+/// @brief method metadata;
+/// @note  constructor, destructor, copy, move is use default
+struct Signature {
+    Type              ret;  //!< return type
+    std::vector<Type> args; //!< argumnet types
+};
 
+/// @brief anonymous function base
+class Method {
 public:
-    static T* find(const char*);
-    static T* find(const string&);
+    virtual const Signature& signature() const = 0;
+    virtual ~Method() = default;
+    virtual std::any invoke(void*, const std::vector<std::any>& args) const = 0;
 
 private:
+    Signature info;
+};
+
+/// @brief a method converted to a lambda
+template<typename Cls, typename Ret, typename... Args>
+class Lambda : public Method {
+    // tuple unpack use by index sequence
+    template<size_t... Is>
+    Ret call(Cls* obj, const std::vector<std::any>& args, std::index_sequence<Is...>) const;
+
+public:
+    Lambda(Ret(Cls::* name)(Args...));
+    Lambda(Ret(Cls::* name)(Args...) const);
+    std::any invoke(void* instance, const std::vector<std::any>& args) const override;
+    const Signature& signature() const override;
+
+private:
+    union {
+        Ret(Cls::* nonconst)(Args...);
+        Ret(Cls::* constant)(Args...) const;
+    };
+    bool flag; // true == call const
+};
+
+/// @brief static object registry
+/// @note  Registry<Class> == metadata registry
+/// @tparam T: Enum (enum metadata)
+///            Class (class metadata) 
+///            Object (static instance)
+///            Method (method lambda)
+template<typename T> class Registry {
+    Registry() = default;
+
+public:
+    ~Registry();
+    template<typename U> static void add(const string&); //!< @tparam U base of T
+    template<typename U> static void add(const char*);   //!< @tparam U base of T
+    static T*                        find(const char*);
+    static T*                        find(const string&);
+
+private:
+    std::unordered_map<string, T*> map;
+
+public:
+    static std::unordered_map<string, T*>& instance();
+};
+
+/// @brief specialize
+template<> class Registry<Method> {
+    // template<typename T> friend Registered registmethod();
     Registry() = default;
 
 public:
     ~Registry();
 
-private:
-    std::unordered_map<string, T*> map;
+public:
+    static void    add(const char*, Method*);
+    static void    add(const string&, Method*);
+    static Method* find(const char*);
+    static Method* find(const string&);
+
+public:
+    template<typename Cls, typename Ret, typename... Args>
+    static Method* lambdaize(Ret(Cls::* name)(Args...));
+    template<typename Cls, typename Ret, typename... Args>
+    static Method* lambdaize(Ret(Cls::* name)(Args...) const);
 
 private:
-    static std::unordered_map<string, T*>& instance();
+    std::unordered_map<string, Method*> table;
+
+public:
+    static std::unordered_map<string, Method*>& instance();
 };
 
 /// unused type
@@ -216,10 +278,12 @@ enum class Registered : bool {
     REGISTERED = 1
 };
 
-/// @brief  pre-registered metadata of typename T, return value is unused
+/// @brief pre-registered metadata of typename T, return value is unused
 template<typename T> Registered registclass();
-/// @brief  pre-registered metadata of typename T, return value is unused
+/// @brief pre-registered metadata of typename T, return value is unused
 template<typename T> Registered registenum();
+/// @brief pre-registered method signature of typename T, return value is unused
+template<typename T> Registered registmethod();
 
 template<typename T> constexpr EType typecode(); //!< get type code
 

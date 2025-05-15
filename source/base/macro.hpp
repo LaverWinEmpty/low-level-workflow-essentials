@@ -235,9 +235,10 @@ public:                                                                         
     template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();\
     LWE::meta::Registered SCOPE_NAME##TYPE##_METHOD_REGISTERED = LWE::meta::registmethod<SCOPE TYPE>();\
     template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>() {\
-        using CLASS = SCOPE TYPE;\ // {
+        using CLASS = SCOPE TYPE;\
+        auto& registry = Registry<Method>::instance(); // {
 #define REGISTER_METHOD(Name)\
-            registry.registerMethod(#Name, createMethodLambda(&CLASS::Name)) // }
+            registry.insert({#Name, Registry<Method>::lambdaize(&CLASS::Name)}) // }
 #define REGISTER_METHOD_END \
         return LWE::meta::Registered::REGISTERED;\
     }

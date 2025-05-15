@@ -534,6 +534,94 @@ template<typename T> const Type& typeof(const T&) {
     return Type::reflect<T>();
 }
 
+template<typename Cls, typename Ret, typename ...Args>
+template<size_t ...Is>
+Ret Lambda<Cls, Ret, Args...>::call(Cls* obj, const std::vector<std::any>& args, std::index_sequence<Is...>) const
+{
+    if (flag) {
+        return (obj->*constant)(std::any_cast<typename std::decay<Args>::type>(args[Is])...);
+    }
+    else return (obj->*nonconst)(std::any_cast<typename std::decay<Args>::type>(args[Is])...);
+}
+
+template<typename Cls, typename Ret, typename ...Args>
+Lambda<Cls, Ret, Args...>::Lambda(Ret(Cls::* name)(Args...)) : nonconst(name), flag(false) {}
+
+template<typename Cls, typename Ret, typename ...Args>
+Lambda<Cls, Ret, Args...>::Lambda(Ret(Cls::* name)(Args...) const) : constant(name), flag(true) {}
+
+template<typename Cls, typename Ret, typename... Args>
+std::any Lambda<Cls, Ret, Args...>::invoke(void* instance, const std::vector<std::any>& args) const {
+    if (args.size() != sizeof...(Args)) {
+        throw std::runtime_error("Parameter count mismatch.");
+    }
+
+    Cls* obj = static_cast<Cls*>(instance);
+    if constexpr (std::is_void_v<Ret>) {
+        call(obj, args, std::index_sequence_for<Args...>{});
+        return std::any(); // if return type is void, an empty value is returned.
+    }
+    else {
+        return call(obj, args, std::index_sequence_for<Args...>{});
+    }
+}
+
+template<typename Class, typename Ret, typename ...Args>
+const Signature& Lambda<Class, Ret, Args...>::signature() const {
+    static const Signature info = {
+        typeof<Ret>(),
+        std::vector<Type>{ typeof<typename std::decay<Args>::type>()... }
+    };
+    return info;
+}
+
+Registry<Method>::~Registry() {
+    for (auto& itr : table) {
+        delete itr.second;
+    }
+}
+
+void Registry<Method>::add(const char* name, Method* lambda) {
+    add(std::string{ name }, lambda);
+}
+
+void Registry<Method>::add(const string& name, Method* lambda) {
+    std::unordered_map<string, Method*>& table = instance();
+    if (table.find(name) != table.end()) {
+        delete lambda; // duplicate
+        return;
+    }
+    table[name] = std::move(lambda);
+}
+
+Method* Registry<Method>::find(const char* name) {
+    return find(std::string{ name });
+}
+
+Method* Registry<Method>::find(const std::string& name) {
+    std::unordered_map<string, Method*>& table = instance();
+    auto result = table.find(name);
+    if (result != table.end()) {
+        return result->second;
+    }
+    return nullptr;
+}
+
+std::unordered_map<std::string, Method*>& Registry<Method>::instance() {
+    static Registry<Method> instance;
+    return instance.table;
+}
+
+template<typename Cls, typename Ret, typename ...Args>
+Method* Registry<Method>::lambdaize(Ret(Cls::* name)(Args...)) {
+    return new Lambda<Cls, Ret, Args...>(name);
+}
+
+template<typename Cls, typename Ret, typename ...Args>
+Method* Registry<Method>::lambdaize(Ret(Cls::* name)(Args...) const) {
+    return new Lambda<Cls, Ret, Args...>(name);
+}
+
 template<typename T> T* Registry<T>::find(const char* in) {
     return find(string{ in });
 }
