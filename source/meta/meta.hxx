@@ -208,7 +208,7 @@ private:
     std::unordered_map<string, T*> map;
 
 private:
-    static std::unordered_map<string, T*>* instance();
+    static std::unordered_map<string, T*>& instance();
 };
 
 /// unused type

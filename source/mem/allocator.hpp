@@ -24,7 +24,7 @@ public:
         template<typename U> static bool     deallocate(U*) noexcept;
         static size_t                        release() noexcept;
         static size_t                        generate(size_t) noexcept;
-        static Allocator*                    instance() noexcept;
+        static Allocator&                    instance() noexcept;
 
     private:
         static Allocator allocator;

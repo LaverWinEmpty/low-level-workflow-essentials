@@ -539,8 +539,8 @@ template<typename T> T* Registry<T>::find(const char* in) {
 }
 
 template<typename T> T* Registry<T>::find(const string& in) {
-    auto result = instance()->find(in);
-    if(result != instance()->end()) {
+    auto result = instance().find(in);
+    if(result != instance().end()) {
         return result->second;
     }
     return nullptr;
@@ -551,9 +551,9 @@ template<typename T> template<typename U> void Registry<T>::add(const char* in) 
 }
 
 template<typename T> template<typename U> void Registry<T>::add(const string& in) {
-    std::unordered_map<string, T*>* map = instance();
-    if (map->find(in) == map->end()) {
-        map->insert({ in, static_cast<T*>(new U()) });
+    std::unordered_map<string, T*> map = instance();
+    if (map.find(in) == map.end()) {
+        map.insert({ in, static_cast<T*>(new U()) });
     }
 }
 
@@ -563,9 +563,9 @@ template<typename T> Registry<T>::~Registry() {
     }
 }
 
-template<typename T> std::unordered_map<string, T*>* Registry<T>::instance() {
+template<typename T> std::unordered_map<string, T*>& Registry<T>::instance() {
     static Registry<T> statics;
-    return &statics.map;
+    return statics.map;
 }
 
 template<typename T> Registered registclass() {

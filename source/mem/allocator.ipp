@@ -72,8 +72,8 @@ template<typename T, size_t A, size_t C> size_t Allocator::Statics<T, A, C>::gen
     return allocator.generate(in);
 }
 
-template<typename T, size_t A, size_t C> Allocator* Allocator::Statics<T, A, C>::instance() noexcept {
-    return &allocator;
+template<typename T, size_t A, size_t C> Allocator& Allocator::Statics<T, A, C>::instance() noexcept {
+    return allocator;
 }
 
 Allocator::Manager::~Manager() {
