@@ -49,7 +49,7 @@ static constexpr size_t DEF_ALIGN = sizeof(void*);
 static constexpr size_t DEF_COUNT = 64;
 } // namespace config
 using namespace config;
-using namespace common;
+using namespace sys;
 
 class Pool : Noncopy {
 protected:
