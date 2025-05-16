@@ -53,6 +53,11 @@ using meta::serialize;
 using meta::deserialize;
 
 /*
+ * @brief get type info
+ */
+using meta::typeof;
+
+/*
  * @brief get class metadata
  */
 using meta::classof;
