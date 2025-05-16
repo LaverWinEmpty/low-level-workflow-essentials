@@ -62,9 +62,7 @@ template<typename T> static const Type& Type::reflect() {
     if(buffer.size() == 0) {
         reflect<T>(&buffer);
         buffer.shrink();
-        for(auto itr : buffer) {
-            buffer.hashed = (buffer.hashed << 5) - static_cast<std::underlying_type_t<EType>>(itr);
-        }
+        buffer.hashed = util::Hash(buffer.begin(), buffer.size());
     }
     return buffer;
 }
