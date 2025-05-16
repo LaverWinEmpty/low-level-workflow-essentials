@@ -16,10 +16,10 @@ UUID::UUID() : ptr(new String) {
     hiptr[6] = (hiptr[6] & 0x0F) | 0x40; // 0x4~
     loptr[1] = (loptr[1] & 0x3F) | 0x80; // 0x8 | 0x9~ | 0xA~ | 0xB~
 
-    sprintf(str, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+    std::std::format_to_n(str, sizeof(str) - 1,
+        "{:02X}{:02X}{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}-{:02X}{:02X}{:02X}{:02X}{:02X}{:02X}",
         hiptr[0], hiptr[1], hiptr[2], hiptr[3], hiptr[4], hiptr[5], hiptr[6], hiptr[7],
-        loptr[0], loptr[1], loptr[2], loptr[3], loptr[4], loptr[5], loptr[6], loptr[7]
-    );
+        loptr[0], loptr[1], loptr[2], loptr[3], loptr[4], loptr[5], loptr[6], loptr[7]);
 }
 
 bool UUID::operator==(const UUID& in) const {
