@@ -36,3 +36,4 @@ Hash::operator hash_t() const {
 
 }
 LWE_END
+#endif
