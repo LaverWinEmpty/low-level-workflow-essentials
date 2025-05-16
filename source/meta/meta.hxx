@@ -9,6 +9,11 @@ namespace meta {
 
 class Object;
 
+/// unused type
+enum class Registered : bool {
+    REGISTERED = 1
+};
+
 /// @brief type codes
 enum class EType : uint8 {
     UNREGISTERED,
@@ -193,12 +198,14 @@ struct Signature {
 
 /// @brief anonymous function base
 class Method {
+    template<typename T> friend Registered registmethod();
+
 public:
     virtual const Signature& signature() const = 0;
     virtual ~Method() = default;
     virtual std::any invoke(void*, const std::vector<std::any>& args) const = 0;
 
-public:
+private:
     template<typename Cls, typename Ret, typename... Args>
     static Method* lambdaize(Ret(Cls::* name)(Args...));
     template<typename Cls, typename Ret, typename... Args>
@@ -283,11 +290,6 @@ private:
 
 private:
     static Table& instance();
-};
-
-/// unused type
-enum class Registered : bool {
-    REGISTERED = 1
 };
 
 /// @brief pre-registered metadata of typename T, return value is unused
