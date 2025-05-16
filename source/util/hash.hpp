@@ -1,7 +1,7 @@
 #ifndef LWE_UTIL_HASH
 #define LWE_UTIL_HASH
 
-#include "../common.hpp"
+#include "../base/hal.hpp"
 
 LWE_BEGIN
 namespace util {
