@@ -7,7 +7,6 @@
 #include <cstdlib>
 #include <cstdint>
 #include <type_traits>
-#include <optional>
 
 #include "std.hpp"
 #include "macro.hpp"
@@ -58,15 +57,4 @@ using namespace LWE::hal;
  **************************************************************************************************/
 
 using std::string;
-
-using std::nullopt;
-using std::nullopt_t;
-template<typename T> using opt = std::optional<T>;
-
-
-LWE_BEGIN
-namespace common {
-
-}
-LWE_END
 #endif
