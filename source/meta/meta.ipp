@@ -1,5 +1,7 @@
 #ifdef LWE_META
 
+#include "../util/hash.hpp"
+
 LWE_BEGIN
 namespace meta {
 
