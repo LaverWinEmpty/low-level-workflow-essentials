@@ -15,20 +15,6 @@
 #    define MACRO(x) STRING(x)
 #endif
 
-#define DECLARE_NO_COPY(Class)                                                                                         \
-    Class(const Class&)            = delete;                                                                           \
-    Class(Class&&)                 = delete;                                                                           \
-    Class& operator=(const Class&) = delete;                                                                           \
-    Class& operator=(Class&&)      = delete
-
-#define DECLARE_STATIC_CLASS(Class)                                                                                    \
-    Class()  = delete;                                                                                                 \
-    ~Class() = delete;                                                                                                 \
-    DECLARE_NO_COPY(Class)
-
-#define ERROR_STRING(x)                                                                                                \
-    std::string() + "File: " + __FILE__ + "\nLine: " + MACRO(__LINE__) + "\nFunction: " + __func__ + "\nFailed: " + #x
-
 #ifndef ASSERT
 #    ifdef NDEBUG
 #        define ASSERT(x)                                                                                              \
@@ -45,16 +31,16 @@
 #    endif
 #endif
 
-#ifdef _MSC_VER
-#    define UNINIT_BEGIN __pragma(warning(disable : 26495))
-#    define UNINIT_END   __pragma(warning(default : 26495))
-#elif(defined(__GNUC__) || defined(__clang__))
-#    define UNINIT_BEGIN _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-#    define UNINIT_END   _Pragma("GCC diagnostic pop")
-#else
-#    define UNINIT_BEGIN
-#    define UNINIT_END
-#endif
+//#ifdef _MSC_VER
+//#    define UNINIT_BEGIN __pragma(warning(disable : 26495))
+//#    define UNINIT_END   __pragma(warning(default : 26495))
+//#elif(defined(__GNUC__) || defined(__clang__))
+//#    define UNINIT_BEGIN _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
+//#    define UNINIT_END   _Pragma("GCC diagnostic pop")
+//#else
+//#    define UNINIT_BEGIN
+//#    define UNINIT_END
+//#endif
 
 #ifndef _T
 #    ifdef UNICODE
@@ -156,9 +142,9 @@ public:                                                                         
         Macro__register_field_begin_scoped,\
         Macro__register_field_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, , )
-#define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::, SCOPE##_)
-#define Macro__register_field_begin_detail(TYPE, SCOPE, SCOPE_NAME)                                                    \
+#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, )
+#define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::)
+#define Macro__register_field_begin_detail(TYPE, SCOPE)                                                                \
     template<> LWE::meta::Class* LWE::meta::classof<SCOPE TYPE>() {                                                    \
         static LWE::meta::Class* META = nullptr;                                                                       \
         if(!META) META = LWE::meta::Registry<LWE::meta::Class>::find(#TYPE);                                           \
@@ -194,7 +180,7 @@ public:                                                                         
         LWE::meta::Registry<LWE::meta::Class>::add<TYPE##Meta>(#TYPE);                                                 \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \
-    LWE::meta::Registered SCOPE_NAME##TYPE##_FIELD_REGISTERED = LWE::meta::registclass<SCOPE TYPE>();                  \
+    LWE::meta::Registered TYPE##_FIELD_REGISTERED = LWE::meta::registclass<SCOPE TYPE>();                              \
     const LWE::meta::Structure& TYPE##Meta::fields() const {                                                           \
         static const LWE::meta::Structure& REF = LWE::meta::Structure::reflect<SCOPE TYPE>();                          \
         return REF;                                                                                                    \
@@ -225,22 +211,25 @@ public:                                                                         
   /*
    * @brief register class method (Type Name, Function Name)
    */
-#define REGISTER_METHOD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
-        Macro__register_method_begin_scoped,\
-        Macro__register_method_begin_global \
+#define REGISTER_METHOD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,                                                            \
+        Macro__register_method_begin_scoped,                                                                           \
+        Macro__register_method_begin_global                                                                            \
     )(__VA_ARGS__)
-#define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, , )
-#define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::, SCOPE##_)
-#define Macro__register_method_begin_detail(TYPE, SCOPE, SCOPE_NAME)\
-    template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();\
-    LWE::meta::Registered SCOPE_NAME##TYPE##_METHOD_REGISTERED = LWE::meta::registmethod<SCOPE TYPE>();\
-    template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>() {\
-        using CLASS = SCOPE TYPE;\
-        auto& registry = Registry<Method>::instance(); // {
-#define REGISTER_METHOD(Name)\
-            registry.insert({#Name, Registry<Method>::lambdaize(&CLASS::Name)}) // }
-#define REGISTER_METHOD_END \
-        return LWE::meta::Registered::REGISTERED;\
+#define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, )
+#define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::)
+#define Macro__register_method_begin_detail(TYPE, SCOPE)                                                               \
+    template<> LWE::meta::Method* LWE::meta::method<TYPE>(const string& in) {                                          \
+        return Registry<Method>::find(#TYPE, in);                                                                      \
+    }                                                                                                                  \
+    template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();                                            \
+    LWE::meta::Registered TYPE##_METHOD_REGISTERED = LWE::meta::registmethod<SCOPE TYPE>();                            \
+    template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>() {                                           \
+        using TYPE_NAME = SCOPE TYPE;                                                                                  \
+        static const string CLASS_NAME = { #TYPE }; // {
+#define REGISTER_METHOD(NAME)                                                                                          \
+            Registry<Method>::add(CLASS_NAME, #NAME, Method::lambdaize(&TYPE_NAME::NAME)) // ; }
+#define REGISTER_METHOD_END                                                                                            \
+        return LWE::meta::Registered::REGISTERED;                                                                      \
     }
 
 /*
@@ -250,9 +239,9 @@ public:                                                                         
         Macro__register_enum_begin_scoped,\
         Macro__register_enum_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_enum_begin_global(TYPE)        Macro__register_enum_begin_detail(TYPE, , )
-#define Macro__register_enum_begin_scoped(TYPE, SCOPE) Macro__register_enum_begin_detail(TYPE, SCOPE::, SCOPE##_)
-#define Macro__register_enum_begin_detail(TYPE, SCOPE, SCOPE_NAME)                                                     \
+#define Macro__register_enum_begin_global(TYPE)        Macro__register_enum_begin_detail(TYPE, )
+#define Macro__register_enum_begin_scoped(TYPE, SCOPE) Macro__register_enum_begin_detail(TYPE, SCOPE::)
+#define Macro__register_enum_begin_detail(TYPE, SCOPE)                                                                 \
     struct TYPE##Meta;                                                                                                 \
     template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>();                     \
     struct TYPE##Meta: LWE::meta::Enum {                                                                               \
@@ -277,7 +266,7 @@ public:                                                                         
         LWE::meta::Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                             \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \
-    LWE::meta::Registered SCOPE_NAME##TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                         \
+    LWE::meta::Registered TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                                     \
     template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>() {                    \
         using enum SCOPE TYPE;                                                                                         \
         const char* NAME = #TYPE;                                                                                      \

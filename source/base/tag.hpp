@@ -3,13 +3,17 @@
 LWE_BEGIN
 
 class Noncopy {
-private:
+protected:
     Noncopy(const Noncopy&)            = delete;
     Noncopy& operator=(const Noncopy&) = delete;
+
+public:
+    Noncopy() = default;
+    ~Noncopy() = default;
 };
 
 class Nomove {
-private:
+protected:
     Nomove(Nomove&&)            = delete;
     Nomove& operator=(Nomove&&) = delete;
 };

@@ -72,6 +72,11 @@ using meta::statics;
  */
 using meta::typestring;
 
+/*
+ * @brief get method
+ */
+using meta::method;
+
 REGISTER_ENUM_BEGIN(EType, meta) {
     REGISTER_ENUM(UNREGISTERED);
     REGISTER_ENUM(VOID);

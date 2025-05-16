@@ -3,6 +3,7 @@
 
 #include "../sync/lock.hpp"
 #include "../stl/deque.hpp"
+#include "../base/tag.hpp"
 
 /*******************************************************************************
  * pool structure
@@ -50,10 +51,7 @@ static constexpr size_t DEF_COUNT = 64;
 using namespace config;
 using namespace common;
 
-class Pool {
-protected:
-    DECLARE_NO_COPY(Pool);
-
+class Pool : Noncopy {
 protected:
     //! @brief memory pool block node
     //! @note  4 pointer = 32 byte in x64

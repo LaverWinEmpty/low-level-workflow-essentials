@@ -198,6 +198,12 @@ public:
     virtual ~Method() = default;
     virtual std::any invoke(void*, const std::vector<std::any>& args) const = 0;
 
+public:
+    template<typename Cls, typename Ret, typename... Args>
+    static Method* lambdaize(Ret(Cls::* name)(Args...));
+    template<typename Cls, typename Ret, typename... Args>
+    static Method* lambdaize(Ret(Cls::* name)(Args...) const);
+
 private:
     Signature info;
 };
@@ -233,6 +239,9 @@ template<typename T> class Registry {
     Registry() = default;
 
 public:
+    using Table = std::unordered_map<string, T*>;
+
+public:
     ~Registry();
     template<typename U> static void add(const string&); //!< @tparam U base of T
     template<typename U> static void add(const char*);   //!< @tparam U base of T
@@ -240,10 +249,10 @@ public:
     static T*                        find(const string&);
 
 private:
-    std::unordered_map<string, T*> map;
+    Table table;
 
-public:
-    static std::unordered_map<string, T*>& instance();
+private:
+    static Table& instance();
 };
 
 /// @brief specialize
@@ -255,22 +264,25 @@ public:
     ~Registry();
 
 public:
-    static void    add(const char*, Method*);
-    static void    add(const string&, Method*);
-    static Method* find(const char*);
-    static Method* find(const string&);
+    using Table = std::unordered_map<string, std::unordered_map<string, Method*>>;
 
 public:
-    template<typename Cls, typename Ret, typename... Args>
-    static Method* lambdaize(Ret(Cls::* name)(Args...));
-    template<typename Cls, typename Ret, typename... Args>
-    static Method* lambdaize(Ret(Cls::* name)(Args...) const);
+    static void add(const char*   cls, const char*   name, Method* in);
+    static void add(const char*   cls, const string& name, Method* in);
+    static void add(const string& cls, const char*   name, Method* in);
+    static void add(const string& cls, const string& name, Method* in);
+
+public:
+    static Method* find(const char*   cls, const char*   name);
+    static Method* find(const char*   cls, const string& name);
+    static Method* find(const string& cls, const char*   name);
+    static Method* find(const string& cls, const string& name);
 
 private:
-    std::unordered_map<string, Method*> table;
+    Table table;
 
-public:
-    static std::unordered_map<string, Method*>& instance();
+private:
+    static Table& instance();
 };
 
 /// unused type
@@ -310,6 +322,14 @@ template<typename T> Enum* enumof();              //!< get enum value list
 template<typename T> Enum* enumof(const T&);      //!< get enum value list
 Enum*                      enumof(const char*);   //!< get enum value list
 Enum*                      enumof(const string&); //!< get enum value list
+
+template<typename T> Method* method(const char*   name);                    //!< get method
+template<typename T> Method* method(const string& name);                    //!< get method
+Method*                      method(const char*   cls, const char*   name); //!< get method
+Method*                      method(const char*   cls, const string& name); //!< get method
+Method*                      method(const string& cls, const char*   name); //!< get method
+Method*                      method(const string& cls, const string& name); //!< get method
+
 
 } // namespace meta
 LWE_END
