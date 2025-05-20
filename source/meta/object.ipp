@@ -54,7 +54,7 @@ template<typename T> void destroy(T* in) {
     }
 }
 
-std::string Object::stringfy() const {
+std::string Object::stringify() const {
     const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
         return {};

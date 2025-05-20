@@ -23,7 +23,7 @@ public:
     virtual Class* meta() const;
 
 public:
-    std::string stringfy() const;
+    std::string stringify() const;
     void        parse(const std::string& in);
     static void parse(Object* out, const std::string& in);
 

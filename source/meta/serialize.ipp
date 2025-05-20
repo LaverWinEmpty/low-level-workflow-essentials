@@ -121,7 +121,7 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
 
     case EType::CLASS:  
-        out->append(reinterpret_cast<const Object*>(in)->stringfy());
+        out->append(reinterpret_cast<const Object*>(in)->stringify());
         break;
 
     case EType::POINTER: {
