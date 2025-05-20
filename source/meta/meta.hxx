@@ -99,7 +99,7 @@ private:
 
 /// @brief container of class fiedls and enum values list reflector
 /// @note  Relfector<MyClass> == MyClass reflector class
-/// @tparam T class or enum
+/// @tparam T Field or Enumerator
 template<typename T> struct Reflector {
     /// @tparam C constructor: type info to create
     template<class C> static const Reflector<T>& reflect();
