@@ -52,6 +52,7 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, SVO>::Deque(Deque<T
 
     // move pointer
     else {
+        counter   = in.counter;
         container = in.container;
         capacitor = in.capacitor;
         head      = in.head;
@@ -98,6 +99,7 @@ template<typename T, size_t SVO> template<size_t N> Deque<T, N>& Deque<T, SVO>::
         }
 
         else {
+            counter   = in.counter;
             container = in.container;
             capacitor = in.capacitor;
             head      = in.head;

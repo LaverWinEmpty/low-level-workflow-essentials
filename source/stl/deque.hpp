@@ -123,11 +123,11 @@ private:
    union {
        mem::Stack<T, MIN> stack; // stack, union for uninitialize
    };
-   T*      container = stack; //!< container
-   size_t  capacitor = MIN;   //!< size: container
-   index_t counter   = 0;     //!< size: element
-   index_t head      = 0;     //!< index: front / bottom
-   index_t tail      = -1;    //!< index: rear / top
+   T*      container = nullptr; //!< container
+   size_t  capacitor = 0;       //!< size: container
+   index_t counter   = 0;       //!< size: element
+   index_t head      = 0;       //!< index: front / bottom
+   index_t tail      = -1;      //!< index: rear / top
 };
 
 template<typename T, size_t SVO> class Deque<T, SVO>::Iterator {
