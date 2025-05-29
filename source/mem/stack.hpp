@@ -1,7 +1,7 @@
 #ifndef LWE_MEM_STACK
 #define LWE_MEM_STACK
 
-#include "../base/hal.hpp"
+#include "../core/core.h"
 
 LWE_BEGIN
 

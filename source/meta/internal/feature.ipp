@@ -1,7 +1,201 @@
-#ifdef LWE_SERIALIZE
+#ifdef LWE_META_FEATURE
+
+#include "class.hpp"
+#include "enum.hpp"
+#include "method.hpp"
+
+#include "../../util/hash.hpp"
 
 LWE_BEGIN
 namespace meta {
+
+// clang-format off
+template<typename T> constexpr EType typecode() {
+    if constexpr(std::is_base_of_v<LWE::meta::Container, T>) return ContainerCode<T>::VALUE;
+    if constexpr(std::is_enum_v<T>)                          return EType::ENUM;
+    if constexpr(std::is_pointer_v<T>)                       return EType::POINTER;
+    if constexpr(std::is_reference_v<T>)                     return EType::REFERENCE;
+    if constexpr(std::is_union_v<T>)                         return EType::UNION;
+    if constexpr(std::is_class_v<T>)                         return EType::CLASS;
+    if constexpr(std::is_void_v<T>)                          return EType::VOID;
+    if constexpr(std::is_same_v<T, bool>)                    return EType::BOOL;
+    if constexpr(std::is_same_v<T, signed char>)             return EType::SIGNED_CHAR;
+    if constexpr(std::is_same_v<T, unsigned char>)           return EType::UNSIGNED_CHAR;
+    if constexpr(std::is_same_v<T, char>)                    return EType::CHAR;
+    if constexpr(std::is_same_v<T, signed short>)            return EType::SIGNED_SHORT;
+    if constexpr(std::is_same_v<T, unsigned short>)          return EType::UNSIGNED_SHORT;
+    if constexpr(std::is_same_v<T, signed int>)              return EType::SIGNED_INT;
+    if constexpr(std::is_same_v<T, unsigned int>)            return EType::UNSIGNED_INT;
+    if constexpr(std::is_same_v<T, signed long>)             return EType::SIGNED_LONG;
+    if constexpr(std::is_same_v<T, unsigned long>)           return EType::UNSIGNED_LONG;
+    if constexpr(std::is_same_v<T, wchar_t>)                 return EType::WCHAR_T;
+    if constexpr(std::is_same_v<T, float>)                   return EType::FLOAT;
+    if constexpr(std::is_same_v<T, double>)                  return EType::DOUBLE;
+    if constexpr(std::is_same_v<T, long double>)             return EType::LONG_DOUBLE;
+    if constexpr(std::is_same_v<T, std::string>)             return EType::STD_STRING;
+    else                                                     return EType::UNREGISTERED;
+}
+// clang-format on
+
+// call by template
+template<typename T> const char* typestring() {
+    Type statics = typeof<T>();
+    return statics.serialize();
+}
+
+// call by argument
+template<typename T> const char* typestring(const T&) {
+    return typestring<T>();
+}
+
+const char* typestring(const Type& in) {
+    return *in;
+}
+
+template<typename T> const Type& typeof() {
+    return Type::reflect<T>();
+}
+
+template<typename T> const Type& typeof(const T&) {
+    return Type::reflect<T>();
+}
+
+template<typename T> Registered registclass() {
+    // default, other class -> template specialization
+    Structure::reflect<Object>();
+    Registry<Object>::add<Object>("Object");
+    Registry<Class>::add<Class>("Object");
+    return Registered::REGISTERED;
+}
+
+template<typename T> Registered registenum() {
+    // default, other enum -> template specialization
+    return Registered::REGISTERED;
+}
+
+template<typename T> Object* statics() {
+    // default, other class -> specialization
+    if constexpr(!std::is_same_v<T, Object>) {
+        return nullptr;
+    }
+    static Object* statics = Registry<Object>::find("Object");
+    return statics;
+}
+
+template<typename T> Object* statics(const T&) {
+    return statics<T>();
+}
+
+Object* statics(const char* in) {
+    return statics(string{ in });
+}
+
+Object* statics(const string& in) {
+    return Registry<Object>::find(in);
+}
+
+template<typename T> Class* classof() {
+    // default, other class -> template specialization
+    if constexpr(!std::is_same_v<T, Object>) {
+        return nullptr;
+    }
+
+    static Class* meta = Registry<Class>::find("Object");
+    return meta;
+}
+
+template<typename T> Class* classof(const T&) {
+    return classof<T>();
+}
+
+Class* classof(const char* in) {
+    return classof(string{ in });
+}
+
+Class* classof(const string& in) {
+    return Registry<Class>::find(in);
+}
+
+template<typename T> Enum* enumof() {
+    return nullptr;
+}
+
+template<typename T> Enum* enumof(const T&) {
+    return enumof<T>();
+}
+
+Enum* enumof(const char* in) {
+    return enumof(string{ in });
+}
+
+Enum* enumof(const string& in) {
+    return Registry<Enum>::find(in);
+}
+
+template<typename T> Method* method(const char* name) {
+    return method<T>(string{ name });
+}
+
+template<typename T> Method* method(const string& name) {
+    // default, other class -> template specialization
+    return nullptr;
+}
+
+Method* method(const char* cls, const char* name) {
+    return Registry<Method>::find(cls, name);
+}
+
+Method* method(const string& cls, const char* name) {
+    return Registry<Method>::find(cls, name);
+}
+
+Method* method(const char* cls, const string& name) {
+    return Registry<Method>::find(cls, name);
+}
+
+Method* method(const string& cls, const string& name) {
+    return Registry<Method>::find(cls, name);
+}
+
+// clang-format off
+constexpr const char* typestring(EType code) {
+    switch(code) {
+    case EType::UNREGISTERED:       return "";
+    case EType::VOID:               return "void";
+    case EType::SIGNED_INT:         return "int";
+    case EType::SIGNED_CHAR:        return "char";
+    case EType::SIGNED_SHORT:       return "short";
+    case EType::SIGNED_LONG:        return "long";
+    case EType::SIGNED_LONG_LONG:   return "long long";
+    case EType::UNSIGNED_SHORT:     return "unsigned short";
+    case EType::UNSIGNED_INT:       return "unsigned int";
+    case EType::UNSIGNED_CHAR:      return "unsigned char";
+    case EType::UNSIGNED_LONG:      return "unsigned long";
+    case EType::UNSIGNED_LONG_LONG: return "unsigned long long";
+    case EType::BOOL:               return "bool";
+    case EType::CHAR:               return "char";
+    case EType::WCHAR_T:            return "wchar_t";
+    case EType::FLOAT:              return "float";
+    case EType::DOUBLE:             return "double";
+    case EType::LONG_DOUBLE:        return "long double";
+    case EType::CLASS:              return "class";
+    case EType::UNION:              return "union";
+    case EType::POINTER:            return "*";
+    case EType::REFERENCE:          return "&";
+    case EType::FUNCTION:           return "function";
+    case EType::STD_STRING:         return "string";
+    case EType::STL_DEQUE:          return "Deque";
+    case EType::CONST:              return "const";
+    case EType::ENUM:               return "enum";
+    }
+    return ""; // error
+}
+// clang-format on
+
+/*
+ * serialize
+ */
+
 // clang-format off
 
 // primitive type to string
@@ -42,7 +236,7 @@ template<> string serialize<string>(const string& in) {
 
 // container to string
 template<> string serialize<Container>(const Container& in) {
-    return in.stringify();
+    return in.serialize();
 }
 
 // string to primitive type
@@ -108,7 +302,7 @@ template<> string deserialize<string>(const string& in) {
 
 // string to container
 void deserialize(Container* out, const string& in) {
-    out->parse(in);
+    out->deserialize(in);
 }
 
 // runtime stringify
@@ -310,9 +504,28 @@ void deserialize(void* out, const std::string& in, const EType& type) {
         break;
 
     case EType::STL_DEQUE:
-        static_cast<Container*>(out)->parse(in);
+        static_cast<Container*>(out)->deserialize(in);
         break;
     }
+}
+
+/*
+ * STL
+ */
+
+template<typename T> constexpr bool isSTL() {
+    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
+};
+
+template<typename T> constexpr bool isSTL(const T&) {
+    return isSTL<T>();
+}
+
+template<> bool isSTL<EType>(const EType& code) {
+    switch(code) {
+        case EType::STL_DEQUE: return true;
+    }
+    return false;
 }
 
 }

@@ -1,9 +1,13 @@
 #ifndef LWE_STD
 #define LWE_STD
 
+#ifdef _POSIX_VERSION
+#    include <sys/types.h>
+#endif
+#include <cstdlib>
+#include <cstdint>
+#include <type_traits>
 #include <string>
-#include <functional>
-#include <optional>
 #include <type_traits>
 #include <stdexcept>
 #include <cassert>
@@ -20,5 +24,7 @@
 #include <iomanip>
 #include <any>
 #include <format>
+#include <system_error>
+
 
 #endif

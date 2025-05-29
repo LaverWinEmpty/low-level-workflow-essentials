@@ -1,4 +1,4 @@
-#ifdef LWE_THREAD_LOCK
+#ifdef LWE_SYNC_LOCK
 
 LWE_BEGIN
 namespace sync {

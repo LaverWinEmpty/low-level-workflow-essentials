@@ -1,9 +1,9 @@
 #ifndef LWE_MEM_POOL
 #define LWE_MEM_POOL
 
+#include "../core/core.h"
 #include "../sync/lock.hpp"
 #include "../stl/deque.hpp"
-#include "../base/tag.hpp"
 
 /*******************************************************************************
  * pool structure
@@ -49,7 +49,6 @@ static constexpr size_t DEF_ALIGN = sizeof(void*);
 static constexpr size_t DEF_COUNT = 64;
 } // namespace config
 using namespace config;
-using namespace sys;
 
 class Pool : Noncopy {
 protected:

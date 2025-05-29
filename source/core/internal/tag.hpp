@@ -1,19 +1,23 @@
+#ifndef LWE_TAG
+#define LWE_TAG
+
 #include "macro.hpp"
 
 LWE_BEGIN
+namespace core {
 
 class Noncopy {
-protected:
+    protected:
     Noncopy(const Noncopy&)            = delete;
     Noncopy& operator=(const Noncopy&) = delete;
-
-public:
+    
+    public:
     Noncopy() = default;
     ~Noncopy() = default;
 };
 
 class Nomove {
-protected:
+    protected:
     Nomove(Nomove&&)            = delete;
     Nomove& operator=(Nomove&&) = delete;
 };
@@ -23,4 +27,6 @@ enum class Uninitialized {
 };
 using enum Uninitialized;
 
+}
 LWE_END
+#endif

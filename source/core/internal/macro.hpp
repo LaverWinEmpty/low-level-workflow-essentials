@@ -270,17 +270,17 @@ public:                                                                         
     template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>() {                    \
         using enum SCOPE TYPE;                                                                                         \
         const char* NAME = #TYPE;                                                                                      \
-        auto result = map.find(NAME);                                                                                  \
-        if (result != map.end()) {                                                                                     \
+        auto result = map().find(NAME);                                                                                \
+        if (result != map().end()) {                                                                                   \
         	return result->second;                                                                                     \
         }                                                                                                              \
         LWE::meta::Enumerate meta; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
-            meta.push(LWE::meta::Enumerator{ static_cast<uint64>(VALUE), #VALUE }) // }
+            meta.push(LWE::meta::Enumerator{ static_cast<uint64_t>(VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
         meta.shrink();                                                                                                 \
-        map.insert({ NAME, meta });                                                                                    \
-        return map[NAME];                                                                                              \
+        map().insert({ NAME, meta });                                                                                  \
+        return map()[NAME];                                                                                            \
     }
 
 /**
@@ -299,11 +299,11 @@ public:                                                                         
 public:                                                                                                                \
 	friend lwe::meta::Container;                                                                                       \
     using CONTAINER##Element = ELEMENT;                                                                                \
-    virtual void parse(const string& in) override {                                                                    \
-        *this = Container::parse<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                                   \
+    virtual void deserialize(const string& in) override {                                                              \
+        *this = Container::deserialize<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                             \
     }                                                                                                                  \
-    virtual std::string stringify() const override {                                                                   \
-        return Container::stringify<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(this);                               \
+    virtual std::string serialize() const override {                                                                   \
+        return Container::serialize<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(this);                               \
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 

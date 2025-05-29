@@ -1,9 +1,9 @@
-#ifdef LWE_CONTAINER
+#ifdef LWE_META_CONTAINER
 
 LWE_BEGIN
 namespace meta {
 
-template<typename Derived> string Container::stringify(const Derived* in) {
+template<typename Derived> string Container::serialize(const Derived* in) {
     std::string out;
 
     // CRTP begin / end
@@ -14,7 +14,7 @@ template<typename Derived> string Container::stringify(const Derived* in) {
         out.append("[");
         // for each
         while(true) {
-            serialize(&out, &*curr, typecode<typename Derived::value_type>());
+            meta::serialize(&out, &*curr, typecode<typename Derived::value_type>());
             ++curr;
             if(curr != last) {
                 out.append(", ");
@@ -25,7 +25,7 @@ template<typename Derived> string Container::stringify(const Derived* in) {
     return out;
 }
 
-template<typename Derived> Derived Container::parse(const string& in) {
+template<typename Derived> Derived Container::deserialize(const string& in) {
     using Element = typename Derived::value_type;
     if(in == "[]") {
         return Derived{}; // empty
@@ -44,7 +44,7 @@ template<typename Derived> Derived Container::parse(const string& in) {
             if(in[i] == '\"' && in[i + 1] == ',', in[i - 1] != '\\') {
                 Element data;
                 // len + 1: with '\"'
-                deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
                 i     += 3; // pass <", >
                 begin  = i; // next position
                 len    = 0; // next length
@@ -57,7 +57,7 @@ template<typename Derived> Derived Container::parse(const string& in) {
             if(in[i] == ']' && in[i + 1] == ',' && in[i - 1] != '\\') {
                 Element data;
                 // len + 1: with ']'
-                deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
+                meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
                 i     += 3; // pass <], >
                 begin  = i; // next position
                 len    = 0; // next length
@@ -68,7 +68,7 @@ template<typename Derived> Derived Container::parse(const string& in) {
         else if constexpr(std::is_same_v<Element, Object> || std::is_base_of_v<Object, Element>) {
             if(in[i] == '}' && in[i + 1] == ',' && in[i - 1] != '\\') {
                 Element data;
-                deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+                meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
                 i     += 2; // pass <, >
                 begin  = i; // next position
                 len    = 0; // next length
@@ -78,7 +78,7 @@ template<typename Derived> Derived Container::parse(const string& in) {
 
         else if(in[i] == ',') {
             Element data;
-            deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+            meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
             i     += 2; // pass <, >
             begin  = i; // next position
             len    = 0; // next length
@@ -88,25 +88,9 @@ template<typename Derived> Derived Container::parse(const string& in) {
 
     // insert last data
     Element data;
-    deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
+    meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
     out.push(std::move(data));
     return std::move(out);
-}
-
-
-template<typename T> constexpr bool isSTL() {
-    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
-};
-
-template<typename T> constexpr bool isSTL(const T&) {
-    return isSTL<T>();
-}
-
-template<> bool isSTL<EType>(const EType& code) {
-    switch(code) {
-        case EType::STL_DEQUE: return true;
-    }
-    return false;
 }
 
 } // namespace meta

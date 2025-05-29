@@ -1,13 +1,12 @@
 
-#ifndef LWE_GLOBAL_SYS
-#define LWE_GLOBAL_SYS
+#ifndef LWE_HELPER
+#define LWE_HELPER
 
 #include "std.hpp"
 #include "macro.hpp"
 
 LWE_BEGIN
-
-namespace sys {
+namespace core {
 
 //! @brief check power of 2
 inline constexpr bool aligned(uint64_t in) noexcept {
@@ -20,12 +19,12 @@ inline constexpr bool aligned(uint64_t in) noexcept {
  * @param [in] in source value
  * @return power of 2: e.g. align(129) ->  256
  */
-inline static constexpr uint64 align(uint64 in) noexcept {
+inline static constexpr uint64_t align(uint64_t in) noexcept {
     if(in <= 1) {
         return 1;
     }
     in -= 1;
-    for(uint64 i = 1; i < sizeof(uint64); i <<= 1) {
+    for(uint64_t i = 1; i < sizeof(uint64_t); i <<= 1) {
         in |= in >> i;
     }
     return in + 1;
@@ -38,7 +37,7 @@ inline static constexpr uint64 align(uint64 in) noexcept {
  * @param [in] x  unit value
  * @return aligned value: e.g. align(11, 5) -> 15
  */
-inline static constexpr uint64 align(uint64 in, uint64 unit) noexcept {
+inline static constexpr uint64_t align(uint64_t in, uint64_t unit) noexcept {
     if(unit <= 1) {
         return in;
     }
@@ -55,13 +54,13 @@ inline static constexpr uint64 align(uint64 in, uint64 unit) noexcept {
  * @param [in] alignment (optional) corrected to by powers of 2
  * @return void* allocated pointer
  */
-template<typename T = void> inline T* memalloc(size_t size, size_t alignment = 0) noexcept {
+template<typename T = void>  inline T* memalloc(size_t size, size_t alignment = 0) noexcept {
     void* ptr = nullptr; // real address
     void* out = nullptr; // user address
 
     if(alignment <= 1) {
         ptr = malloc(size + sizeof(void*)); // add space for metadata;
-        out = reinterpret_cast<void*>(reinterpret_cast<uintptr>(ptr) + 1); // make space void*
+        out = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + 1); // make space void*
     }
 
     else {
@@ -70,7 +69,7 @@ template<typename T = void> inline T* memalloc(size_t size, size_t alignment = 0
 
         ptr = malloc(size + alignment + sizeof(void*));
         if(ptr) {
-            out = reinterpret_cast<void*>(align(reinterpret_cast<uintptr>(ptr), alignment)); // aligned pointer
+            out = reinterpret_cast<void*>(align(reinterpret_cast<uintptr_t>(ptr), alignment)); // aligned pointer
             if(reinterpret_cast<char*>(out) - reinterpret_cast<char*>(ptr) < sizeof(void*)) {
                 out = reinterpret_cast<char*>(out) + alignment; // make space for metadata pointer
             }
@@ -93,9 +92,7 @@ template<typename T> inline void memfree(T* in) noexcept {
     free(*(reinterpret_cast<void**>(in) - 1));
 }
 
-} // namespace sys
-
-using namespace sys;
+} // namespace core
 
 LWE_END
 #endif

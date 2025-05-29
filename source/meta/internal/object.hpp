@@ -1,11 +1,15 @@
 #ifndef LWE_OBJECT
 #define LWE_OBJECT
 
-#include "meta.hxx"
-#include "../mem/pool.hpp"
+#include "type.hpp"
+#include "feature.hpp"
+
+#include "../../mem/pool.hpp"
 
 LWE_BEGIN
 namespace meta {
+
+struct Class; // meta class
 
 /**
  * @brief serializable object: template, array not support
@@ -46,17 +50,6 @@ private:
     }
     static sync::Lock lock;
 };
-
-struct ObjectMeta: Class {
-    virtual const char*      name() const override;
-    virtual size_t           size() const override;
-    virtual const Structure& fields() const override;
-    virtual Class*           base() const override;
-    virtual Object*          statics() const override;
-};
-
-template<typename T> T*   create();
-template<typename T> void destroy(T*);
 
 } // namespace meta
 LWE_END

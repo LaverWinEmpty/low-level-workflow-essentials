@@ -1,5 +1,8 @@
 #ifdef LWE_OBJECT
 
+#include "feature.hpp"
+#include "class.hpp"
+
 LWE_BEGIN
 namespace meta {
 
@@ -200,27 +203,6 @@ bool Object::isof(const string& in) const {
 
 void Object::parse(Object* out, const std::string& in) {
     out->parse(in);
-}
-
-const char* ObjectMeta::name() const {
-    return "Object";
-}
-
-size_t ObjectMeta::size() const {
-    return sizeof(Object);
-}
-
-const Structure& ObjectMeta::fields() const {
-    return Structure::reflect<Object>();
-}
-
-Class* ObjectMeta::base() const {
-    return nullptr;
-}
-
-Object* ObjectMeta::statics() const {
-    // return statics<Object>();
-    return nullptr;
 }
 
 Class* Object::meta() const {
