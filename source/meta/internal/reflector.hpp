@@ -9,12 +9,12 @@ namespace meta {
 struct Enumerator;
 struct Field;
 
-/// @brief container of class fiedls and enum values list reflector
-/// @note  Relfector<MyClass> == MyClass reflector class
-/// @tparam T Field or Enumerator
+//! @brief T array for reflection (container of class fiedls and enum values list reflector)
+//! @note  Relfector<MyClass> == MyClass reflector class
+//! @tparam T Field or Enumerator
 template<typename T> class Reflector {
 public:
-    /// @tparam C constructor: type info to create
+    //! @tparam C constructor: type info to create
     template<class C> static const Reflector<T>& reflect();
 
 public:
