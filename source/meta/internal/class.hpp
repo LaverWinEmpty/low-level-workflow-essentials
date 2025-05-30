@@ -14,6 +14,8 @@ struct Field {
     const char* name;
     size_t      size;
     size_t      offset;
+
+    explicit operator bool() const { return name != nullptr; }
 };
 
 /// @brief class metadata
@@ -23,6 +25,10 @@ struct Class {
     virtual const Structure& fields() const;
     virtual const Class*     base() const;
     virtual const Object*    statics() const;
+
+public:
+    const Field& field(const char*) const;
+    const Field& field(const string&) const;
 };
 
 }

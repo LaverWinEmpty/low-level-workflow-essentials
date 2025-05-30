@@ -31,6 +31,27 @@ const Object* Class::statics() const {
     return meta::statics<Object>();
 }
 
+const const Field& Class::field(const char* name) const {
+    return field(string{ name });
+}
+
+const const Field& Class::field(const string& name) const {
+    static const Field failed = {
+        .type   = Type{},
+        .name   = nullptr,
+        .size   = 0,
+        .offset = size_t(-1)
+    };
+
+    const Structure& temp = fields();
+    for(auto& itr : temp) {
+        if(itr.name == name) {
+            return itr;
+        }
+    }
+    return failed;
+}
+
 }
 LWE_END
 #endif

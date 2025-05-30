@@ -19,10 +19,11 @@ LWE_BEGIN
 /**************************************************************************************************
  * external exposure
  **************************************************************************************************/
+using meta::Type;        //!< type: field type info
 using meta::Object;      //!< type: object class
 using meta::Class;       //!< type: meta class
 using meta::Enum;        //!< type: meta enum
-using meta::Type;        //!< type: field type info
+using meta::Container;   //!< type: container
 using meta::create;      //!< function: new object
 using meta::destroy;     //!< function: delete object
 using meta::serialize;   //!< function: serialize
