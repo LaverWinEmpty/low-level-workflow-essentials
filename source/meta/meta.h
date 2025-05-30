@@ -1,5 +1,5 @@
-#ifndef LWE_REFLECT
-#define LWE_REFLECT
+#ifndef LWE_META
+#define LWE_META
 
 /**************************************************************************************************
  * meta headers

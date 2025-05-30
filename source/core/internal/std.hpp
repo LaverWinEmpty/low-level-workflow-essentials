@@ -1,5 +1,5 @@
-#ifndef LWE_STD
-#define LWE_STD
+#ifndef LWE_CORE_STD
+#define LWE_CORE_STD
 
 #ifdef _POSIX_VERSION
 #    include <sys/types.h>

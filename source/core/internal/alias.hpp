@@ -1,5 +1,5 @@
-#ifndef LWE_ALIAS
-#define LWE_ALIAS
+#ifndef LWE_CORE_ALIAS
+#define LWE_CORE_ALIAS
 
 #include "std.hpp"
 #include "macro.hpp"

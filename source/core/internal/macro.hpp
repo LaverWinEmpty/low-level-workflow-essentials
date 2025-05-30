@@ -1,6 +1,6 @@
 
-#ifndef LWE_MACRO
-#define LWE_MACRO
+#ifndef LWE_CORE_MACRO
+#define LWE_CORE_MACRO
 
 // namespace
 #define LWE       lwe

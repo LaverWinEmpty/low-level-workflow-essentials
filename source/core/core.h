@@ -1,5 +1,5 @@
-#ifndef LWE_COMMON_HEADER
-#define LWE_COMMON_HEADER
+#ifndef LWE_CORE_HEADER
+#define LWE_CORE_HEADER
 
 /**************************************************************************************************
  * include core filess

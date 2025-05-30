@@ -13,7 +13,7 @@ struct Field {
     Type        type;
     const char* name;
     size_t      size;
-    size_t offset;
+    size_t      offset;
 };
 
 /// @brief class metadata

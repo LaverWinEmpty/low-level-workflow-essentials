@@ -1,6 +1,6 @@
 
-#ifndef LWE_HELPER
-#define LWE_HELPER
+#ifndef LWE_CORE_HELPER
+#define LWE_CORE_HELPER
 
 #include "std.hpp"
 #include "macro.hpp"

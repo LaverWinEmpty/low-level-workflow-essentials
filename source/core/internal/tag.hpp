@@ -1,5 +1,5 @@
-#ifndef LWE_TAG
-#define LWE_TAG
+#ifndef LWE_CORE_TAG
+#define LWE_CORE_TAG
 
 #include "macro.hpp"
 
