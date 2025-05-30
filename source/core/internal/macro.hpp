@@ -188,8 +188,8 @@ public:                                                                         
     template<> template<> const LWE::meta::Structure& LWE::meta::Structure::reflect<SCOPE TYPE>() {                    \
         using CLASS = SCOPE TYPE;                                                                                      \
         const char* NAME = #TYPE;                                                                                      \
-        auto result = map().find(NAME);                                                                                  \
-        if (result != map().end()) {                                                                                     \
+        auto result = map().find(NAME);                                                                                \
+        if (result != map().end()) {                                                                                   \
         	return result->second;                                                                                     \
         }                                                                                                              \
         LWE::meta::Structure meta; // {
@@ -204,8 +204,8 @@ public:                                                                         
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
         meta.shrink();                                                                                                 \
-        map().insert({ NAME, meta });                                                                                    \
-        return map()[NAME];                                                                                              \
+        map().insert({ NAME, meta });                                                                                  \
+        return map()[NAME];                                                                                            \
     }
 
   /*
@@ -288,8 +288,8 @@ public:                                                                         
  */
 #define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
     template<typename T> struct LWE::meta::ContainerCode<T, std::void_t<typename T::CONTAINER##Element>> {             \
-        using enum meta::EType;                                                                                        \
-        static constexpr meta::EType VALUE = ENUM;                                                                     \
+        using enum meta::Keyword;                                                                                      \
+        static constexpr meta::Keyword VALUE = ENUM;                                                                   \
     }
 
 /**

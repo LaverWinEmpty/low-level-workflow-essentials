@@ -10,30 +10,30 @@ LWE_BEGIN
 namespace meta {
 
 // clang-format off
-template<typename T> constexpr EType typecode() {
+template<typename T> constexpr Keyword typecode() {
     if constexpr(std::is_base_of_v<LWE::meta::Container, T>) return ContainerCode<T>::VALUE;
-    if constexpr(std::is_enum_v<T>)                          return EType::ENUM;
-    if constexpr(std::is_pointer_v<T>)                       return EType::POINTER;
-    if constexpr(std::is_reference_v<T>)                     return EType::REFERENCE;
-    if constexpr(std::is_union_v<T>)                         return EType::UNION;
-    if constexpr(std::is_class_v<T>)                         return EType::CLASS;
-    if constexpr(std::is_void_v<T>)                          return EType::VOID;
-    if constexpr(std::is_same_v<T, bool>)                    return EType::BOOL;
-    if constexpr(std::is_same_v<T, signed char>)             return EType::SIGNED_CHAR;
-    if constexpr(std::is_same_v<T, unsigned char>)           return EType::UNSIGNED_CHAR;
-    if constexpr(std::is_same_v<T, char>)                    return EType::CHAR;
-    if constexpr(std::is_same_v<T, signed short>)            return EType::SIGNED_SHORT;
-    if constexpr(std::is_same_v<T, unsigned short>)          return EType::UNSIGNED_SHORT;
-    if constexpr(std::is_same_v<T, signed int>)              return EType::SIGNED_INT;
-    if constexpr(std::is_same_v<T, unsigned int>)            return EType::UNSIGNED_INT;
-    if constexpr(std::is_same_v<T, signed long>)             return EType::SIGNED_LONG;
-    if constexpr(std::is_same_v<T, unsigned long>)           return EType::UNSIGNED_LONG;
-    if constexpr(std::is_same_v<T, wchar_t>)                 return EType::WCHAR_T;
-    if constexpr(std::is_same_v<T, float>)                   return EType::FLOAT;
-    if constexpr(std::is_same_v<T, double>)                  return EType::DOUBLE;
-    if constexpr(std::is_same_v<T, long double>)             return EType::LONG_DOUBLE;
-    if constexpr(std::is_same_v<T, std::string>)             return EType::STD_STRING;
-    else                                                     return EType::UNREGISTERED;
+    if constexpr(std::is_enum_v<T>)                          return Keyword::ENUM;
+    if constexpr(std::is_pointer_v<T>)                       return Keyword::POINTER;
+    if constexpr(std::is_reference_v<T>)                     return Keyword::REFERENCE;
+    if constexpr(std::is_union_v<T>)                         return Keyword::UNION;
+    if constexpr(std::is_class_v<T>)                         return Keyword::CLASS;
+    if constexpr(std::is_void_v<T>)                          return Keyword::VOID;
+    if constexpr(std::is_same_v<T, bool>)                    return Keyword::BOOL;
+    if constexpr(std::is_same_v<T, signed char>)             return Keyword::SIGNED_CHAR;
+    if constexpr(std::is_same_v<T, unsigned char>)           return Keyword::UNSIGNED_CHAR;
+    if constexpr(std::is_same_v<T, char>)                    return Keyword::CHAR;
+    if constexpr(std::is_same_v<T, signed short>)            return Keyword::SIGNED_SHORT;
+    if constexpr(std::is_same_v<T, unsigned short>)          return Keyword::UNSIGNED_SHORT;
+    if constexpr(std::is_same_v<T, signed int>)              return Keyword::SIGNED_INT;
+    if constexpr(std::is_same_v<T, unsigned int>)            return Keyword::UNSIGNED_INT;
+    if constexpr(std::is_same_v<T, signed long>)             return Keyword::SIGNED_LONG;
+    if constexpr(std::is_same_v<T, unsigned long>)           return Keyword::UNSIGNED_LONG;
+    if constexpr(std::is_same_v<T, wchar_t>)                 return Keyword::WCHAR_T;
+    if constexpr(std::is_same_v<T, float>)                   return Keyword::FLOAT;
+    if constexpr(std::is_same_v<T, double>)                  return Keyword::DOUBLE;
+    if constexpr(std::is_same_v<T, long double>)             return Keyword::LONG_DOUBLE;
+    if constexpr(std::is_same_v<T, std::string>)             return Keyword::STD_STRING;
+    else                                                     return Keyword::UNREGISTERED;
 }
 // clang-format on
 
@@ -158,35 +158,35 @@ Method* method(const string& cls, const string& name) {
 }
 
 // clang-format off
-constexpr const char* typestring(EType code) {
+constexpr const char* typestring(Keyword code) {
     switch(code) {
-    case EType::UNREGISTERED:       return "";
-    case EType::VOID:               return "void";
-    case EType::SIGNED_INT:         return "int";
-    case EType::SIGNED_CHAR:        return "char";
-    case EType::SIGNED_SHORT:       return "short";
-    case EType::SIGNED_LONG:        return "long";
-    case EType::SIGNED_LONG_LONG:   return "long long";
-    case EType::UNSIGNED_SHORT:     return "unsigned short";
-    case EType::UNSIGNED_INT:       return "unsigned int";
-    case EType::UNSIGNED_CHAR:      return "unsigned char";
-    case EType::UNSIGNED_LONG:      return "unsigned long";
-    case EType::UNSIGNED_LONG_LONG: return "unsigned long long";
-    case EType::BOOL:               return "bool";
-    case EType::CHAR:               return "char";
-    case EType::WCHAR_T:            return "wchar_t";
-    case EType::FLOAT:              return "float";
-    case EType::DOUBLE:             return "double";
-    case EType::LONG_DOUBLE:        return "long double";
-    case EType::CLASS:              return "class";
-    case EType::UNION:              return "union";
-    case EType::POINTER:            return "*";
-    case EType::REFERENCE:          return "&";
-    case EType::FUNCTION:           return "function";
-    case EType::STD_STRING:         return "string";
-    case EType::STL_DEQUE:          return "Deque";
-    case EType::CONST:              return "const";
-    case EType::ENUM:               return "enum";
+    case Keyword::UNREGISTERED:       return "";
+    case Keyword::VOID:               return "void";
+    case Keyword::SIGNED_INT:         return "int";
+    case Keyword::SIGNED_CHAR:        return "char";
+    case Keyword::SIGNED_SHORT:       return "short";
+    case Keyword::SIGNED_LONG:        return "long";
+    case Keyword::SIGNED_LONG_LONG:   return "long long";
+    case Keyword::UNSIGNED_SHORT:     return "unsigned short";
+    case Keyword::UNSIGNED_INT:       return "unsigned int";
+    case Keyword::UNSIGNED_CHAR:      return "unsigned char";
+    case Keyword::UNSIGNED_LONG:      return "unsigned long";
+    case Keyword::UNSIGNED_LONG_LONG: return "unsigned long long";
+    case Keyword::BOOL:               return "bool";
+    case Keyword::CHAR:               return "char";
+    case Keyword::WCHAR_T:            return "wchar_t";
+    case Keyword::FLOAT:              return "float";
+    case Keyword::DOUBLE:             return "double";
+    case Keyword::LONG_DOUBLE:        return "long double";
+    case Keyword::CLASS:              return "class";
+    case Keyword::UNION:              return "union";
+    case Keyword::POINTER:            return "*";
+    case Keyword::REFERENCE:          return "&";
+    case Keyword::FUNCTION:           return "function";
+    case Keyword::STD_STRING:         return "string";
+    case Keyword::STL_DEQUE:          return "Deque";
+    case Keyword::CONST:              return "const";
+    case Keyword::ENUM:               return "enum";
     }
     return ""; // error
 }
@@ -306,24 +306,24 @@ void deserialize(Container* out, const string& in) {
 }
 
 // runtime stringify
-void serialize(std::string* out, const void* in, const EType& type) {
+void serialize(std::string* out, const void* in, const Keyword& type) {
     switch (type) {
     // skip
-    case EType::UNREGISTERED:
-    case EType::VOID: 
+    case Keyword::UNREGISTERED:
+    case Keyword::VOID: 
         //TODO:
         break;
 
-    case EType::CLASS:  
+    case Keyword::CLASS:  
         out->append(reinterpret_cast<const Object*>(in)->stringify());
         break;
 
-    case EType::POINTER: {
+    case Keyword::POINTER: {
         //TODO:
         }
         break;
 
-    case EType::REFERENCE: {
+    case Keyword::REFERENCE: {
         //TODO:
         }
         break;
@@ -332,178 +332,178 @@ void serialize(std::string* out, const void* in, const EType& type) {
         break;
 
     // int
-    case EType::SIGNED_INT:
-    case EType::UNSIGNED_INT:
+    case Keyword::SIGNED_INT:
+    case Keyword::UNSIGNED_INT:
         out->append(serialize(*static_cast<const int*>(in)));
         break;
 
-    case EType::BOOL:
+    case Keyword::BOOL:
         out->append(serialize(*static_cast<const int*>(in)));
         break;
 
     // char
-    case EType::CHAR:
-    case EType::SIGNED_CHAR:
-    case EType::UNSIGNED_CHAR:
+    case Keyword::CHAR:
+    case Keyword::SIGNED_CHAR:
+    case Keyword::UNSIGNED_CHAR:
         out->append(serialize(*static_cast<const char*>(in)));
         break;
 
     // wchar
-    case EType::WCHAR_T:
+    case Keyword::WCHAR_T:
         //TODO: fix
         // stringify<wchar_t>(out, in);
         break;
 
     // short
-    case EType::SIGNED_SHORT:
-    case EType::UNSIGNED_SHORT: 
+    case Keyword::SIGNED_SHORT:
+    case Keyword::UNSIGNED_SHORT: 
         out->append(serialize(*static_cast<const short*>(in)));
         break;
 
     // long
-    case EType::SIGNED_LONG:
-    case EType::UNSIGNED_LONG: 
+    case Keyword::SIGNED_LONG:
+    case Keyword::UNSIGNED_LONG: 
         out->append(serialize(*static_cast<const long*>(in)));
         break;
 
     // long long
-    case EType::SIGNED_LONG_LONG:
-    case EType::UNSIGNED_LONG_LONG:
+    case Keyword::SIGNED_LONG_LONG:
+    case Keyword::UNSIGNED_LONG_LONG:
         out->append(serialize(*static_cast<const long long*>(in)));
         break;
     
     // float
-    case EType::FLOAT:
+    case Keyword::FLOAT:
         out->append(serialize<float>(*static_cast<const float*>(in))); 
         break;
 
     // double
-    case EType::DOUBLE: 
+    case Keyword::DOUBLE: 
         out->append(serialize<double>(*static_cast<const double*>(in)));
         break;
 
     // long double
-    case EType::LONG_DOUBLE: 
+    case Keyword::LONG_DOUBLE: 
         out->append(serialize<long double>(*static_cast<const long double*>(in)));
         break;
     
-    case EType::ENUM:
+    case Keyword::ENUM:
         // out->append(static_cast<const EInterface*>(in)->stringify());
         break;
 
     // function
-    case EType::FUNCTION: 
+    case Keyword::FUNCTION: 
         //TODO:
         break;
 
-    case EType::STD_STRING: 
+    case Keyword::STD_STRING: 
         out->append(serialize(*static_cast<const string*>(in)));
         break;
 
-    case EType::STL_DEQUE:
+    case Keyword::STL_DEQUE:
         out->append(serialize(*static_cast<const Container*>(in)));
         break;
     }
 }
 
 // runtime parse
-void deserialize(void* out, const std::string& in, const EType& type) {
+void deserialize(void* out, const std::string& in, const Keyword& type) {
     switch (type) {
-    case EType::UNREGISTERED:
-    case EType::VOID:
+    case Keyword::UNREGISTERED:
+    case Keyword::VOID:
         break;
 
-    case EType::CLASS: 
+    case Keyword::CLASS: 
         Object::parse(static_cast<Object*>(out), in);
         break;
 
-    case EType::POINTER: {
+    case Keyword::POINTER: {
         //TODO:
         }
         break;
 
-    case EType::REFERENCE: {
+    case Keyword::REFERENCE: {
         //TODO:
         }
         break;
 
-    case EType::UNION: {
+    case Keyword::UNION: {
         //TODO:
         }
         break;
 
     // int
-    case EType::SIGNED_INT:
-    case EType::UNSIGNED_INT: 
+    case Keyword::SIGNED_INT:
+    case Keyword::UNSIGNED_INT: 
         *static_cast<int*>(out) = deserialize<int>(in);
         break;
 
     // bool
-    case EType::BOOL:
+    case Keyword::BOOL:
         *static_cast<bool*>(out) = deserialize<bool>(in);
     break;
 
     // char
-    case EType::CHAR:
-    case EType::SIGNED_CHAR:
-    case EType::UNSIGNED_CHAR:
+    case Keyword::CHAR:
+    case Keyword::SIGNED_CHAR:
+    case Keyword::UNSIGNED_CHAR:
         *static_cast<char*>(out) = deserialize<char>(in);
         break;
 
     // wchar
-    case EType::WCHAR_T:
+    case Keyword::WCHAR_T:
     // TODO: fix
         // parse<wchar_t>(static_cast<wchar_t*>(out), in, inout);
         break;
 
     // short
-    case EType::SIGNED_SHORT:
-    case EType::UNSIGNED_SHORT: 
+    case Keyword::SIGNED_SHORT:
+    case Keyword::UNSIGNED_SHORT: 
         *static_cast<short*>(out) = deserialize<short>(in);
         break;
 
     // long
-    case EType::SIGNED_LONG:
-    case EType::UNSIGNED_LONG: 
+    case Keyword::SIGNED_LONG:
+    case Keyword::UNSIGNED_LONG: 
         *static_cast<long*>(out) = deserialize<long>(in);
         break;
 
     // long long
-    case EType::SIGNED_LONG_LONG:
-    case EType::UNSIGNED_LONG_LONG:
+    case Keyword::SIGNED_LONG_LONG:
+    case Keyword::UNSIGNED_LONG_LONG:
         *static_cast<long long*>(out) = deserialize<long long>(in);
         break;
 
     // float
-    case EType::FLOAT:
+    case Keyword::FLOAT:
         *static_cast<float*>(out) = deserialize<float>(in);
         break;
 
     // double
-    case EType::DOUBLE:
+    case Keyword::DOUBLE:
         *static_cast<double*>(out) = deserialize<double>(in);
         break;
 
     // long double    
-    case EType::LONG_DOUBLE:
+    case Keyword::LONG_DOUBLE:
         *static_cast<long double*>(out) = deserialize<long double>(in);
         break;
 
-    case EType::ENUM:
+    case Keyword::ENUM:
         // static_cast<EInterface*>(out)->parse(in);
         break;
 
     // function
-    case EType::FUNCTION:
+    case Keyword::FUNCTION:
         //TODO:
         break;
 
     // std::string
-    case EType::STD_STRING: 
+    case Keyword::STD_STRING: 
         *static_cast<string*>(out) = deserialize<string>(in);
         break;
 
-    case EType::STL_DEQUE:
+    case Keyword::STL_DEQUE:
         static_cast<Container*>(out)->deserialize(in);
         break;
     }
@@ -514,16 +514,16 @@ void deserialize(void* out, const std::string& in, const EType& type) {
  */
 
 template<typename T> constexpr bool isSTL() {
-    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != EType::UNREGISTERED;
+    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != Keyword::UNREGISTERED;
 };
 
 template<typename T> constexpr bool isSTL(const T&) {
     return isSTL<T>();
 }
 
-template<> bool isSTL<EType>(const EType& code) {
+template<> bool isSTL<Keyword>(const Keyword& code) {
     switch(code) {
-        case EType::STL_DEQUE: return true;
+        case Keyword::STL_DEQUE: return true;
     }
     return false;
 }

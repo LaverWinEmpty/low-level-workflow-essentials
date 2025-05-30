@@ -38,7 +38,7 @@ using meta::method;      //!< function: get method
 /**************************************************************************************************
  * register type enum
  **************************************************************************************************/
-REGISTER_ENUM_BEGIN(EType, meta) {
+REGISTER_ENUM_BEGIN(Keyword, meta) {
     REGISTER_ENUM(UNREGISTERED);
     REGISTER_ENUM(VOID);
     REGISTER_ENUM(SIGNED_INT);

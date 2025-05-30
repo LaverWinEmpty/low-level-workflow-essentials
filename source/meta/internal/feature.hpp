@@ -25,9 +25,9 @@ template<typename T> Registered registenum();
 //! @brief pre-registered method signature of typename T, return value is unused
 template<typename T> Registered registmethod();
 
-template<typename T> constexpr EType typecode(); //!< get type code
+template<typename T> constexpr Keyword typecode(); //!< get type code
 
-constexpr const char*            typestring(EType);       //!< reflect type name string by enum
+constexpr const char*            typestring(Keyword);     //!< reflect type name string by enum
 template<typename T> const char* typestring();            //!< reflect type name string explicit
 template<typename T> const char* typestring(const T&);    //!< reflect type name string implicit
 const char*                      typestring(const Type&); //!< reflect type name
@@ -68,12 +68,12 @@ template<> bool        deserialize<bool>(const string&);       //!< string to bo
 template<> string      deserialize<string>(const string&);     //!< string to string
 void                   deserialize(Container*, const string&); //!< string to container
 
-void serialize(string*, const void*, const EType&);   // runtime parse
-void deserialize(void*, const string&, const EType&); // runtime stringify
+void serialize(string*, const void*, const Keyword&);   // runtime parse
+void deserialize(void*, const string&, const Keyword&); // runtime stringify
 
 template<typename T> constexpr bool isSTL();                    //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
-template<> bool                     isSTL<EType>(const EType&); //!< check container type code
+template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container type code
 
 }
 LWE_END

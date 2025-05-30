@@ -110,7 +110,7 @@ void Object::parse(const std::string& in) {
             len    = 0;
         }
 
-        else if(prop[i].type == EType::STD_STRING) {
+        else if(prop[i].type == Keyword::STD_STRING) {
             len = 1; // pass '\"'
             while(true) {
                 if(in[begin + len] == '\"' && in[begin + len - 1] != '\\') {
@@ -124,7 +124,7 @@ void Object::parse(const std::string& in) {
             len    = 0;
         }
 
-        else if(prop[i].type == EType::CLASS) {
+        else if(prop[i].type == Keyword::CLASS) {
             len = 1; // pass "{ "
 
             while(true) {
