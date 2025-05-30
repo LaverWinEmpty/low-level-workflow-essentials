@@ -267,14 +267,16 @@ const char* Type::operator*() const {
         else if(in[idx] == EType::CONST) {
             // CONST POINTER ... = ...* const
             if(in[idx + 1] == EType::POINTER) {
-                fn(out, in, idx + 1);
+                size_t last = fn(out, in, idx + 1);
                 out->append(" const");
+                return last + 1; // ...* const, terminate
             }
             // CONST ... = const ...
             // CONST REFERENCE ...  = const ...&
             else {
                 out->append("const ");
-                fn(out, in, idx + 1);
+                size_t last = fn(out, in, idx + 1);
+                return last + 1; // const ..., terminate
             }
         }
         // class or enum

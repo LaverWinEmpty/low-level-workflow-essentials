@@ -31,11 +31,11 @@ const Object* Class::statics() const {
     return meta::statics<Object>();
 }
 
-const const Field& Class::field(const char* name) const {
+const Field& Class::field(const char* name) const {
     return field(string{ name });
 }
 
-const const Field& Class::field(const string& name) const {
+const Field& Class::field(const string& name) const {
     static const Field failed = {
         .type   = Type{},
         .name   = nullptr,
