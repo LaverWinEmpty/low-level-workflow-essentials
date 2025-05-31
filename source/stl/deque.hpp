@@ -23,14 +23,16 @@
 **************************************************************************************************/
 
 #include "config.hpp"
-#include "../core/core.h"
+#include "../base/base.h"
 #include "../meta/meta.h"
 #include "../mem/stack.hpp"
 
 LWE_BEGIN
+
 namespace stl {
 
 template<typename T, size_t SVO = 0> class Deque: public meta::Container {
+public:
     CONTAINER_BODY(Deque, T, SVO);
 
 private:

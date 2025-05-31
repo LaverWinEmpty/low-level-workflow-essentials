@@ -171,7 +171,7 @@ public:                                                                         
         virtual const LWE::meta::Structure& fields() const override;                                                   \
     };                                                                                                                 \
     LWE::meta::Class* SCOPE TYPE::meta() const {                                                                       \
-        return LWE::meta::classof<TYPE>();                                                                             \
+        return LWE::meta::classof<���䰡 TYPE>();                                                                             \
     }                                                                                                                  \
     template<> template<> const LWE::meta::Structure& LWE::meta::Structure::reflect<SCOPE TYPE>();                     \
     template<> LWE::meta::Registered LWE::meta::registclass<SCOPE TYPE>() {                                            \
@@ -297,13 +297,15 @@ public:                                                                         
  */
 #define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
 public:                                                                                                                \
-	friend lwe::meta::Container;                                                                                       \
+	friend LWE::meta::Container;                                                                                       \
     using CONTAINER##Element = ELEMENT;                                                                                \
-    virtual void deserialize(const string& in) override {                                                              \
-        *this = Container::deserialize<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(in);                             \
-    }                                                                                                                  \
     virtual std::string serialize() const override {                                                                   \
-        return Container::serialize<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(this);                               \
+        const LWE::meta::Container* ptr = static_cast<const Container*>(this);                                         \
+        return LWE::meta::serialize<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(ptr);                                \
+    }                                                                                                                  \
+    virtual void deserialize(const string& in) override {                                                              \
+        const LWE::meta::Container* ptr = const_cast<Container*>(static_cast<const Container*>(this));                 \
+        LWE::meta::deserialize<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(this, in);                               \
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 

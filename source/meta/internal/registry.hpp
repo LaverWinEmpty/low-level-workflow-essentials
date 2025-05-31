@@ -1,7 +1,7 @@
 #ifndef LWE_META_REGISTRY
 #define LWE_META_REGISTRY
 
-#include "../../core/core.h"
+#include "../../base/base.h"
 
 LWE_BEGIN
 namespace meta {

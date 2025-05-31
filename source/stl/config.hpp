@@ -1,6 +1,6 @@
 #ifndef LWE_STL_CONFIG
 
-#include "../core/core.h"
+#include "../base/base.h"
 
 LWE_BEGIN
 namespace stl {

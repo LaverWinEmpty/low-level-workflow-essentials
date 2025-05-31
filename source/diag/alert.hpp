@@ -1,7 +1,7 @@
 #ifndef LWE_SYS_ALERT
 #define LWE_SYS_ALERT
 
-#include "../core/core.h"
+#include "../base/base.h"
 
 /*
 #include <stdexcept>

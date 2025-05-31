@@ -1,7 +1,7 @@
 #ifndef LWE_SYNC_LOCK
 #define LWE_SYNC_LOCK
 
-#include "../core/core.h"
+#include "../base/base.h"
 
 LWE_BEGIN
 namespace sync {

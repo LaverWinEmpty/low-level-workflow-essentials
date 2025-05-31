@@ -68,22 +68,12 @@ constexpr const char* typestring(Keyword code) {
 }
 // clang-format on
 
-//template<typename T> Registered registclass() {
-//    static_assert(std::is_same_v<T, Object>);
-//
-//    // default, other class -> template specialization
-//    Structure::reflect<Object>();
-//    Registry<Object>::add<Object>("Object");
-//    Registry<Class>::add<Class>("Object");
-//    return Registered::REGISTERED;
-//}
-//
-//template<typename T> Registered registenum() {
-//    // default, other enum -> template specialization
-//    return Registered::REGISTERED;
-//}
+template<typename T> Registered registenum() {
+   // default, other enum -> template specialization
+   return Registered::REGISTERED;
+}
 
-// clang-format off
+Container::~Container() { }
 
 template<typename T> constexpr bool isSTL() {
     return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != Keyword::UNREGISTERED;
