@@ -131,7 +131,6 @@ const char*                      typestring(const Type&); //!< reflect type name
 
 template<typename T> const Type& typeof();         //!< reflect typeinfo by template
 template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
-template<typename T> void        typeof(Type*);    //!< pirvate
 
 template<typename T> Class* classof();              //!< get class field list
 template<typename T> Class* classof(const T&);      //!< get class field list

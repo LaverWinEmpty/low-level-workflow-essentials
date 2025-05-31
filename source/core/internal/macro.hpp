@@ -227,7 +227,7 @@ public:                                                                         
         using TYPE_NAME = SCOPE TYPE;                                                                                  \
         static const string CLASS_NAME = { #TYPE }; // {
 #define REGISTER_METHOD(NAME)                                                                                          \
-            Registry<Method>::add(CLASS_NAME, #NAME, Method::lambdaize(&TYPE_NAME::NAME)) // ; }
+            Registry<Method>::add(CLASS_NAME, #NAME, lambdaize(&TYPE_NAME::NAME)) // ; }
 #define REGISTER_METHOD_END                                                                                            \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }
