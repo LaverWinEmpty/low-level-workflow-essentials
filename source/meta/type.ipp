@@ -1,7 +1,6 @@
 #ifdef LWE_META_TYPE
 
-#include "../../util/hash.hpp"
-#include "feature.hpp"
+#include "../util/hash.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -93,21 +92,21 @@ template<typename T> static void Type::reflect(Type* out) {
         const char* str = nullptr;
         if constexpr(std::is_class_v<T>) {
             out->push(Keyword::CLASS);
-            Class* meta = classof<T>();
-            if (!meta) {
+            Class* info = classof<T>();
+            if (!info) {
                 registclass<T>(); // Try register
-                meta = classof<T>();
+                info = classof<T>();
             }
-            if(meta) str = meta->name();
+            if(info) str = info->name();
         }
         else if constexpr(std::is_enum_v<T>) {
             out->push(Keyword::ENUM);
-            Enum* meta = enumof<T>();
-            if(!meta) {
+            Enum* info = enumof<T>();
+            if(!info) {
                 registenum<T>(); // try register
-                meta = enumof<T>();
+                info = enumof<T>();
             }
-            if (meta) str = meta->name();
+            if (info) str = info->name();
         }
 
         // calculate size
@@ -343,6 +342,173 @@ const Keyword* Type::end() const {
 
 size_t Type::count() const {
     return counter;
+}
+
+const Field& Class::field(const char* name) const {
+    return field(string{ name });
+}
+
+const Field& Class::field(const string& name) const {
+    static const Field failed = {
+        .type   = Type{},
+        .name   = nullptr,
+        .size   = 0,
+        .offset = size_t(-1)
+    };
+
+    const Structure& temp = fields();
+    for(auto& itr : temp) {
+        if(itr.name == name) {
+            return itr;
+        }
+    }
+    return failed;
+}
+
+template<typename E> const char* Enum::serialize(E in) {
+    static std::unordered_map<E, const char*> cache;
+
+    auto result = cache.find(in);
+    if(result != cache.end()) {
+        return result->second;
+    }
+
+    const Enumerate& reflected = Enumerate::find<E>();
+    for(auto i : reflected) {
+        if(i.value == static_cast<uint64_t>(in)) {
+            cache[in] = i.name;
+            return i.name;
+        }
+    }
+    return "";
+}
+
+const char* Enum::serialize(const string& type, uint64_t value) {
+    const Enumerate& reflected = Enumerate::find(type);
+    for(auto i : reflected) {
+        if(i.value == value) {
+            return i.name;
+        }
+    }
+    return "";
+}
+
+const char* Enum::serialize(const char* type, uint64_t value) {
+    return serialize(string{ type }, value);
+}
+
+template<typename E> E Enum::deserialize(const char* in) {
+    return deserialize(string{ in });
+}
+
+template<typename E> E Enum::deserialize(const string& in) {
+    std::unordered_map<string, E> cache;
+
+    auto result = cache.find(in);
+    if(result != cache.end()) {
+        return result->second;
+    }
+
+    const Enumerate& reflected = Enumerate::find<E>();
+    for(auto i : reflected) {
+        if(i.name == in) {
+            cache[in] = static_cast<E>(i.value);
+            return static_cast<E>(i.value);
+        }
+    }
+    return static_cast<E>(0);
+}
+
+uint64_t Enum::deserialize(const string& type, const string& name) {
+    const Enumerate& reflected = Enumerate::find(type);
+    for(auto i : reflected) {
+        if(i.name == name) {
+            return i.value;
+        }
+    }
+    return 0;
+}
+
+// call by template
+template<typename T> const char* typestring() {
+    Type statics = typeof<T>();
+    return statics.serialize();
+}
+
+// call by argument
+template<typename T> const char* typestring(const T&) {
+    return typestring<T>();
+}
+
+const char* typestring(const Type& in) {
+    return *in;
+}
+
+template<typename T> const Type& typeof() {
+    return Type::reflect<T>();
+}
+
+template<typename T> const Type& typeof(const T&) {
+    return Type::reflect<T>();
+}
+
+template<typename T> Class* classof() {
+    // default, other class -> template specialization
+    if constexpr(!std::is_same_v<T, Object>) {
+        return nullptr;
+    }
+
+    static Class* meta = Registry<Class>::find("Object");
+    return meta;
+}
+
+template<typename T> Class* classof(const T&) {
+    return classof<T>();
+}
+
+Class* classof(const char* in) {
+    return classof(string{ in });
+}
+
+Class* classof(const string& in) {
+    return Registry<Class>::find(in);
+}
+
+template<typename T> Enum* enumof() {
+    return nullptr;
+}
+
+template<typename T> Enum* enumof(const T&) {
+    return enumof<T>();
+}
+
+Enum* enumof(const char* in) {
+    return enumof(string{ in });
+}
+
+Enum* enumof(const string& in) {
+    return Registry<Enum>::find(in);
+}
+
+template<typename T> Object* statics() {
+    // default, other class -> specialization
+    if constexpr(!std::is_same_v<T, Object>) {
+        return nullptr;
+    }
+    static Object* statics = Registry<Object>::find("Object");
+    return statics;
+}
+
+template<typename T> Object* statics(const T&) {
+    return statics<T>();
+}
+
+Object* statics(const char* in) {
+    return statics(string{ in });
+}
+
+Object* statics(const string& in) {
+    return Registry<Object>::find(in);
 }
 
 }

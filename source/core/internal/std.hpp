@@ -22,7 +22,6 @@
 #include <mutex>
 #include <sstream>
 #include <iomanip>
-#include <any>
 #include <format>
 #include <system_error>
 

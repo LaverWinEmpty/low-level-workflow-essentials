@@ -1,7 +1,7 @@
 #ifndef LWE_META_REFLECTOR
 #define LWE_META_REFLECTOR
 
-#include "type.hpp"
+#include "../../core/core.h"
 
 LWE_BEGIN
 namespace meta {

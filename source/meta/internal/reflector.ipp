@@ -130,7 +130,7 @@ template<typename T> const Reflector<T>& Reflector<T>::find(const char* in) {
 }
 
 template<typename T> const Reflector<T>& Reflector<T>::find(const string& in) {
-    return map[in];
+    return map()[in];
 }
 
 template<typename T> template<typename Arg> void Reflector<T>::push(Arg&& in) {

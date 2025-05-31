@@ -1,7 +1,7 @@
 #ifndef LWE_UTIL_ANY
 #define LWE_UTIL_ANY
 
-#include "../core/core.h"
+#include "../meta/type.hpp"
 
 LWE_BEGIN
 namespace util {
@@ -22,9 +22,11 @@ public:
 public:
 	Any& operator=(Any&& in) noexcept;
 
-private:
-	Any(const Any&) = delete;            //!< there is no way to find the copy constructor.
-	Any& operator=(const Any&) = delete; //!< there is no way to find the copy constructor.
+public:
+	Any(const Any&);
+
+public:
+	Any& operator=(const Any&);
 
 public:
 	void reset();
@@ -33,15 +35,20 @@ public:
 	template<typename T> void set(T&&);
 
 public:
-	template<typename T> T cast();
+	template<typename T> T cast(bool = false) const;
 
 public:
-	template<typename T> bool check();
+	template<typename T> bool check() const;
+
+public:
+	const meta::Type& type() const;
+
+public:
+	explicit operator bool() const noexcept;
 
 private:
 	union {
-		void* ptr = nullptr;
-		// SVO
+		void*              ptr;
 		char               c;
 		signed char        sc;
 		signed int         si;
@@ -57,12 +64,13 @@ private:
 		float              f;
 		double             d;
 		long double        ld;
-	};
-	void (*destructor)(void*) = nullptr;
+	} data = { 0 };
+	void (*deleter)(void*) = nullptr;
+	void (*copier)(void*, void*) = nullptr;
 
 private:
-	Type   type;
-	size_t size;
+	meta::Type info;
+	size_t     size;
 };
 
 }

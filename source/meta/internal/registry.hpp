@@ -1,11 +1,10 @@
 #ifndef LWE_META_REGISTRY
 #define LWE_META_REGISTRY
 
-#include "../core/core.h"
+#include "../../core/core.h"
 
 LWE_BEGIN
 namespace meta {
-
 
 /// @brief static object registry
 /// @note  Registry<Class> == metadata registry

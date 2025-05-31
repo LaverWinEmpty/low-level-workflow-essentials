@@ -1,14 +1,13 @@
 #ifndef LWE_SYS_ALERT
 #define LWE_SYS_ALERT
 
-#include "../base/"
+#include "../core/core.h"
 
 /*
 #include <stdexcept>
 #include <system_error>
 #include <format>
 #include <string>
-
 */
 
 LWE_BEGIN
@@ -33,13 +32,13 @@ public:
 	/// @brief get custom error
 	/// @param [in] string error message
 	/// @param [in] int32  error code
-	Alert(const char*, int32 = -1) noexcept;
+	Alert(const char*, int32_t = -1) noexcept;
 
 public:
 	/// @brief get custom error
 	/// @param [in] char* error message
 	/// @param [in] int32 error code
-	Alert(const string&, int32 = -1) noexcept;
+	Alert(const string&, int32_t = -1) noexcept;
 
 public:
 	/// @brief copy
@@ -73,9 +72,9 @@ public:
 	operator std::runtime_error() const;
 
 private:
-	string message = "";
-	int32  code    = 0;
-	size_t offset  = 0; //!< message begin pos
+	string  message = "";
+	int32_t code    = 0;
+	size_t  offset  = 0; //!< message begin pos
 };
 
 }

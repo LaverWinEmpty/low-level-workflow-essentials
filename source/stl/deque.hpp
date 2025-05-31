@@ -28,8 +28,8 @@
 #include "../mem/stack.hpp"
 
 LWE_BEGIN
-
 namespace stl {
+
 template<typename T, size_t SVO = 0> class Deque: public meta::Container {
     CONTAINER_BODY(Deque, T, SVO);
 
@@ -205,6 +205,5 @@ REGISTER_CONTAINER(Deque, STL_DEQUE);
 
 } // namespace stl
 LWE_END
-
 #include "deque.ipp"
 #endif
