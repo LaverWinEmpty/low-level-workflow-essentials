@@ -42,6 +42,12 @@ public:
 	template<typename T> T cast(bool = false) const;
 
 public:
+	template<typename T> T&& move();
+
+public:
+	bool valid() const;
+
+public:
 	template<typename T> bool check() const;
 
 public:
@@ -73,6 +79,7 @@ private:
 		double             d;
 		long double        ld;
 	} data = { 0 };
+
 	void (*deleter)(void*) = nullptr;
 	void (*copier)(void*, void*) = nullptr;
 
