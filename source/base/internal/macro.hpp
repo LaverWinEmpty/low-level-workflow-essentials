@@ -142,7 +142,7 @@ public:                                                                         
         Macro__register_field_begin_scoped,\
         Macro__register_field_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, )
+#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, ::)
 #define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::)
 #define Macro__register_field_begin_detail(TYPE, SCOPE)                                                                \
     template<> LWE::meta::Class* LWE::meta::classof<SCOPE TYPE>() {                                                    \
@@ -171,7 +171,7 @@ public:                                                                         
         virtual const LWE::meta::Structure& fields() const override;                                                   \
     };                                                                                                                 \
     LWE::meta::Class* SCOPE TYPE::meta() const {                                                                       \
-        return LWE::meta::classof<���䰡 TYPE>();                                                                             \
+        return LWE::meta::classof<SCOPE TYPE>();                                                                       \
     }                                                                                                                  \
     template<> template<> const LWE::meta::Structure& LWE::meta::Structure::reflect<SCOPE TYPE>();                     \
     template<> LWE::meta::Registered LWE::meta::registclass<SCOPE TYPE>() {                                            \
@@ -215,7 +215,7 @@ public:                                                                         
         Macro__register_method_begin_scoped,                                                                           \
         Macro__register_method_begin_global                                                                            \
     )(__VA_ARGS__)
-#define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, )
+#define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, ::)
 #define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::)
 #define Macro__register_method_begin_detail(TYPE, SCOPE)                                                               \
     template<> LWE::meta::Method* LWE::meta::method<TYPE>(const string& in) {                                          \
@@ -227,7 +227,7 @@ public:                                                                         
         using TYPE_NAME = SCOPE TYPE;                                                                                  \
         static const string CLASS_NAME = { #TYPE }; // {
 #define REGISTER_METHOD(NAME)                                                                                          \
-            Registry<Method>::add(CLASS_NAME, #NAME, lambdaize(&TYPE_NAME::NAME)) // ; }
+            Registry<Method>::add(CLASS_NAME, #NAME, Method::lambdaize(&TYPE_NAME::NAME)) // ; }
 #define REGISTER_METHOD_END                                                                                            \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }
@@ -239,7 +239,7 @@ public:                                                                         
         Macro__register_enum_begin_scoped,\
         Macro__register_enum_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_enum_begin_global(TYPE)        Macro__register_enum_begin_detail(TYPE, )
+#define Macro__register_enum_begin_global(TYPE)        Macro__register_enum_begin_detail(TYPE, ::)
 #define Macro__register_enum_begin_scoped(TYPE, SCOPE) Macro__register_enum_begin_detail(TYPE, SCOPE::)
 #define Macro__register_enum_begin_detail(TYPE, SCOPE)                                                                 \
     struct TYPE##Meta;                                                                                                 \
