@@ -168,7 +168,7 @@ template<typename T> T Any::cast(bool safety) const {
 		}
 	}
 	// primitive
-	else {
+	else if constexpr (std::is_fundamental_v<T> || std::is_enum_v<T>) {
 		if (info == meta::Keyword::CHAR)               return static_cast<T>(data.c);
 		if (info == meta::Keyword::SIGNED_CHAR)        return static_cast<T>(data.sc);
 		if (info == meta::Keyword::SIGNED_INT)         return static_cast<T>(data.si);
