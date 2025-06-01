@@ -62,11 +62,15 @@ template<typename T> constexpr bool isSTL();                    //!< check conta
 template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
 template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container type code
 
-//! @brief pre-registered metadata of typename T, return value is unused
+//! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();
 
-//! @brief pre-registered metadata of typename T, return value is unused
+//! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registenum();
+
+//! @brief pre-registered methods of T, return value is unused
+template<typename T> Registered registmethod();
+
 
 }
 LWE_END
