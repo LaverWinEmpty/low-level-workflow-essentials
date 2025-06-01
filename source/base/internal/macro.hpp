@@ -130,8 +130,9 @@
  */
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
 public:                                                                                                                \
-	friend lwe::meta::Structure;                                                                                       \
+	friend LWE::meta::Structure;                                                                                       \
     friend struct TYPE##Meta;                                                                                          \
+    template<typename T> friend LWE::meta::Registered LWE::meta::registmethod();                                       \
     virtual LWE::meta::Class* meta() const override;                                                                   \
     using Base = BASE
 
