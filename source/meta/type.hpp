@@ -33,15 +33,21 @@ public:
     const Keyword* end() const;
     size_t         count() const; //!< type code count
     hash_t         hash() const;  //!< hashed data
-    Keyword        type() const;  //!< get first type code, exclude const
+    Keyword        code() const;  //!< get first type code, exclude const
 
 public:
     //! @brief IS TO STRING NOT DEREFERENCE
     const char* operator*() const;
 
 public:
+    bool operator==(const Type&) const;
+    bool operator!=(const Type&) const;
+    bool operator==(Keyword) const;
+    bool operator!=(Keyword) const;
+
+public:
     explicit operator string() const;
-    operator Keyword() const;
+    explicit operator Keyword() const;
 
 private:
     static constexpr size_t STACK = (sizeof(size_t) + sizeof(Keyword*));

@@ -57,7 +57,7 @@ Any& Any::operator=(const Any& in){
 
 		// primitive type (SVO)
 		if (!copier) {
-			data = data; // shallow copy
+			data = in.data; // shallow copy
 		}
 		// else call copy constructor
 		else {
@@ -168,6 +168,7 @@ template<typename T> T Any::cast(bool safety) const {
 		}
 	}
 	// primitive
+	// copy -> weak type (source type cast to T)
 	else if constexpr (std::is_fundamental_v<T> || std::is_enum_v<T>) {
 		if (info == meta::Keyword::CHAR)               return static_cast<T>(data.c);
 		if (info == meta::Keyword::SIGNED_CHAR)        return static_cast<T>(data.sc);
@@ -184,7 +185,7 @@ template<typename T> T Any::cast(bool safety) const {
 		if (info == meta::Keyword::FLOAT)              return static_cast<T>(data.f);
 		if (info == meta::Keyword::DOUBLE)             return static_cast<T>(data.d);
 		if (info == meta::Keyword::LONG_DOUBLE)        return static_cast<T>(data.ld);
-		if (info == meta::Keyword::ENUM)               return static_cast<T>(data.ull); // uint64 -> enum (cut)
+		if (info == meta::Keyword::ENUM)               return static_cast<T>(data.ull); // uint64 -> enum (shrink)
 	}
 	// clang-format on
 
@@ -196,8 +197,54 @@ template<typename T> T Any::cast(bool safety) const {
 	return *static_cast<T*>(data.ptr);
 }
 
+template<typename T> T& Any::ref() {
+	using Typename = std::remove_reference_t<T>;
+
+	// ref -> strong type
+	auto p = meta::typeof<Typename>();
+	if(info != p) {
+		throw diag::Alert("BAD ANY CAST");
+	}
+
+	// pointer
+	if constexpr (std::is_pointer_v<T>) {
+		if (info == meta::Keyword::POINTER) {
+			return static_cast<T>(data.ptr);
+		}
+	}
+
+	// primitive
+	else if constexpr (std::is_fundamental_v<T> || std::is_enum_v<T>) {
+		if constexpr (std::is_same_v<T, char>)                return data.c;
+		if constexpr (std::is_same_v<T, signed char>)         return data.sc;
+		if constexpr (std::is_same_v<T, signed int>)          return data.si;
+		if constexpr (std::is_same_v<T, signed long>)         return data.sl;
+		if constexpr (std::is_same_v<T, signed short>)        return data.ss;
+		if constexpr (std::is_same_v<T, signed long long>)    return data.sll;
+		if constexpr (std::is_same_v<T, unsigned char>)       return data.uc;
+		if constexpr (std::is_same_v<T, unsigned int>)        return data.ui;
+		if constexpr (std::is_same_v<T, unsigned long>)       return data.ul;
+		if constexpr (std::is_same_v<T, unsigned short>)      return data.us;
+		if constexpr (std::is_same_v<T, unsigned long long>)  return data.ull;
+		if constexpr (std::is_same_v<T, bool>)                return data.b;
+		if constexpr (std::is_same_v<T, float>)               return data.f;
+		if constexpr (std::is_same_v<T, double>)              return data.d;
+		if constexpr (std::is_same_v<T, long double>)         return data.ld;
+		if constexpr (std::is_enum_v<T>)                      return static_cast<T>(data.ull);
+	}
+
+	// other
+	else {
+		return *static_cast<T*>(data.ptr);
+	}
+}
+
+template<typename T> const T& Any::ref() const {
+	return const_cast<Any*>(this)->ref<T>();
+}
+
 template<typename T> bool Any::check() const {
-	return info.hash() == meta::typeof<T>().hash();
+	return info == meta::typeof<T>();
 }
 
 const meta::Type& Any::type() const {
@@ -206,6 +253,28 @@ const meta::Type& Any::type() const {
 
 Any::operator bool() const noexcept {
 	return data.ptr != nullptr;
+}
+
+template<typename T> Any::operator T() {
+	// check strong type
+	if (!check<T>()) {
+		throw diag::Alert("BAD ANY CAST");
+	}
+	if (std::is_reference_v<T>) {
+		return ref<T>();
+	}
+	return cast<T>();
+}
+
+template<typename T> Any::operator T() const {
+	// check strong type
+	if (!check<T>()) {
+		throw diag::Alert("BAD ANY CAST");
+	}
+	if (std::is_reference_v<T>) {
+		return ref<T>();
+	}
+	return cast<T>();
 }
 
 }

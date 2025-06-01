@@ -2,6 +2,8 @@
 
 #include "../util/hash.hpp"
 
+// TODO: insert thread lock
+
 LWE_BEGIN
 namespace meta {
 
@@ -249,7 +251,7 @@ hash_t Type::hash() const {
     return hashed;
 }
 
-Keyword Type::type() const {
+Keyword Type::code() const {
     if(counter < STACK) {
         return stack[0] == Keyword::CONST ? stack[1] : stack[0];
     }
@@ -320,6 +322,22 @@ const char* Type::operator*() const {
         map.insert({ hashed, temp });
     }
     return map[hashed].c_str();
+}
+
+bool Type::operator==(const Type& in) const {
+    return hash() == in.hash();
+}
+
+bool Type::operator!=(const Type& in) const {
+    return !operator==(in);
+}
+
+bool Type::operator==(Keyword in) const {
+    return static_cast<Keyword>(*this) == in;
+}
+
+bool Type::operator!=(Keyword in) const {
+    return !operator==(in);
 }
 
 Type::operator string() const {

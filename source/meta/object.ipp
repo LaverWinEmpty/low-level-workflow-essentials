@@ -30,10 +30,10 @@ std::string Object::serialize() const {
     size_t loop = prop.size() - 1;
     buffer.append("{ ");
     for(size_t i = 0; i < loop; ++i) {
-        meta::serialize(&buffer, ptr + prop[i].offset, prop[i].type);
+        meta::serialize(&buffer, ptr + prop[i].offset, prop[i].type.code());
         buffer.append(", ");
     }
-    meta::serialize(&buffer, ptr + prop[loop].offset, prop[loop].type);
+    meta::serialize(&buffer, ptr + prop[loop].offset, prop[loop].type.code());
     buffer.append(" }");
     return buffer;
 }
@@ -56,7 +56,7 @@ void Object::deserialize(const std::string& in) {
 
     size_t loop = prop.size();
     for(size_t i = 0; i < loop; ++i) {
-        if(isSTL(prop[i].type.type())) {
+        if(isSTL(prop[i].type.code())) {
             len = 1; // pass '['
             while(true) {
                 if(in[begin + len] == ']' && in[begin + len - 1] != '\\') {
@@ -65,7 +65,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             // len + 1: with ']'
-            meta::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
+            meta::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type.code());
             begin += (len + 3); // pass <], >
             len    = 0;
         }
@@ -79,7 +79,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             // len + 1: with '\"'
-            meta::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
+            meta::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type.code());
             begin += (len + 3); // pass <", >
             len    = 0;
         }
@@ -94,7 +94,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             // len + 1: with '}'
-            meta::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type);
+            meta::deserialize(out + prop[i].offset, in.substr(begin, len + 1), prop[i].type.code());
             begin += (len + 3); // pass <}, >
             len    = 0;
         }
@@ -109,8 +109,8 @@ void Object::deserialize(const std::string& in) {
                 }
                 ++len;
             }
-            meta::deserialize(out + prop[i].offset, in.substr(begin, len), prop[i].type); // ignore ',' or ' '
-            begin += 3;                                                             // pass <, > or < ]>
+            meta::deserialize(out + prop[i].offset, in.substr(begin, len), prop[i].type.code()); // ignore ',' or ' '
+            begin += 3;                                                                          // pass <, > or < ]>
             len    = 0;
         }
     }

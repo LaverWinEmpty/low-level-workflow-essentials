@@ -35,6 +35,10 @@ public:
 	template<typename T> void set(T&&);
 
 public:
+	template<typename T> T&       ref();
+	template<typename T> const T& ref() const;
+
+public:
 	template<typename T> T cast(bool = false) const;
 
 public:
@@ -45,6 +49,10 @@ public:
 
 public:
 	explicit operator bool() const noexcept;
+
+public:
+	template<typename T> operator T();
+	template<typename T> operator T() const;
 
 private:
 	union {
