@@ -6,8 +6,6 @@ sync::Lock Object::lock;
 
 // feauter.ipp implementation
 template<typename T> Registered registclass() {
-   static_assert(std::is_same_v<T, Object>);
-
    // default, other class -> template specialization
    Structure::reflect<Object>();
    Registry<Object>::add<Object>("Object");
