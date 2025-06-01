@@ -58,14 +58,13 @@ auto Registry<Method>::instance() -> Table& {
     return instance.table;
 }
 
-
 template<typename Cls, typename Ret, typename ...Args>
-Method* lambdaize(Ret(Cls::* name)(Args...)) {
+Method* Method::lambdaize(Ret(Cls::* name)(Args...)) {
     return new Lambda<Cls, Ret, Args...>(name);
 }
 
 template<typename Cls, typename Ret, typename ...Args>
-Method* lambdaize(Ret(Cls::* name)(Args...) const) {
+Method* Method::lambdaize(Ret(Cls::* name)(Args...) const) {
     return new Lambda<Cls, Ret, Args...>(name);
 }
 
