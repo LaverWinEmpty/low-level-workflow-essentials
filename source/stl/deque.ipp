@@ -137,7 +137,7 @@ template<typename T, size_t SVO> template<typename Arg> bool Deque<T, SVO>::empl
         tail  = backward(tail);
         index = tail;
     }
-    // in range: move
+    // move for insert in the middle
     else {
         index = relative(index);
         for(index_t i = tail; i >= index; --i) {
@@ -375,8 +375,9 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexc
     index_t index = 0;
     for(index_t i = 0; i < counter; ++i) {
         if(index < static_cast<index_t>(in)) {
-            newly[index++] = std::move(container[relative(i)]); // move
-        } else container[relative(i)].~T();                     // delete
+            new (newly + index) T(std::move(container[relative(i)])); // move
+            ++index;
+        } else container[relative(i)].~T(); // delete
     }
 
     // free
