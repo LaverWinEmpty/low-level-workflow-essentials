@@ -7,19 +7,23 @@ LWE_BEGIN
 namespace core {
 
 class Noncopy {
-    protected:
+private:
     Noncopy(const Noncopy&)            = delete;
     Noncopy& operator=(const Noncopy&) = delete;
     
-    public:
+public:
     Noncopy() = default;
     ~Noncopy() = default;
 };
 
 class Nomove {
-    protected:
+private:
     Nomove(Nomove&&)            = delete;
     Nomove& operator=(Nomove&&) = delete;
+
+public:
+    Nomove() = default;
+    ~Nomove() = default;
 };
 
 enum class Uninitialized {
