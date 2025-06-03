@@ -229,9 +229,9 @@ public:                                                                         
         if (result != map().end()) {                                                                                   \
         	return result->second;                                                                                     \
         }                                                                                                              \
-        LWE::meta::Structure meta; // {
+        LWE::meta::Structure info; // {
 #define REGISTER_FIELD(FIELD)                                                                                          \
-        meta.push(                                                                                                     \
+        info.push(                                                                                                     \
                 LWE::meta::Field {                                                                                     \
                     typeof<decltype(CLASS::FIELD)>(),                                                                  \
                     #FIELD,                                                                                            \
@@ -240,8 +240,8 @@ public:                                                                         
                 }                                                                                                      \
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
-        meta.shrink();                                                                                                 \
-        map().insert({ NAME, meta });                                                                                  \
+        info.shrink();                                                                                                 \
+        map().insert({ NAME, info });                                                                                  \
         return map()[NAME];                                                                                            \
     }
 
@@ -255,7 +255,7 @@ public:                                                                         
 #define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, ::)
 #define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::)
 #define Macro__register_method_begin_detail(TYPE, SCOPE)                                                               \
-    template<> LWE::meta::Method* LWE::meta::method<TYPE>(const string& in) {                                          \
+    template<> LWE::meta::Method* LWE::meta::method<SCOPE TYPE>(const std::string& in) {                               \
         return Registry<Method>::find(#TYPE, in);                                                                      \
     }                                                                                                                  \
     template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();                                            \
