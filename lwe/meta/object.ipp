@@ -110,7 +110,7 @@ void Object::deserialize(const std::string& in) {
                 ++len;
             }
             meta::deserialize(out + prop[i].offset, in.substr(begin, len), prop[i].type.code()); // ignore ',' or ' '
-            begin += 3;                                                                          // pass <, > or < ]>
+            begin += (len + 2);                                                                  // pass <, > or < ]>
             len    = 0;
         }
     }
