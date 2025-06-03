@@ -119,6 +119,10 @@ void Object::deserialize(const std::string& in) {
 Object::~Object() {}
 
 template<typename T> bool Object::isof() const {
+    if(this == nullptr) {
+        return false;
+    }
+
     const Class* cls = classof<T>();
     if(cls) {
         const Class* self = meta();
@@ -426,6 +430,7 @@ template<typename Derived> void deserialize(Container* ptr, const string& in) {
         else if constexpr(std::is_same_v<Element, Object> || std::is_base_of_v<Object, Element>) {
             if(in[i] == '}' && in[i + 1] == ',' && in[i - 1] != '\\') {
                 Element data;
+
                 meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
                 i     += 2; // pass <, >
                 begin  = i; // next position
