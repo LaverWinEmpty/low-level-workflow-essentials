@@ -48,7 +48,7 @@ private:
         static std::unordered_map<size_t, mem::Pool*> instance;
         return instance;
     }
-    static sync::Lock lock;
+    static async::Lock lock;
 };
 
 //! @breif Object Metadata, has not base -> manual generation

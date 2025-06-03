@@ -8,84 +8,84 @@ namespace util {
 
 class Any {
 public:
-	Any();
+    Any();
 
 public:
-	template<typename T> Any(T&&);
+    template<typename T> Any(T&&);
 
 public:
-	~Any();
+    ~Any();
 
 public:
-	Any(Any&& in) noexcept;
+    Any(Any&& in) noexcept;
 
 public:
-	Any& operator=(Any&& in) noexcept;
+    Any& operator=(Any&& in) noexcept;
 
 public:
-	Any(const Any&);
+    Any(const Any&);
 
 public:
-	Any& operator=(const Any&);
+    Any& operator=(const Any&);
 
 public:
-	void reset();
+    void reset();
 
 public:
-	template<typename T> void set(T&&);
+    template<typename T> void set(T&&);
 
 public:
-	template<typename T> T&       ref();
-	template<typename T> const T& ref() const;
+    template<typename T> T&       ref();
+    template<typename T> const T& ref() const;
 
 public:
-	template<typename T> T cast(bool = false) const;
+    template<typename T> T cast(bool = false) const;
 
 public:
-	template<typename T> T&& move();
+    template<typename T> T&& move();
 
 public:
-	bool valid() const;
+    bool valid() const;
 
 public:
-	template<typename T> bool check() const;
+    template<typename T> bool check() const;
 
 public:
-	const meta::Type& type() const;
+    const meta::Type& type() const;
 
 public:
-	explicit operator bool() const noexcept;
+    explicit operator bool() const noexcept;
 
 public:
-	template<typename T> operator T();
-	template<typename T> operator T() const;
+    template<typename T> operator T();
+    template<typename T> operator T() const;
 
 private:
-	union {
-		void*              ptr;
-		char               c;
-		signed char        sc;
-		signed int         si;
-		signed long        sl;
-		signed short       ss;
-		signed long long   sll;
-		unsigned char      uc;
-		unsigned int       ui;
-		unsigned long      ul;
-		unsigned short     us;
-		unsigned long long ull;
-		bool               b;
-		float              f;
-		double             d;
-		long double        ld;
-	} data = { 0 };
+    union {
+        void*              ptr;
+        char               c;
+        signed char        sc;
+        signed int         si;
+        signed long        sl;
+        signed short       ss;
+        signed long long   sll;
+        unsigned char      uc;
+        unsigned int       ui;
+        unsigned long      ul;
+        unsigned short     us;
+        unsigned long long ull;
+        bool               b;
+        float              f;
+        double             d;
+        long double        ld;
+    } data = { 0 };
 
-	void (*deleter)(void*) = nullptr;
-	void (*copier)(void*, void*) = nullptr;
+    void (*deleter)(void*) = nullptr;
+    void (*copier)(void*, void*) = nullptr;
 
 private:
-	meta::Type info;
-	size_t     size;
+    meta::Type info;
+    size_t     size;
 };
 
 }

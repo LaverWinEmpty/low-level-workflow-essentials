@@ -2,7 +2,7 @@
 LWE_BEGIN
 namespace meta {
 
-sync::Lock Object::lock;
+async::Lock Object::lock;
 
 // feauter.ipp implementation
 template<typename T> Registered registclass() {

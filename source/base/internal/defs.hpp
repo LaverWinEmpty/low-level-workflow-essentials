@@ -1,6 +1,10 @@
 #ifndef LWE_CORE_ALIAS
 #define LWE_CORE_ALIAS
 
+#ifdef _POSIX_VERSION
+#    include <sys/types.h>
+#endif
+
 #include "std.hpp"
 #include "macro.hpp"
 

@@ -74,6 +74,50 @@
 #    endif
 #endif
 
+#define WINDOWS __COUNTER__
+#define LINUX   __COUNTER__
+#define UNIX    __COUNTER__
+#define BSD     __COUNTER__
+#define APPLE   __COUNTER__
+#define ANDROID __COUNTER__
+
+#define MSVC  __COUNTER__
+#define GCC   __COUNTER__
+#define CLANG __COUNTER__
+
+#ifndef OS
+#    ifdef _WIN32
+#        define OS WINDOWS
+#    else
+#    ifdef __linux__
+#        define OS LINUX
+#    else
+#    ifdef __unix__
+#        define OS UNIX
+#    else
+#    ifdef __FreeBSD__
+#        define OS BSD
+#    else
+#    ifdef __APPLE__
+#        define OS APPLE
+#    else
+#    ifdef __ANDROID__
+#        define OS ANDROID
+#    endif
+#endif
+
+#ifndef COMPILER
+#    ifdef _MSC_VER
+#        define COMPILER MSVC
+#    else
+#    ifdef __GNUC__
+#        define COMPILER GCC
+#    else
+#    ifdef __clang__
+#        define COMPILER CLANG
+#    endif
+#endif
+
 #define CPP98 1998
 #define CPP03 2003
 #define CPP11 2011

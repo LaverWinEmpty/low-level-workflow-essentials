@@ -1,9 +1,6 @@
 #ifndef LWE_CORE_STD
 #define LWE_CORE_STD
 
-#ifdef _POSIX_VERSION
-#    include <sys/types.h>
-#endif
 #include <cstdlib>
 #include <cstdint>
 #include <type_traits>

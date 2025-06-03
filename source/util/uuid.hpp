@@ -8,26 +8,26 @@ LWE_BEGIN
 namespace util {
 
 struct UUID {
-	struct String {
-		char str[37];
-	};
+    struct String {
+        char str[37];
+    };
 
 public:
-	UUID();
+    UUID();
 
 public:
-	bool operator==(const UUID&) const;
-	bool operator!=(const UUID&) const;
+    bool operator==(const UUID&) const;
+    bool operator!=(const UUID&) const;
 
 public:
-	const char* operator*() const;
-	operator const char* () const;
-	operator std::string() const;
-	operator std::string_view() const;
+    const char* operator*() const;
+    operator const char* () const;
+    operator std::string() const;
+    operator std::string_view() const;
 
 private:
-	uint64 hi, lo;
-	std::shared_ptr<String> ptr;
+    uint64 hi, lo;
+    std::shared_ptr<String> ptr;
 };
 
 }

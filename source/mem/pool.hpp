@@ -2,7 +2,7 @@
 #define LWE_MEM_POOL
 
 #include "../base/base.h"
-#include "../sync/lock.hpp"
+#include "../async/lock.hpp"
 // #include "../stl/deque.hpp"
 
 /*******************************************************************************
