@@ -280,7 +280,7 @@ public:                                                                         
 #define Macro__register_enum_begin_scoped(TYPE, SCOPE) Macro__register_enum_begin_detail(TYPE, SCOPE::)
 #define Macro__register_enum_begin_detail(TYPE, SCOPE)                                                                 \
     struct TYPE##Meta;                                                                                                 \
-    template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>();                     \
+    template<> template<> const LWE::meta::Enumeration& LWE::meta::Enumeration::reflect<SCOPE TYPE>();                 \
     struct TYPE##Meta: LWE::meta::Enum {                                                                               \
         virtual const char* name() const {                                                                             \
             return #TYPE;                                                                                              \
@@ -288,8 +288,8 @@ public:                                                                         
         virtual size_t size() const {                                                                                  \
             return sizeof(SCOPE TYPE);                                                                                 \
         }                                                                                                              \
-        virtual const LWE::meta::Enumerate& enums() const {                                                            \
-            static const LWE::meta::Enumerate& REF = LWE::meta::Enumerate::reflect<SCOPE TYPE>();                      \
+        virtual const LWE::meta::Enumeration& enums() const {                                                          \
+            static const LWE::meta::Enumeration& REF = LWE::meta::Enumeration::reflect<SCOPE TYPE>();                  \
             return REF;                                                                                                \
         }                                                                                                              \
     };                                                                                                                 \
@@ -299,19 +299,19 @@ public:                                                                         
         return ENUM;                                                                                                   \
     }                                                                                                                  \
     template<> LWE::meta::Registered LWE::meta::registenum<SCOPE TYPE>() {                                             \
-        LWE::meta::Enumerate::reflect<SCOPE TYPE>();                                                                   \
+        LWE::meta::Enumeration::reflect<SCOPE TYPE>();                                                                 \
         LWE::meta::Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                             \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \
     LWE::meta::Registered TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                                     \
-    template<> template<> const LWE::meta::Enumerate& LWE::meta::Enumerate::reflect<SCOPE TYPE>() {                    \
+    template<> template<> const LWE::meta::Enumeration& LWE::meta::Enumeration::reflect<SCOPE TYPE>() {                \
         using enum SCOPE TYPE;                                                                                         \
         const char* NAME = #TYPE;                                                                                      \
         auto result = map().find(NAME);                                                                                \
         if (result != map().end()) {                                                                                   \
         	return result->second;                                                                                     \
         }                                                                                                              \
-        LWE::meta::Enumerate meta; // {
+        LWE::meta::Enumeration meta; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
             meta.push(LWE::meta::Enumerator{ static_cast<uint64_t>(VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \

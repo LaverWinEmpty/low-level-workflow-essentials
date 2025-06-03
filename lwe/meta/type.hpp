@@ -118,9 +118,9 @@ public:
 
 //! @brief enum metadata
 struct Enum {
-    virtual const char*      name() const  = 0;
-    virtual size_t           size() const  = 0;
-    virtual const Enumerate& enums() const = 0;
+    virtual const char*        name() const  = 0;
+    virtual size_t             size() const  = 0;
+    virtual const Enumeration& enums() const = 0;
 
 public:
     template<typename E> static const char* serialize(E);

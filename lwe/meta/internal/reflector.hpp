@@ -55,8 +55,8 @@ private:
     inline static std::unordered_map<string, Reflector<T>>& map();
 };
 
-using Enumerate = Reflector<Enumerator>;
-using Structure = Reflector<Field>;
+using Enumeration = Reflector<Enumerator>;
+using Structure   = Reflector<Field>;
 
 }
 LWE_END

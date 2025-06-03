@@ -409,7 +409,7 @@ template<typename E> const char* Enum::serialize(E in) {
         return result->second;
     }
 
-    const Enumerate& reflected = Enumerate::find<E>();
+    const Enumeration& reflected = Enumeration::find<E>();
     for(auto i : reflected) {
         if(i.value == static_cast<uint64_t>(in)) {
             cache[in] = i.name;
@@ -420,7 +420,7 @@ template<typename E> const char* Enum::serialize(E in) {
 }
 
 const char* Enum::serialize(const string& type, uint64_t value) {
-    const Enumerate& reflected = Enumerate::find(type);
+    const Enumeration& reflected = Enumeration::find(type);
     for(auto i : reflected) {
         if(i.value == value) {
             return i.name;
@@ -445,7 +445,7 @@ template<typename E> E Enum::deserialize(const string& in) {
         return result->second;
     }
 
-    const Enumerate& reflected = Enumerate::find<E>();
+    const Enumeration& reflected = Enumeration::find<E>();
     for(auto i : reflected) {
         if(i.name == in) {
             cache[in] = static_cast<E>(i.value);
@@ -456,7 +456,7 @@ template<typename E> E Enum::deserialize(const string& in) {
 }
 
 uint64_t Enum::deserialize(const string& type, const string& name) {
-    const Enumerate& reflected = Enumerate::find(type);
+    const Enumeration& reflected = Enumeration::find(type);
     for(auto i : reflected) {
         if(i.name == name) {
             return i.value;
