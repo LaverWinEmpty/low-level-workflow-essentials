@@ -54,11 +54,29 @@ root/
 
 ---
 
+## 🧪 Usage Examples
+
+> Usage examples are available in the test/ directory.
+
+- Each example is defined in a header file:
+  ```
+  test/
+  └─ example_name.hpp
+  ```
+
+- To run an example, simply include the header and call:
+  ```
+  test::example_name();
+  ```
+
+⚠️ Examples are work-in-progress and may change as the engine evolves.
+
+---
+
 ## 🚧 Status
 
 - Reflection: ~80% implemented  
 - IOCP / Networking / System-level components: not yet implemented  
-- Usage examples: WIP  
-- This is a **personal learning project**, but built to a high standard of safety and performance.
+- This is a **personal learning project**, but built to a high standard of safety and performance.  
 
 ---
