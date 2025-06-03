@@ -1,4 +1,3 @@
-
 #ifndef LWE_CORE_MACRO
 #define LWE_CORE_MACRO
 
@@ -86,34 +85,27 @@
 #define CLANG __COUNTER__
 
 #ifndef OS
-#    ifdef _WIN32
+#    if defined(_WIN32)
 #        define OS WINDOWS
-#    else
-#    ifdef __linux__
+#    elif defined(__linux__)
 #        define OS LINUX
-#    else
-#    ifdef __unix__
+#    elif defined(__unix___
 #        define OS UNIX
-#    else
-#    ifdef __FreeBSD__
+#    elif defined(__FreeBSD__)
 #        define OS BSD
-#    else
-#    ifdef __APPLE__
+#    elif defined(__APPLE__)
 #        define OS APPLE
-#    else
-#    ifdef __ANDROID__
+#    elif defined(__ANDROID__)
 #        define OS ANDROID
 #    endif
 #endif
 
 #ifndef COMPILER
-#    ifdef _MSC_VER
+#    if defined(_MSC_VER)
 #        define COMPILER MSVC
-#    else
-#    ifdef __GNUC__
+#    elif defined(__GNUC__)
 #        define COMPILER GCC
-#    else
-#    ifdef __clang__
+#    elif defined(__clang__)
 #        define COMPILER CLANG
 #    endif
 #endif
