@@ -2,6 +2,20 @@
 
 #include "../meta/meta.h"
 
+/*
+    serialize format
+
+    { }: Class
+    [ ]: Container
+    " ": String
+
+    e.g.
+    std::string field
+    { "string" }
+    serialized ->
+    { "\{ \"class\" \}" }
+*/
+
 #include <iostream>
 // test class
 namespace test {
