@@ -2,8 +2,6 @@
 
 #include "../util/hash.hpp"
 
-// TODO: insert thread lock
-
 LWE_BEGIN
 namespace meta {
 
@@ -72,6 +70,7 @@ template<typename T> static const Type& Type::reflect() {
             // double- checked
             if(flag == Registered::UNREGISTERED) {
                 // generate and caching
+
                 reflect<T>(&buf);
                 buf.shrink();
                 buf.hashed = util::Hash(buf.begin(), buf.count());
@@ -106,6 +105,18 @@ template<typename T> static void Type::reflect(Type* out) {
         reflect<typename std::remove_pointer_t<T>>(out); // dereference
     }
 
+    /**************************************************************************
+     * NOTE: EXCEPTION CLASSES
+     **************************************************************************/
+
+    // string
+    else if constexpr(std::is_same_v<T, std::string>) {
+        out->push(Keyword::STD_STRING);
+    }
+
+    /**************************************************************************
+     * OTHER CLASS
+     **************************************************************************/
     else if constexpr(std::is_class_v<T> || std::is_enum_v<T>) {
         // get type info
         const char* str = nullptr;
@@ -157,7 +168,8 @@ template<typename T> static void Type::reflect(Type* out) {
             out->push(Keyword::REFERENCE);
             reflect<Temp>(out); // dereference
         }
-    } else out->push(typecode<T>()); // primitive
+    }
+    else out->push(typecode<T>()); // primitive
 }
 
 Type::Type(const Type& in): counter(in.counter), hashed(in.hashed), str(in.str) {
