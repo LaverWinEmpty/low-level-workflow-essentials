@@ -73,16 +73,16 @@
 #    endif
 #endif
 
-#define WINDOWS __COUNTER__
-#define LINUX   __COUNTER__
-#define UNIX    __COUNTER__
-#define BSD     __COUNTER__
-#define APPLE   __COUNTER__
-#define ANDROID __COUNTER__
+#define WINDOWS 0x0001
+#define LINUX   0x0002
+#define UNIX    0x0003
+#define BSD     0x0004
+#define APPLE   0x0005
+#define ANDROID 0x0006
 
-#define MSVC  __COUNTER__
-#define GCC   __COUNTER__
-#define CLANG __COUNTER__
+#define MSVC  0x0100
+#define GCC   0x0200
+#define CLANG 0x0300
 
 #ifndef OS
 #    if defined(_WIN32)
