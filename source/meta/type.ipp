@@ -62,13 +62,30 @@ void Type::shrink() {
 }
 
 template<typename T> static const Type& Type::reflect() {
-    static Type buffer;
-    if(buffer.count() == 0) {
-        reflect<T>(&buffer);
-        buffer.shrink();
-        buffer.hashed = util::Hash(buffer.begin(), buffer.count());
+    static Registered flag = Registered::UNREGISTERED;
+    static Type       buf;
+    static string     str;
+    static std::mutex mtx;
+
+    if(flag == Registered::UNREGISTERED) {
+        LOCKGUARD(mtx) {
+            // double- checked
+            if(flag == Registered::UNREGISTERED) {
+                // generate and caching
+                reflect<T>(&buf);
+                buf.shrink();
+                buf.hashed = util::Hash(buf.begin(), buf.count());
+                
+                // to string and caching
+                stringify(&str, buf, 0);
+                buf.str = str.c_str();
+
+                // set on complete
+                flag = Registered::REGISTERED;
+            }
+        }
     }
-    return buffer;
+    return buf;
 }
 
 template<typename T> static void Type::reflect(Type* out) {
@@ -143,7 +160,7 @@ template<typename T> static void Type::reflect(Type* out) {
     } else out->push(typecode<T>()); // primitive
 }
 
-Type::Type(const Type& in): counter(in.counter), hashed(in.hashed) {
+Type::Type(const Type& in): counter(in.counter), hashed(in.hashed), str(in.str) {
     if(in.counter < STACK) {
         std::memcpy(stack, in.stack, sizeof(Keyword) * counter);
     } else {
@@ -157,7 +174,7 @@ Type::Type(const Type& in): counter(in.counter), hashed(in.hashed) {
     }
 }
 
-Type::Type(Type&& in) noexcept: counter(in.counter), hashed(in.hashed) {
+Type::Type(Type&& in) noexcept: counter(in.counter), hashed(in.hashed), str(in.str) {
     if(in.counter < STACK) {
         std::memcpy(stack, in.stack, counter); // copy
     } else {
@@ -167,9 +184,10 @@ Type::Type(Type&& in) noexcept: counter(in.counter), hashed(in.hashed) {
 
         in.heap      = nullptr;
         in.capacitor = 0;
-        in.counter     = 0;
+        in.counter   = 0;
         in.hashed    = 0;
     }
+    in.str = nullptr; // moved
 }
 
 Type::Type(Keyword in): counter(1), hashed(hash()) {
@@ -186,7 +204,8 @@ Type& Type::operator=(const Type& in) {
     Keyword* dest = counter < STACK ? stack : heap; // allocated: use heap
     if(in.counter < STACK) {
         std::memcpy(dest, in.stack, in.counter); // copy stack
-    } else {
+    }
+    else {
         // reallocation required
         if(in.counter > capacitor) {
             dest = static_cast<Keyword*>(malloc(sizeof(Keyword) * in.counter));
@@ -200,6 +219,7 @@ Type& Type::operator=(const Type& in) {
     }
     counter = in.counter;
     hashed  = in.hashed;
+    str     = in.str;
     return *this;
 }
 
@@ -212,7 +232,8 @@ Type& Type::operator=(Type&& in) noexcept {
         hashed = in.hashed;
         if(counter < STACK) {
             std::memcpy(stack, in.stack, counter); // copy
-        } else {
+        }
+        else {
             heap      = in.heap;
             capacitor = in.capacitor;
 
@@ -220,6 +241,9 @@ Type& Type::operator=(Type&& in) noexcept {
             in.capacitor = 0;
             in.counter     = 0;
         }
+        // cached string move
+        str = in.str;
+        in.str = nullptr;
     }
     return *this;
 }
@@ -259,69 +283,7 @@ Keyword Type::code() const {
 }
 
 const char* Type::operator*() const {
-    std::function<size_t(string*, const Type&, size_t)> fn = [&fn](string* out, const Type& in, size_t idx) {
-        if(idx >= in.count()) {
-            return idx;
-        }
-        // pointer or reference
-        if(in[idx] == Keyword::POINTER || in[idx] == Keyword::REFERENCE) {
-            fn(out, in, idx + 1); // rec
-        }
-        // const
-        else if(in[idx] == Keyword::CONST) {
-            // CONST POINTER ... = ...* const
-            if(in[idx + 1] == Keyword::POINTER) {
-                size_t last = fn(out, in, idx + 1);
-                out->append(" const");
-                return last + 1; // ...* const, terminate
-            }
-            // CONST ... = const ...
-            // CONST REFERENCE ...  = const ...&
-            else {
-                out->append("const ");
-                size_t last = fn(out, in, idx + 1);
-                return last + 1; // const ..., terminate
-            }
-        }
-        // class or enum
-        if(in[idx] == Keyword::CLASS || in[idx] == Keyword::ENUM) {
-            uint64_t len;
-            char*  ptr = reinterpret_cast<char*>(&len);
-            for(int i = 0; i < sizeof(len); ++i) {
-                ptr[i] = static_cast<uint8_t>(in[idx + 1 + i]); // read size
-            }
-            if(len) {
-                const char* ptr = reinterpret_cast<const char*>(&in[idx + 1 + sizeof(len)]);
-                out->append(ptr, len);
-                return idx + 1 + sizeof(len) + len;
-            }
-            out->append(typestring(in[idx])); // size 0 == unregistered type
-            return idx + 1 + sizeof(len);
-        }
-        // primitive
-        else {
-            out->append(typestring(in[idx]));
-        }
-        // has template
-        if(isSTL(in[idx])) {
-            out->append("<");
-            fn(out, in, idx + 1);
-
-            // TODO: map 처리
-
-            out->append(">");
-        }
-
-        return idx + 1;
-    };
-
-    static std::unordered_map<size_t, string> map;
-    if(map.find(hashed) == map.end()) {
-        string temp;
-        fn(&temp, *this, 0);
-        map.insert({ hashed, temp });
-    }
-    return map[hashed].c_str();
+    return str;
 }
 
 bool Type::operator==(const Type& in) const {
@@ -360,6 +322,62 @@ const Keyword* Type::end() const {
 
 size_t Type::count() const {
     return counter;
+}
+
+size_t Type::stringify(string* out, const Type& in, size_t idx) {
+    if(idx >= in.count()) {
+        return idx;
+    }
+    // pointer or reference
+    if(in[idx] == Keyword::POINTER || in[idx] == Keyword::REFERENCE) {
+        stringify(out, in, idx + 1); // rec
+    }
+    // const
+    else if(in[idx] == Keyword::CONST) {
+        // CONST POINTER ... = ...* const
+        if(in[idx + 1] == Keyword::POINTER) {
+            size_t last = stringify(out, in, idx + 1);
+            out->append(" const");
+            return last + 1; // ...* const, terminate
+        }
+        // CONST ... = const ...
+        // CONST REFERENCE ...  = const ...&
+        else {
+            out->append("const ");
+            size_t last = stringify(out, in, idx + 1);
+            return last + 1; // const ..., terminate
+        }
+    }
+    // class or enum
+    if(in[idx] == Keyword::CLASS || in[idx] == Keyword::ENUM) {
+        uint64_t len;
+        char*  ptr = reinterpret_cast<char*>(&len);
+        for(int i = 0; i < sizeof(len); ++i) {
+            ptr[i] = static_cast<uint8_t>(in[idx + 1 + i]); // read size
+        }
+        if(len) {
+            const char* ptr = reinterpret_cast<const char*>(&in[idx + 1 + sizeof(len)]);
+            out->append(ptr, len);
+            return idx + 1 + sizeof(len) + len;
+        }
+        out->append(typestring(in[idx])); // size 0 == unregistered type
+        return idx + 1 + sizeof(len);
+    }
+    // primitive
+    else {
+        out->append(typestring(in[idx]));
+    }
+    // has template
+    if(isSTL(in[idx])) {
+        out->append("<");
+        stringify(out, in, idx + 1);
+
+        // TODO: map implementation
+
+        out->append(">");
+    }
+
+    return idx + 1;
 }
 
 const Field& Class::field(const char* name) const {

@@ -58,6 +58,9 @@ private:
     template<typename T> static void reflect(Type*);
 
 private:
+    static size_t stringify(string*, const Type&, size_t);
+
+private:
     hash_t hashed  = 0;
     size_t counter = 0;
     union {
@@ -67,6 +70,9 @@ private:
         };
         Keyword stack[STACK] = { Keyword::UNREGISTERED };
     };
+
+private:
+    const char* str; //!< to string result cache
 };
 
 /**************************************************************************************************
