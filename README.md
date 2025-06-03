@@ -1,0 +1,64 @@
+# LiteWindowsEngine
+
+**LiteWindowsEngine** (LWE) is a lightweight, modular C++ engine focused on performance, low-level reflection, and future scalability.
+
+> Project by [LaverWinEmpty](https://github.com/LaverWinEmpty)
+
+---
+
+## 🔍 Overview
+
+LiteWindowsEngine is a personal engine project aiming to be minimal, efficient, and practical.  
+Reflection is already implemented at around 80% without relying on RTTI.  
+The current goal is to build a realistic engine structure that is **thread-safe** and **performance-oriented**, even if it's mainly for learning.
+
+---
+
+## 🛠️ Tech Stack
+
+- **Language:** C++ (only)
+- **Core Features:**
+  - RTTI-free Reflection system
+  - Future plans include custom `set` implementation and IOCP-based async system (currently in planning)
+
+---
+
+## 💡 Platform
+
+> **Note:** Cross-platform support is under consideration.  
+> However, currently, **only Windows** is supported and tested.  
+> Hence the name **LiteWindowsEngine**.
+
+---
+
+## 📁 Project Structure
+
+```
+root/
+├─ namespace/               # Mirrors C++ namespaces
+│  ├─ internal/             # Internal details (not recommended to include directly)
+│  ├─ module.hpp            # Main public interface
+│  ├─ module.ipp            # Inline implementation (acts like .cpp)
+│  └─ namespace.h           # Aggregated public headers
+└─ ...
+```
+
+- To use only reflection:
+  ```cpp
+  #include "root/meta/meta.h"
+  ```
+- General module usage:
+  ```cpp
+  #include "module.hpp"
+  ```
+
+---
+
+## 🚧 Status
+
+- Reflection: ~80% implemented  
+- IOCP / Networking / System-level components: not yet implemented  
+- Usage examples: WIP  
+- This is a **personal learning project**, but built to a high standard of safety and performance.
+
+---
