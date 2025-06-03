@@ -52,7 +52,8 @@ template<typename, typename = std::void_t<>> struct ContainerCode {
 
 //! @brief unused type
 enum class Registered : bool {
-    REGISTERED = 1
+    UNREGISTERED = 0,
+    REGISTERED   = 1
 };
 
 template<typename T> constexpr Keyword typecode(); //!< get type code
