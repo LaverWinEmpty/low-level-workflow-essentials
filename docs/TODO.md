@@ -33,5 +33,4 @@
 
 ## ✅ Network
 - [ ] TCP/UDP socket
-- [ ] Cross-platform high-performance I/O:
-  - `epoll` style implementation (Windows) or IOCP
+- [ ] High-performance I/O (Enhanced `Select` Model (O(1) performance), or Windows IOCP)
