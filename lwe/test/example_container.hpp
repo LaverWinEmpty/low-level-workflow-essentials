@@ -91,7 +91,7 @@ void example_container() {
     std::cout << "array old pointer: " << testArray.data() << "\n"; // before pointer
     testArray.reserve(100);                                         // 100 -> set 128, realloc T[128]
     std::cout << "array new pointer: " << testArray.data() << "\n"; // after pointer
-    std::cout << beginTest->c << std::endl;                         // not dangling pointer (based on single thread)
+    std::cout << beginTest->c << std::endl;                         // not dangling pointer
 
     // serialize
     std::cout << testArray.serialize();
