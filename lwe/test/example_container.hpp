@@ -29,13 +29,31 @@ void example_container() {
     // out == nullptr -> abandon (defualt)
     // Data is not moved, but the starting index is set to 1.
 
-    // count 8 -> out of range (UB)
-    for (int i = 0; i < 8; ++i) {
+    // count 9, size 3 -> circulation
+    for (int i = 0; i < 9; ++i) {
         std::cout << testArray[i].c << " ";
     }
-    std::cout << "\n"; // 2 3 4 0 0 0 0 0 1 (UB)
-    // [0] is not removed
-    // out of range -> no throw, circulation
+    std::cout << "\n"; // 2 3 4 0 0 0 0 0 1 2
+    // CAREFUL: Potential UB
+    //  - [0] is not removed from memory but destructor was called
+    //    (Accessing destructed objects may cause errors)
+    // - Out of range behavior: no throw, uses circulation
+    //   index within capacity -> allowed
+    //   index beyond capacity -> wraps around (modulo)
+    // - Design rationale:
+    //   1. Prevent crashes while allowing controlled out-of-bounds access
+    //   2. Support index-based access after reserve()/resize() operations
+    //   3. Enable fixed-size circular buffer usage (capacity = power of 2)
+    //      (Note: This use case is not recommended for general purposes)
+
+    // if need throw, use at()
+    try {
+        std::cout << testArray.at(1000000).c;
+    }
+    catch(std::out_of_range& e) {
+        // catched
+        std::cout << "out of range\n";
+    } 
 
     // cout 6 -> circulation
     auto itr = testArray.begin();
@@ -68,14 +86,25 @@ void example_container() {
     // Note 2
     // Iterator += value is supported.
 
+    // NOTE
+    auto beginTest = testArray.begin();                             // get testArray[0];
+    std::cout << "array old pointer: " << testArray.data() << "\n"; // before pointer
+    testArray.reserve(100);                                         // 100 -> set 128, realloc T[128]
+    std::cout << "array new pointer: " << testArray.data() << "\n"; // after pointer
+    std::cout << beginTest->c << std::endl;                         // not dangling pointer (based on single thread)
+
     // serialize
     std::cout << testArray.serialize();
 
     // out (console)
     /*
-        2 3 4 0 0 0 0 0 1
+        2 3 4 0 0 0 0 0 1 2
+        out of range
         2 3 4 2 3 4
         2 3 4
+        array old pointer: 0000000000000000
+        array new pointer: 1111111111111111
+        2
         [{ 2, 2 }, { 3, 3 }, { 4, 4 }]
     */
 }
