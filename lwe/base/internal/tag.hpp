@@ -26,6 +26,14 @@ public:
     ~Nomove() = default;
 };
 
+class Static {
+    Static()                         noexcept = default;
+    Static(const Static&)            noexcept = default;
+    Static(Static&&)                 noexcept = default;
+    Static& operator=(const Static&) noexcept = default;
+    Static& operator=(Static&&)      noexcept = default;
+};
+
 enum class Uninitialized {
     UNINIT
 };
