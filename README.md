@@ -16,10 +16,10 @@ The current goal is to build a realistic engine structure that is **thread-safe*
 
 ## 🛠️ Tech Stack
 
-- **Language:** C++ (only)
+- **Language:** C++20 (only)
 - **Core Features:**
   - RTTI-free Reflection system
-  - Future plans include custom `set` implementation and IOCP-based async system (currently in planning)
+  - Planned features include a custom `select(fd_set)` implementation or IOCP-based async system, and a D3D11-based rendering API
 
 ---
 
