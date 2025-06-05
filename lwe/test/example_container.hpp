@@ -16,7 +16,8 @@ void example_container() {
     // Circular Array
     // declare: Deque<Type, SVO size>
     // capacity is power of 2, optimized
-    lwe::stl::Deque<Test, 8> testArray; // SVO 8, over -> allocate
+    lwe::stl::Deque<Test, 8> testArray; // Small Vector Optimization: size 8
+    // Storage larger than SVO size -> Heap allocation
 
     testArray.push({ 1, 1, 1 });
     testArray.push({ 2, 2, 2 });
@@ -77,11 +78,12 @@ void example_container() {
     //
     // Note 1
     // end, rend is out of range
-    // - e.g. size() == 10, end index == 11
-    // rear, bottom is in of range
     // - e.g. size() == 10, end index == 10
+    // rear, bottom is in of range
+    // - e.g. size() == 10, end index == 9
     // It is like rbegin, rend, need itr - 1
-    // Or, read itr finally from outside.
+    // Or, read itr finally from outside the loop.
+    // Because, rear and bottom are iterators, but also mean "last element."
     //
     // Note 2
     // Iterator += value is supported.
