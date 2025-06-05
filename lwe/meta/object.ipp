@@ -281,10 +281,10 @@ template<> string serialize<string>(const string& in) {
             case '\"': out.append("\\\"");   break;
             case '\n': out.append("\\n");    break;
             case '\t': out.append("\\t");    break;
-            case '[': out.append("\\[");    break;
-            case ']': out.append("\\]");    break;
-            case '{': out.append("\\{");    break;
-            case '}': out.append("\\}");    break;
+            case '[':  out.append("\\[");    break;
+            case ']':  out.append("\\]");    break;
+            case '{':  out.append("\\{");    break;
+            case '}':  out.append("\\}");    break;
             default:   out.append(1, in[i]); break;
           }
     }
