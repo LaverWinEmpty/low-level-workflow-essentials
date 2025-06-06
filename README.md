@@ -16,18 +16,15 @@ The current goal is to build a realistic engine structure that is **thread-safe*
 
 ## 🛠️ Tech Stack
 
-- **Language:** C++20 (only)
-- **Core Features:**
-  - RTTI-free Reflection system
-  - Planned features include a custom `select(fd_set)` implementation or IOCP-based async system, and a D3D11-based rendering API
+- **Language:** C++17
 
 ---
 
 ## 💡 Platform
 
-> **Note:** Cross-platform support is under consideration.  
-> However, currently, **only Windows** is supported and tested.  
-> Hence the name **LiteWindowsEngine**.
+> Tested exclusively on **Windows** with **MSVC** (`/Zc:preprocessor`).
+> 
+> **Note:** However, this project targets cross-platform support.
 
 ---
 
@@ -73,10 +70,18 @@ root/
 
 ---
 
-## 🚧 Status
 
-- Reflection: ~80% implemented  
-- IOCP / Networking / System-level components: not yet implemented  
-- This is a **personal learning project**, but built to a high standard of safety and performance.  
+## 📋 Development Status
+
+**Implemented:**
+- RTTI-free Reflection system (~80%)
+  - [x] Basic type reflection and serialization
+  - [x] Enum type reflection and serialization 
+  - [-] Object type rfelection and serialization (Need: default constructor, pointer serialization)
+  - [-] Custom container type reflection and serialization (current implementation Deque only)
+
+**Planned:**
+- Custom async IO API
+- Custom rendering API
 
 ---
