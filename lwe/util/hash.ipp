@@ -11,7 +11,7 @@ Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
     }
 
     // to stirng, string size 17
-    sprintf(str, "%016llX", val);
+    snprintf(str, sizeof(str), "%016llX", val);
 }
 
 Hash::Hash(const string& in): Hash(in.c_str(), in.size()) {}

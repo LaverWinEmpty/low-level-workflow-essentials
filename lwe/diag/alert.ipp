@@ -9,10 +9,11 @@ Alert::Alert(Code code, const std::error_category& category) noexcept : Alert(ca
 Alert::Alert(const char* msg, int32_t code) noexcept: Alert(string{ msg }, code) {}
 
 Alert::Alert(const string& msg, int32_t code) noexcept: code(code) {
-	// use as buffer
-	message.resize(FORMAT_SIZE + msg.size());
-	std::sprintf(message.data(), FORMAT, code);
-	std::memcpy(message.data() + FORMAT_SIZE, msg.c_str(), msg.size());
+	char buffer[FORMAT_SIZE + 1];
+	std::snprintf(buffer, sizeof(buffer), FORMAT, code);
+
+	message += buffer;
+	message += msg;
 }
 
 Alert::Alert(const Alert& in) noexcept: message(in.message), code(in.code) { }
