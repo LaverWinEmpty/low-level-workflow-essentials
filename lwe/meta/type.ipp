@@ -398,10 +398,10 @@ const Field& Class::field(const char* name) const {
 
 const Field& Class::field(const string& name) const {
     static const Field failed = {
-        .type   = Type{},
-        .name   = nullptr,
-        .size   = 0,
-        .offset = size_t(-1)
+        /*.type   = */ Type{},
+        /*.name   = */ nullptr,
+        /*.size   = */ 0,
+        /*.offset = */ size_t(-1)
     };
 
     const Structure& temp = fields();

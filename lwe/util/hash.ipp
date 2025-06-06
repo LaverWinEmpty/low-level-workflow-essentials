@@ -9,7 +9,9 @@ Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
         val ^= ptr[i];
         val *= FNV1A64_PRIME;
     }
-    std::format_to_n(str, sizeof(str) - 1, "{:X}", val);
+
+    // to stirng, string size 17
+    sprintf(str, "%016llX", val);
 }
 
 Hash::Hash(const string& in): Hash(in.c_str(), in.size()) {}

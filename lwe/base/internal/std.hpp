@@ -1,6 +1,10 @@
 #ifndef LWE_CORE_STD
 #define LWE_CORE_STD
 
+#ifdef _MSC_VER
+#    define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include <cstdlib>
 #include <cstdint>
 #include <type_traits>
@@ -19,7 +23,6 @@
 #include <mutex>
 #include <sstream>
 #include <iomanip>
-#include <format>
 #include <system_error>
 
 

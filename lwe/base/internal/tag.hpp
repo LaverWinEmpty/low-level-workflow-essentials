@@ -34,10 +34,10 @@ class Static {
     Static& operator=(Static&&)      noexcept = default;
 };
 
-enum class Uninitialized {
+enum Uninitialized {
     UNINIT
 };
-using enum Uninitialized;
+// using enum Uninitialized;
 
 }
 LWE_END

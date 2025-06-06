@@ -305,7 +305,7 @@ public:                                                                         
     }                                                                                                                  \
     LWE::meta::Registered TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                                     \
     template<> template<> const LWE::meta::Enumeration& LWE::meta::Enumeration::reflect<SCOPE TYPE>() {                \
-        using enum SCOPE TYPE;                                                                                         \
+        using ENUM_ALIAS = SCOPE TYPE;                                                                                 \
         const char* NAME = #TYPE;                                                                                      \
         auto result = map().find(NAME);                                                                                \
         if (result != map().end()) {                                                                                   \
@@ -313,7 +313,7 @@ public:                                                                         
         }                                                                                                              \
         LWE::meta::Enumeration meta; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
-            meta.push(LWE::meta::Enumerator{ static_cast<uint64_t>(VALUE), #VALUE }) // }
+            meta.push(LWE::meta::Enumerator{ static_cast<uint64_t>(ENUM_ALIAS::VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
         meta.shrink();                                                                                                 \
         map().insert({ NAME, meta });                                                                                  \
@@ -325,8 +325,8 @@ public:                                                                         
  */
 #define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
     template<typename T> struct LWE::meta::ContainerCode<T, std::void_t<typename T::CONTAINER##Element>> {             \
-        using enum meta::Keyword;                                                                                      \
-        static constexpr meta::Keyword VALUE = ENUM;                                                                   \
+        using ENUM_ALIAS = LWE::meta::Keyword;                                                                         \
+        static constexpr meta::Keyword VALUE = ENUM_ALIAS::ENUM;                                                       \
     }
 
 /**
@@ -338,11 +338,11 @@ public:                                                                         
     using CONTAINER##Element = ELEMENT;                                                                                \
     virtual std::string serialize() const override {                                                                   \
         const LWE::meta::Container* ptr = static_cast<const Container*>(this);                                         \
-        return LWE::meta::serialize<CONTAINER<ELEMENT __VA_OPT__(,) __VA_ARGS__>>(ptr);                                \
+        return LWE::meta::serialize<CONTAINER<ELEMENT, ## __VA_ARGS__>>(ptr);                                \
     }                                                                                                                  \
     virtual void deserialize(const string& in) override {                                                              \
         const LWE::meta::Container* ptr = const_cast<Container*>(static_cast<const Container*>(this));                 \
-        LWE::meta::deserialize<CONTAINER<ELEMENT  __VA_OPT__(,) __VA_ARGS__>>(this, in);                               \
+        LWE::meta::deserialize<CONTAINER<ELEMENT, ## __VA_ARGS__>>(this, in);                               \
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 

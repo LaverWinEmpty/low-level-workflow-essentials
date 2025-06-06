@@ -14,7 +14,12 @@ LWE_BEGIN
 namespace diag {
 
 class Alert : public std::exception {
-	static constexpr const char* FORMAT = "[0x{:08X}] ";
+	static constexpr const char*  FORMAT = "[0x%08X] "; //!< "FORMAT: error message"
+
+private:
+	//! @brief formatting buffer size
+	//! @note  buffer size = format size - '\0' - %08X size + FFFFFFFF size
+	static constexpr const size_t FORMAT_SIZE = 10 - 1 - 4 + 8; //!< 13 ("[0xFFFFFFFF] ")
 	
 public:
 	/// @brief not exception
@@ -74,7 +79,7 @@ public:
 private:
 	string  message = "";
 	int32_t code    = 0;
-	size_t  offset  = 0; //!< message begin pos
+	// size_t  offset  = 0; //!< message begin pos
 };
 
 }
