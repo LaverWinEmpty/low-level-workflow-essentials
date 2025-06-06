@@ -75,13 +75,13 @@ root/
 
 **Implemented:**
 - RTTI-free Reflection system (~80%)
-  - [x] Basic type reflection and serialization
-  - [x] Enum type reflection and serialization 
-  - [-] Object type rfelection and serialization (Need: default constructor, pointer serialization)
-  - [-] Custom container type reflection and serialization (current implementation Deque only)
+  - ✅ Basic type reflection and serialization
+  - ✅ Enum type reflection and serialization 
+  - ⚠️ Object type rfelection and serialization (Need: default constructor, pointer serialization)
+  - ⚠️ Custom container type reflection and serialization (current implementation Deque only)
 
 **Planned:**
-- Custom async IO API
-- Custom rendering API
+- ❌ Custom async IO API
+- ❌ Custom rendering API
 
 ---
