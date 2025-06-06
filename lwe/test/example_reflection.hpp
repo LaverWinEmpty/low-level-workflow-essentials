@@ -120,7 +120,7 @@ void example_reflection() {
         // 3rd enum value
         value = enumReflector[2].value;
     }
-    test->c = static_cast<uint64_t>(value);
+    test->c = static_cast<int>(value);
 
     // class test
     // find filed
