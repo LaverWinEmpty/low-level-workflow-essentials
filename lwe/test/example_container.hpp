@@ -53,7 +53,7 @@ void example_container() {
     }
     catch(std::out_of_range& e) {
         // catched
-        std::cout << "out of range\n";
+        std::cout << e.what() << "\n";
     } 
 
     // cout 6 -> circulation

@@ -17,6 +17,7 @@
 */
 
 #include <iostream>
+
 // test class
 namespace test {
     // test enum
@@ -105,7 +106,7 @@ void example_reflection() {
     meta::Class* metaclass = test->meta();
 
     // enum test
-    int value = 0;
+    uint64_t value = 0;
 
     // meta::Enum
     Enum* eval = enumof<test::ETest>();
@@ -119,7 +120,7 @@ void example_reflection() {
         // 3rd enum value
         value = enumReflector[2].value;
     }
-    test->c = value;
+    test->c = static_cast<uint64_t>(value);
 
     // class test
     // find filed
