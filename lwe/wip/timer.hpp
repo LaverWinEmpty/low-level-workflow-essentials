@@ -4,6 +4,9 @@ LWE_BEGIN
 namespace util {
 
 class Timer {
+    const float NOSIE_FILTER = 0.00005; // sec, ignore micro delays
+    const int   FRAME_SKIP   = 10;      // fps 60 -> 0.16 sec (delta time clamping)
+
     using Clock = std::chrono::steady_clock;
     using MS    = std::chrono::milliseconds;
 public:
@@ -41,7 +44,11 @@ class Tick : Static {
 
 public:
     static void initialize(float fps) {
-        step = 1 / fps;
+        // use on tick time
+        tickstep = 1 / fps;
+        
+        // use on delta time
+        skip = tickstep * FRAME_SKIP;
 
         // set 0
         tick.curr.f = 0;
@@ -64,31 +71,31 @@ public:
         float dt = timer.lap();
 
         // accumulate
-        // clamping (ignore 0.1 ms under)
-        if (dt > 0.0001) {
+        // noise filtering
+        if (dt > NOSIE_FILTER) {
             pulse        += dt;
             delta.curr.f += dt;
             tick.curr.f  += dt;
             timer.reset();
         }
 
-        // calculate delta time clamping (max 0.1 sec)
-        if (delta.curr.f >= 0.1) {
-            delta.last.f = 0.1;  // set limit
-            delta.curr.f -= 0.1; // reduction
+        // calculate delta time clamping
+        if (delta.curr.f >= skip) {
+            delta.last.f =  skip;  // set limit
+            delta.curr.f -= skip; // reduction
         }
         else {
             delta.last.f = delta.curr.f; // remainder
-            delta.curr.f = 0;               // init
+            delta.curr.f = 0;            // init
         }
 
         // calculate tick time
-        int coefficient = 0; // init
-        while (tick.curr.f >= step) {
-            tick.curr.f -= step;
-            ++coefficient;
+        tickcnt = 0; // init
+        while (tick.curr.f >= tickstep) {
+            tick.curr.f -= tickstep;
+            ++tickcnt;
         }
-        tick.last.f = coefficient * step;
+        tick.last.f = tickcnt * tickstep;
 
         // calculate frame per seonds
         if (pulse >= interval) {
@@ -119,6 +126,20 @@ public:
     }
 
 public:
+    //! @brief get tick time to count
+    //! @note  Tick::count() * Tick::rate() = Tick::fixed() 
+    static int count() {
+        return tickcnt;
+    }
+
+public:
+    //! @brief get tick time step
+    //! @note  Tick::rate() * Tick::count() = Tick::fixed() 
+    static float step() {
+        return tickstep;
+    }
+
+public:
     //! @brief get timescale
     static float timescale() {
         return scale;
@@ -140,18 +161,25 @@ public:
         return interval;
     }
 
+public:
+    //! @brief frame skip flag
+
+
 private:
     inline static Timer timer; //!< main timer
 
-    inline static Accumulator tick;  //!< fixed tick counter
-    inline static Accumulator delta; //!< delta time counter
-    inline static Accumulator frame; //!< frame counter
+    inline static Accumulator tick;    //!< fixed tick counter
+    inline static Accumulator delta;   //!< delta time counter
+    inline static Accumulator frame;   //!< frame counter
+    inline static int         tickcnt; //!< last tick count
 
-    inline static float step     = 0; //!< frame time step
+    inline static float tickstep = 0; //!< frame time step
     inline static float pulse    = 0; //!< for fps count
     inline static float interval = 1; //!< fps refresh
     inline static float correct  = 1; //!< frame count to per sec
     inline static float scale    = 1; //!< time scale use in delta / tick
+    inline static float skip     = 0; //!< delta time frame skip
+    
 };
 
 }
