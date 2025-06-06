@@ -1,32 +1,47 @@
 #ifndef LWE_UTIL_RANDOM
 #define LWE_UTIL_RANDOM
 
-#include "../common.hpp"
+#include "../base/base.h"
 
 LWE_BEGIN
 namespace util {
 
 class Random {
 public:
-    using State = uint64[4];
+    using State = uint64_t[4];
 
 public:
-    Random(uint64 = 0);
+    Random(uint64_t = 0);
 
 public:
-    Random* instance(uint64 seed = 0);
+    Random* instance(uint64_t seed = 0);
 
 public:
-    void initialize(uint64);
+    void initialize(uint64_t);
 
 public:
-    int64  sint(int64  = INT64_MAX,  int64  = INT64_MIN);
-    uint64 uint(uint64 = UINT64_MAX, uint64 = 0);
-    double real(double = 1,          double = 0);
+    int64_t  sint(int64_t  = INT64_MAX,  int64_t  = INT64_MIN);
+    uint64_t uint(uint64_t = UINT64_MAX, uint64_t = 0);
+    double   real(double   = 1,          double   = 0);
 
 private:
-    uint64 xoshiro256() const;
-    static uint64 splitmix64(uint64&);
+    uint64_t        xoshiro256();
+    static uint64_t splitmix64(uint64_t&);
+
+public:
+    template<typename T> static T generate(T a, T b) {
+        static Random rand;
+
+        if constexpr (std::is_floating_point_v<T>) {
+            return rand.real(a, b);
+        }
+        else if constexpr (std::is_signed_v<T>) {
+            return rand.sint(a, b);
+        }
+        else {
+            return rand.uint(a, b);
+        }
+    }
 
 private:
     State state;

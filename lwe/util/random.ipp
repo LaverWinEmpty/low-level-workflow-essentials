@@ -3,32 +3,32 @@
 LWE_BEGIN
 namespace util {
 
-Random::Random(uint64 seed) {
+Random::Random(uint64_t seed) {
     state[0] = splitmix64(seed);
     state[1] = splitmix64(seed);
     state[2] = splitmix64(seed);
     state[3] = splitmix64(seed);
 }
 
-Random* Random::instance(uint64 seed) {
+Random* Random::instance(uint64_t seed) {
     static thread_local Random random(seed ? seed : time(nullptr));
     return &random;
 }
 
-void Random::initialize(uint64 seed) {
+void Random::initialize(uint64_t seed) {
     state[0] = splitmix64(seed);
     state[1] = splitmix64(seed);
     state[2] = splitmix64(seed);
     state[3] = splitmix64(seed);
 }
 
-uint64 Random::xoshiro256() const {
-    auto ro64 = [](uint64 in, size_t rot) {
+uint64_t Random::xoshiro256() {
+    auto ro64 = [](uint64_t in, size_t rot) {
         return (in << rot | in >> rot);
     };
 
-    uint64 result = ro64(state[1] * 5, 7) * 9;
-    uint64 temp   = state[1] << 17;
+    uint64_t result = ro64(state[1] * 5, 7) * 9;
+    uint64_t temp   = state[1] << 17;
 
     state[2] ^= state[0];
     state[3] ^= state[1];
@@ -40,51 +40,51 @@ uint64 Random::xoshiro256() const {
     return result;
 }
 
-uint64 Random::splitmix64(uint64& inout) {
-    uint64 result = inout += 0x9E3779B97F4A7C15;
+uint64_t Random::splitmix64(uint64_t& inout) {
+    uint64_t result = inout += 0x9E3779B97F4A7C15;
     result = (result ^ (result >> 30)) * 0xBF58476D1CE4E5B9;
     result = (result ^ (result >> 27)) * 0x94D049BB133111EB;
     return result ^ (result >> 31);
 }
 
-int64 Random::sint(int64 a, int64 b) const {
-    return int64(uint(a, b));
+int64_t Random::sint(int64_t a, int64_t b) {
+    return int64_t(uint(a, b));
 }
 
-uint64 Random::uint(uint64 a, uint64 b) const {
+uint64_t Random::uint(uint64_t a, uint64_t b) {
     // check
     if (a == b) {
-        return uint64(a); // same, one value
+        return uint64_t(a); // same, one value
     }
 
     // cast
-    uint64 umin = uint64(a);
-    uint64 umax = uint64(b) + 1;
+    uint64_t umin = uint64_t(a);
+    uint64_t umax = uint64_t(b) + 1;
     if (umin == umax) {
         return xoshiro256(); // overflowed, all values
     }
 
     // swap
     if (a > b) {
-        uint64 temp = umin;
+        uint64_t temp = umin;
         umin = umax;
         umax = temp;
     }
 
     // set
-    uint64 range = umax - umin;
-    uint64 mask  = ~uint64(0);
-    uint64 limit = mask - mask % range;
+    uint64_t range = umax - umin;
+    uint64_t mask  = ~uint64_t(0);
+    uint64_t limit = mask - mask % range;
 
     // rejection sampling 
-    uint64 result = xoshiro256();
+    uint64_t result = xoshiro256();
     while (result >= limit) {
         result = xoshiro256();
     }
-    return uint64(umin + result % range);
+    return uint64_t(umin + result % range);
 }
 
-double Random::real(double a, double b) const {
+double Random::real(double a, double b) {
     // no calculate case
     if (a == b) {
         return static_cast<double>(a);
@@ -92,14 +92,14 @@ double Random::real(double a, double b) const {
 
     // swap
     if (a > b) {
-        uint64 temp = a;
+        double temp = a;
         a = b;
         b = temp;
     }
 
-    static uint64 ONE = 1ULL << 52; // IEEE754 exponent one bit
+    static uint64_t ONE = 1ULL << 52; // IEEE754 exponent one bit
 
-    uint64 mantissa = xoshiro256() & ((ONE - 1)); // get mantissa of random
+    uint64_t mantissa = xoshiro256() & ((ONE - 1)); // get mantissa of random
 
     double result = double(mantissa) / ONE; // nomalization
 

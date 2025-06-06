@@ -26,7 +26,7 @@ public:
     operator std::string_view() const;
 
 private:
-    uint64 hi, lo;
+    uint64_t hi, lo;
     std::shared_ptr<String> ptr;
 };
 
