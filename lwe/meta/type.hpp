@@ -12,7 +12,6 @@ namespace meta {
 
 //! @brief type info
 struct Type {
-public:
     template<typename T> static const Type& reflect();
 
 public:
