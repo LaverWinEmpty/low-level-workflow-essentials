@@ -5,15 +5,15 @@
  * meta header description
  **************************************************************************************************
  * simple UML
- * ! < ^ > is reference, else inheritance or composition
- * ! `->` UML line, `[]=>` description
+ * ! < ^ > (arrow) is reference, else composition or inheritance, specialization
+ * ! `<=[ ]` description
  *
  *                               +-----------+
  *                               | Container | <=[container type]
  *                               +-----------+
  *                                     ^
  *                                     |
- *                                +---------+
+ *                                +----+----+
  *                                | Keyword | <=[enum(VOID, INT, CONST ...)]
  *                                +----+----+
  *                                     |
@@ -21,35 +21,42 @@
  *                                 | Type  | <=[type info: (Keyword array]
  *                                 +---+---+
  *                                     |
- *         +---------------------------+----------------------------+
- *         |                           |                            |
- *  +------+------+                +---+---+                  +-----+-----+
- *  | Enumerator  | <=[enum info]  | Field | <=[class info]   | Signature | <=[method info]
- *  +------+------+                +---+---+                  +-----+-----+
- *         |                           |                            |
- *         +--------------+------------+                       +----+----+
- *                        |                                    | Method  | <=[`Lambda` base]
- *                +-------+------+                             +----+----+
- *                | Reflector<T> | <=[info container (T array)]     |
- *                +-------+------+                            +-----+-----+
- *                        |                                   | Lambda<T> |
- *         +--------------+--------------+                    +-----------+
- *         |                             |                          ^
- *   +-----+-----+                +------+------+                   |
- *   | Structure | <=[<Field>]    | Enumeration | <=[<Enumerator>]  |
- *   +-----+-----+                +------+------+                   |
- *         |                             |                          |
- *     +---+---+                     +---+---+                      |
- *     | Class | <=[class metadata]  | Enum  | <=[enum metadata]    |
- *     +---+---+                     +---+---+                      |
- *         |                             ^                          |
- *    +----+----+                        |                    +-----+-----+
- *    | Object  | <----------------------+------------------- | Registry  |
- *    +---------+                                             +-----------+
+ *         +---------------------------+------------------------------+
+ *         |                           |                              |
+ *  +------+------+                +---+---+                    +-----+-----+
+ *  | Enumerator  | <=[enum info]  | Field | <=[class info]     | Signature | <=[method info]
+ *  +------+------+                +---+---+                    +-----+-----+
+ *         |                           |                              |
+ *         +--------------+------------+                         +----+----+
+ *                        |                                      | Method  | <=[`Lambda` base]
+ *                +-------+------+                               +----+----+
+ *                | Reflector<T> | <=[T array, CRTP base]             |
+ *                +-------+------+                              +-----+-----+
+ *                        |                                     | Lambda<T> | <=[reflection]
+ *         +--------------+--------------+                      +-----------+
+ *         |                             |                            ^
+ *   +-----+-----+                +------+------+                     |
+ *   | Structure | <=[<Field>]    | Enumeration | <=[<Enumerator>]    |
+ *   +-----+-----+                +------+------+                     |
+ *         |                             |                            |
+ *     +---+---+                     +---+---+                        |
+ *     | Class | <=[class metadata]  | Enum  | <=[enum metadata]      |
+ *     +-------+                     +-------+                        |
+ *         ^                             ^                            |
+ *         |                             |                            |
+ *         |                             +----------------------------+
+ *    +----+----+                        |                            |
+ *    | Object  | <=[reflection]     +---+---+                  +-----+-----+
+ *    +---------+                    | Value | <=[reflection]   | Registry  | <=[internal]
+ *         ^                         +-------+                  +-----+-----+
+ *         |                                                          |
+ *         +----------------------------------------------------------+
  *
- * ! Type <-> Container <-> Object: cross-reference for type check in serialize
- * ! Keyword indirectly references Container when type checking.
- * ! Enum: referenced only when serializing.
+ * ! `Class`: metadata base of `Object`
+ * ! `Enum`: metadata base of registered enums. referenced only when serializing.
+ * ! `Value`: enum helper object, unregistered enums can also use it.
+ * ! `Type` <-> `Container` <-> `Object`: cross-reference for type check in serialize
+ * ! `Keyword` -> `Container` when type checking.
  **************************************************************************************************/
 
 /**************************************************************************************************
@@ -63,7 +70,6 @@
 #include "type.hpp"
 #include "lambda.hpp" // included type.hpp 
 #include "object.hpp" // included lambda.hpp 
-
 
 LWE_BEGIN
 /**************************************************************************************************
