@@ -22,10 +22,6 @@ class Object {
     template<typename T> friend void destroy(T*);
     friend Object*                   create(const Class*);
     friend void                      destroy(Object*);
-    
-protected:
-    Object(Initializer);
-    Object() = default;
 
 public:
     virtual ~Object();

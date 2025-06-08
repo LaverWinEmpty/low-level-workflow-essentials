@@ -8,7 +8,7 @@ async::Lock Object::lock;
 template<typename T> Registered registclass() {
    // default, other class -> template specialization
    Structure::reflect<Object>();
-   Registry<Object>::add<Object>("Object", INITIALIZER);
+   Registry<Object>::add<Object>("Object");
    Registry<Class>::add<ObjectMeta>("Object");
    return Registered::REGISTERED;
 }
@@ -16,10 +16,6 @@ template<typename T> Registered registclass() {
 /*
  * object methods
  */
-
- Object::Object(Initializer) {
-    // recursion end point: not working
- }
 
 std::string Object::serialize() const {
     const Structure& prop = meta()->fields();
@@ -198,7 +194,7 @@ Class* ObjectMeta::base() const {
 }
 
 Object* ObjectMeta::statics() const {
-    return meta::statics<Object>(INITIALIZER);
+    return meta::statics<Object>();
 }
 
 Registered Object_REGISTERED = registclass<Object>();
