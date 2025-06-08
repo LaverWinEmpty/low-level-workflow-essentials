@@ -15,10 +15,17 @@ struct Class; // meta class
  * @brief serializable object: template, array not support
  */
 class Object {
+    friend struct                     ObjectMeta;
+    template<typename T> friend class Registry;
+    template<typename T> friend void initialize(T*);
     template<typename T> friend T*   create();
     template<typename T> friend void destroy(T*);
     friend Object*                   create(const Class*);
     friend void                      destroy(Object*);
+    
+protected:
+    Object(Initializer);
+    Object() = default;
 
 public:
     virtual ~Object();

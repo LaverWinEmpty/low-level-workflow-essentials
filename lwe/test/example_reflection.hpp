@@ -192,13 +192,12 @@ void example_reflection() {
     }
 
     // check derived
-    Object* obj = new Object;
-    std::cout << "obj = new Obejct;\n";
+    Object* obj = statics<Object>();
+    std::cout << "obj =  statics<Object>();\n";
 
     // false
     std::cout << "obj is Test: " << serialize<bool>(obj->isof<Test>()) << "\n";
 
-    delete obj;
 
     obj = test; // set test
     std::cout << "obj = test;\n";
@@ -219,7 +218,7 @@ void example_reflection() {
         print not found
         100, 200, 300
         sum: 600
-        obj = new Obejct;
+        obj =  statics<Object>();
         obj is Test: false
         obj = test;
         obj is Test: true

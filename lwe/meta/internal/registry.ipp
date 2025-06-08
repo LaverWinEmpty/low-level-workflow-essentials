@@ -15,14 +15,16 @@ template<typename T> T* Registry<T>::find(const string& in) {
    return nullptr;
 }
 
-template<typename T> template<typename U> void Registry<T>::add(const char* in) {
-   add<U>(string{ in });
+template<typename T> template<typename U, typename... Args>
+void Registry<T>::add(const char* in, Args&&... args) {
+   add<U>(string{ in }, std::forward<Args>(args)...);
 }
 
-template<typename T> template<typename U> void Registry<T>::add(const string& in) {
+template<typename T> template<typename U, typename... Args>
+void Registry<T>::add(const string& in, Args&&... args) {
    Table& table = instance();
    if (table.find(in) == table.end()) {
-       table.insert({ in, static_cast<T*>(new U()) });
+       table.insert({ in, static_cast<T*>(new U(std::forward<Args>(args)...)) });
    }
 }
 
