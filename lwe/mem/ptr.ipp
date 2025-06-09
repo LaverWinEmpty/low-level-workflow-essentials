@@ -276,6 +276,25 @@ template<typename T> const T& Ptr<T>::operator*() const {
     else return internal->data;
 }
 
+template<typename T> bool Ptr<T>::operator==(void* in) const {
+    if(pointer) {
+        return external->ptr == in;
+    }
+    else return &internal->data == in;
+}
+
+template<typename T> bool Ptr<T>::operator!=(void* in) const {
+    return !operator==(in);
+}
+
+template<typename T> bool Ptr<T>::operator==(const Ptr& in) const {
+    return block == in.block;
+}
+
+template<typename T> bool Ptr<T>::operator==(const Ptr& in) const {
+    return !operator==();
+}
+
 template<typename T> bool Ptr<T>::clone() {
     // impossible
     if(unique() || tracker == nullptr) {

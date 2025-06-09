@@ -26,28 +26,34 @@ template<typename T> class Ptr {
     };
 
 private:
-    bool initialize(bool);
-    bool release();
+    bool initialize(bool); // malloc
+    bool release();        // free
 
 public:
-    Ptr();
-    Ptr(T*);
-    Ptr(const T&);
-    Ptr(T&&);
-    template<typename... Args> Ptr(Args&&...);
+    Ptr();                                     //!< set nullptr
+    Ptr(T*);                                   //!< external poitner (new T)
+    Ptr(const T&);                             //!< data is stored in the control block.
+    Ptr(T&&);                                  //!< data is moved in the control block.
+    template<typename... Args> Ptr(Args&&...); //!< create data in control block
 
 public:
     ~Ptr();
-    Ptr(const Ptr&);
-    Ptr(Ptr&&) noexcept;
-    Ptr& operator=(const Ptr&);
-    Ptr& operator=(Ptr&&) noexcept;
+    Ptr(const Ptr&);                //!< shallow copy 
+    Ptr(Ptr&&) noexcept;            //!< move
+    Ptr& operator=(const Ptr&);     //!< shallow copy
+    Ptr& operator=(Ptr&&) noexcept; //!< move
 
 public:
-    T*       operator->();
-    const T* operator->() const;
-    T&       operator*();
-    const T& operator*() const;
+    T*       operator->();       //!< get ptr
+    const T* operator->() const; //!< get ptr const
+    T&       operator*();        //!< get ref
+    const T& operator*() const;  //!< get ref const
+
+public:
+    bool operator==(void*) const; //!< compare to pointer
+    bool operator!=(void*) const; //!< compare to pointer
+    bool operator==(const Ptr&) const; //!< compare if the block ​​are the same
+    bool operator!=(const Ptr&) const; //!< compare if the block ​​are the same
 
 public:
     //! @return false: bad alloc
@@ -70,11 +76,11 @@ private:
     const Tracker* list() const;
 
 private:
-    Tracker* tracker;
+    Tracker* tracker = nullptr;
 
 private:
     union {
-        void*     block; //!< copy, move, delete
+        void*     block = nullptr; //!< copy, move, delete
         Internal* internal;
         External* external;
     };
