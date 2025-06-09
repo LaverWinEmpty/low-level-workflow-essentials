@@ -291,8 +291,8 @@ template<typename T> bool Ptr<T>::operator==(const Ptr& in) const {
     return block == in.block;
 }
 
-template<typename T> bool Ptr<T>::operator==(const Ptr& in) const {
-    return !operator==();
+template<typename T> bool Ptr<T>::operator!=(const Ptr& in) const {
+    return !operator==(in);
 }
 
 template<typename T> bool Ptr<T>::clone() {
