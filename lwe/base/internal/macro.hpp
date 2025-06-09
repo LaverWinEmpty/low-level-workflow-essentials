@@ -187,10 +187,10 @@ public:                                                                         
         if(!META) META = LWE::meta::Registry<LWE::meta::Class>::find(#TYPE);                                           \
         return META;                                                                                                   \
     }                                                                                                                  \
-    template<> LWE::meta::Object* LWE::meta::statics<SCOPE TYPE>() {                                                   \
+    template<> SCOPE TYPE* LWE::meta::statics<SCOPE TYPE>() {                                                          \
         static LWE::meta::Object* OBJ = nullptr;                                                                       \
         if(!OBJ) OBJ = LWE::meta::Registry<LWE::meta::Object>::find(#TYPE);                                            \
-        return OBJ;                                                                                                    \
+        return static_cast<SCOPE TYPE*>(OBJ);                                                                          \
     }                                                                                                                  \
     struct TYPE##Meta: LWE::meta::Class {                                                                              \
         virtual const char* name() const override {                                                                    \
@@ -206,7 +206,10 @@ public:                                                                         
             return LWE::meta::statics<SCOPE TYPE>();                                                                   \
         }                                                                                                              \
         virtual LWE::meta::Object* construct(LWE::meta::Object* in) const override {                                   \
-            new (in) SCOPE TYPE();                                                                                     \
+            if constexpr (std::is_copy_constructible_v<SCOPE TYPE>) {                                                  \
+                new (in) SCOPE TYPE(*LWE::meta::statics<SCOPE TYPE>());                                                \
+            }                                                                                                          \
+            else new (in) SCOPE TYPE();                                                                                \
             return in;                                                                                                 \
         }                                                                                                              \
         virtual const LWE::meta::Structure& fields() const override;                                                   \

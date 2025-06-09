@@ -538,16 +538,18 @@ Enum* enumof(const string& in) {
     return Registry<Enum>::find(in);
 }
 
-template<typename T> Object* statics() {
+template<typename T> T* statics() {
     // default, other class -> specialization
     if constexpr(!std::is_same_v<T, Object>) {
         return nullptr;
     }
-    static Object* statics = Registry<Object>::find("Object");
-    return statics;
+
+    // static == find only once
+    static Object* instance = Registry<Object>::find("Object");
+    return static_cast<T*>(instance);
 }
 
-template<typename T> Object* statics(const T&) {
+template<typename T> T* statics(const T&) {
     return statics<T>();
 }
 

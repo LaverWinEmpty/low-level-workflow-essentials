@@ -153,10 +153,10 @@ template<typename T> Enum* enumof(const T&);      //!< get enum value list
 Enum*                      enumof(const char*);   //!< get enum value list
 Enum*                      enumof(const string&); //!< get enum value list
 
-template<typename T> Object* statics();              //!< get static class
-template<typename T> Object* statics(const T&);      //!< get static class
-Object*                      statics(const char*);   //!< get static class
-Object*                      statics(const string&); //!< get static class
+template<typename T> T* statics();              //!< get static class
+template<typename T> T* statics(const T&);      //!< get static class
+Object*                 statics(const char*);   //!< get static class
+Object*                 statics(const string&); //!< get static class
 }
 LWE_END
 #include "type.ipp"
