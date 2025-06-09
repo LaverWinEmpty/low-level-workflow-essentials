@@ -209,11 +209,8 @@ Registered Object_REGISTERED = registclass<Object>();
  * etc
  */
 
+// use metaclass
 Object* create(const Class* in) {
-    if (in == nullptr) {
-        return nullptr;
-    }
-
     void* ptr = nullptr;
     LOCKGUARD(Object::lock) {
         // get size
@@ -221,64 +218,91 @@ Object* create(const Class* in) {
 
         // size to hash: if same size, use the same pool.
         auto result = Object::pool().find(size);
+        // find pool
         if (result == Object::pool().end()) {
+            // generate pool
             Object::pool()[size] = new mem::Pool(size);
-
             // refind
             result = Object::pool().find(size);
         }
-
         // allocate
         ptr = result->second->allocate<void>();
     }
 
-    if (!ptr) {
-        return nullptr;
+    // allocate succeeded -> call constructor virtual
+    if(ptr) {
+        in->construct(static_cast<Object*>(ptr));
     }
-    return in->construct(static_cast<Object*>(ptr)); // ctor override;
+    return static_cast<Object*>(ptr);
 }
 
-void destroy(Object* in) {
-    size_t size = in->meta()->size();
-    in->~Object();
-    Object::pool()[size]->deallocate<void>(in);
-}
-
+// template
 template<typename T> T* create() {
     if constexpr(!std::is_base_of_v<Object, T>) {
-        assert(false);
         return nullptr;
     }
 
-    T* ptr = nullptr;
+    void* ptr = nullptr;
     LOCKGUARD(Object::lock) {
         // get size
         size_t size = classof<T>()->size();
 
         // size to hash: if same size, use the same pool.
         auto result = Object::pool().find(size);
+        // find pool
         if(result == Object::pool().end()) {
+            // generate pool
             Object::pool()[size] = new mem::Pool(size);
-
             // refind
             result = Object::pool().find(size);
         }
-
         // allocate
-        ptr = result->second->allocate<T>();
+        ptr = result->second->allocate<void>();
     }
-    return ptr;
+
+    // allocate succeeded -> call constructor T
+    if(ptr) {
+        if(std::is_copy_constructible_v<T>) {
+            new (ptr) T(*statics<T>()); // call copy constructor by default instance
+        }
+        else new (ptr) T(); // call default constructor
+    }
+    return static_cast<T*>(ptr);
 }
 
+// use metaclass
+void destroy(Object* in) {
+    if(in == nullptr) {
+        return;
+    }
+
+    // get size to find pool
+    size_t size = in->meta()->size();
+    in->~Object();
+
+    LOCKGUARD(Object::lock) {
+        // size to hash, and find
+        Object::pool()[size]->deallocate<void>(in);
+    }
+}
+
+// template
 template<typename T> void destroy(T* in) {
     if constexpr(!std::is_base_of_v<Object, T>) {
         assert(false);
     }
+    
+    if(!in) {
+        return;
+    }
 
+    // get size to find pool
+    size_t size = in->meta()->size();
+    in->~T();
+
+    // lock
     LOCKGUARD(Object::lock) {
-        // get size to find pool
-        size_t size = in->meta()->size();
-        in->~T();
+        // size to hash, and find
         Object::pool()[size]->deallocate<void>(in);
     }
 }
