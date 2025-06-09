@@ -210,7 +210,7 @@ Registered Object_REGISTERED = registclass<Object>();
  */
 
 // use metaclass
-Object* create(const Class* in) {
+Object* Object::constructor(const Class* in) {
     void* ptr = nullptr;
     LOCKGUARD(Object::lock) {
         // get size
@@ -237,7 +237,7 @@ Object* create(const Class* in) {
 }
 
 // template
-template<typename T> T* create() {
+template<typename T> T* Object::constructor() {
     if constexpr(!std::is_base_of_v<Object, T>) {
         return nullptr;
     }
@@ -271,7 +271,7 @@ template<typename T> T* create() {
 }
 
 // use metaclass
-void destroy(Object* in) {
+void Object::destructor(Object* in) {
     if(in == nullptr) {
         return;
     }
@@ -287,7 +287,7 @@ void destroy(Object* in) {
 }
 
 // template
-template<typename T> void destroy(T* in) {
+template<typename T> void Object::destructor(T* in) {
     if constexpr(!std::is_base_of_v<Object, T>) {
         assert(false);
     }

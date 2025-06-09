@@ -80,8 +80,6 @@ using meta::Object;      //!< type: object class
 using meta::Class;       //!< type: meta class
 using meta::Enum;        //!< type: meta enum
 using meta::Container;   //!< type: container
-using meta::create;      //!< function: new object
-using meta::destroy;     //!< function: delete object
 using meta::serialize;   //!< function: serialize
 using meta::deserialize; //!< function: deserialize
 using meta::typeof;      //!< function: get type info
