@@ -169,8 +169,6 @@ template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer) {
 
 // copy
 template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
-    pointer = in.pointer;
-
     // tracking
     if(tracker) {
         // last
@@ -203,7 +201,8 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
         }
 
         // shared block (union)
-        block = in.block;
+        block   = in.block;
+        pointer = in.pointer;
 
         // insert this
         push();
@@ -214,8 +213,6 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
 // move
 template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
     if (this != &in) {
-        pointer = in.pointer;
-
         // tracking
         if(tracker) {
             // last
@@ -231,6 +228,7 @@ template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
         }
 
         // move
+        pointer    = in.pointer;
         tracker    = in.tracker;
         block      = in.block;
         in.tracker = nullptr;
@@ -304,6 +302,8 @@ template<typename T> bool Ptr<T>::clone() {
     pointer  = false;
     // push
     push(); // isnert to new block
+
+    return true;
 }
 
 
@@ -328,6 +328,10 @@ template<typename T> bool Ptr<T>::push() {
 
 // block management
 template<typename T> bool Ptr<T>::pop() {
+    if (block == nullptr) {
+        return false;
+    }
+
     // get head
     Tracker*& head = list();
 
