@@ -43,7 +43,7 @@ template<typename T> bool Ptr<T>::release() {
 
     // call destructor
     if(pointer) {
-        external->ptr->~T();
+        delete external->ptr; // delete
     }
     else internal->data.~T();
 
