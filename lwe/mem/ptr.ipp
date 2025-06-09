@@ -289,6 +289,7 @@ template<typename T> bool Ptr<T>::clone() {
     if(!temp) {
         return false;
     }
+    temp->head = nullptr;
     
     // deep copy by placement new copy constructor
     if(pointer) {
