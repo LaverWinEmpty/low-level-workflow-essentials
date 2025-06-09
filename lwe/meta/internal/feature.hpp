@@ -58,6 +58,12 @@ enum class Registered : bool {
 constexpr Registered UNREGISTERED = Registered::UNREGISTERED; // convenience alias
 constexpr Registered REGISTERED   = Registered::REGISTERED;   // convenience alias
 
+//! @brief meta system internal type
+enum class Initializer : uint8_t {
+    INITIALIZER
+};
+constexpr Initializer INITIALIZER = Initializer::INITIALIZER; // convenience alias
+
 //! @brief meta system internal construct helper
 template<typename T> void initialize(T* in) {
     new (in) typename T::Base();

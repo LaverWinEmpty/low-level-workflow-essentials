@@ -20,10 +20,18 @@ public:
 
 public:
     ~Registry();
-    template<typename U> static U* add(const string&); //!< @tparam U base of T
-    template<typename U> static U* add(const char*);   //!< @tparam U base of T
-    static T*                      find(const char*);
-    static T*                      find(const string&);
+    //! @tparam U base of T, Args: U(args...)
+    //! @note   e.g. T == Object, U == Obejct derived class
+    template<typename U, typename... Args> static void add(const string&, Args&&...);
+
+public:
+    //! @tparam U base of T, Args: U(args...)
+    //! @note   e.g. T == Object, U == Obejct derived class
+    template<typename U, typename... Args> static void add(const char*, Args&&...);
+
+public:
+    static T* find(const char*);
+    static T* find(const string&);
 
 private:
     Table table;
