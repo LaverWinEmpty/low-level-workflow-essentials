@@ -25,16 +25,23 @@ template<typename T> class Ptr {
         Tracker* head = nullptr;
     };
 
+public:
+    using Deleter = std::function<void(void*)>;
+
 private:
     bool initialize(bool); // malloc
     bool release();        // free
 
 public:
     Ptr();                                     //!< set nullptr
-    Ptr(T*);                                   //!< external poitner (new T)
     Ptr(const T&);                             //!< data is stored in the control block.
     Ptr(T&&);                                  //!< data is moved in the control block.
-    template<typename... Args> Ptr(Args&&...); //!< create data in control block
+    Ptr(T*, Deleter = nullptr);                //!< external poitner (new T), and deallocator (null = default)
+
+public:
+    //! @brief create data in control block (like make_shared<T>)
+    template<typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
+    Ptr(Args&&...); 
 
 public:
     ~Ptr();
@@ -87,6 +94,9 @@ private:
         Internal* internal;
         External* external;
     };
+
+public:
+    Deleter deleter; //!< @brief custom deleter
 
 private:
     bool pointer;

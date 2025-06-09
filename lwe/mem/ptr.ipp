@@ -43,24 +43,28 @@ template<typename T> bool Ptr<T>::release() {
 
     // call destructor
     if(pointer) {
-        delete external->ptr; // delete
+        if(deleter) {
+            deleter(external->ptr);
+        }
+        else delete external->ptr; // default delete
     }
     else internal->data.~T();
 
     free(block); // union
-    block = nullptr; // for safe
+    block   = nullptr; // for safe
+    deleter = nullptr; // for safe
     return true;
 }
 
 // default
-template<typename T> Ptr<T>::Ptr(): pointer(true) {
+template<typename T> Ptr<T>::Ptr(): pointer(true), deleter(nullptr) {
     // set nullptr
     tracker = nullptr;
     block   = nullptr; // union
 }
 
 // pointer
-template<typename T> Ptr<T>::Ptr(T* in): pointer(true) {
+template<typename T> Ptr<T>::Ptr(T* in, Deleter func): pointer(true), deleter(func) {
     if(in == nullptr) {
         return;
     }
@@ -79,7 +83,7 @@ template<typename T> Ptr<T>::Ptr(T* in): pointer(true) {
 }
 
 // reference
-template<typename T> Ptr<T>::Ptr(const T& in): pointer(false) {
+template<typename T> Ptr<T>::Ptr(const T& in): pointer(false), deleter(nullptr) {
     // init
     if(!initialize(false)) {
         // failed
@@ -94,7 +98,7 @@ template<typename T> Ptr<T>::Ptr(const T& in): pointer(false) {
 }
 
 // move
-template<typename T> Ptr<T>::Ptr(T&& in): pointer(false) {
+template<typename T> Ptr<T>::Ptr(T&& in): pointer(false), deleter(nullptr) {
     // init
     if(!initialize(false)) {
         // failed
@@ -110,7 +114,7 @@ template<typename T> Ptr<T>::Ptr(T&& in): pointer(false) {
 
 // T constructor
 template<typename T>
-template<typename... Args> Ptr<T>::Ptr(Args&&... in): pointer(false) {
+template<typename... Args, typename> Ptr<T>::Ptr(Args&&... in): pointer(false), deleter(nullptr) {
     // init
     if(!initialize(false)) {
         // failed
@@ -143,7 +147,7 @@ template<typename T> Ptr<T>::~Ptr() {
 }
 
 // copy
-template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer) {
+template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer), deleter(in.deleter) {
     // set nullptr
     if(in.tracker == nullptr) {
         tracker = nullptr;
@@ -167,6 +171,14 @@ template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer) {
     }
 }
 
+// move
+template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept :
+    pointer(in.pointer), tracker(in.tracker), block(in.block), deleter(in.deleter) {
+    // move
+    in.tracker = nullptr;
+    in.block   = nullptr; // union
+}
+
 // copy
 template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
     // tracking
@@ -183,6 +195,7 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
         if(tracker) {
             free(tracker); // delete
         }
+        deleter = nullptr;
         tracker = nullptr;
         block   = nullptr;
         return *this;
@@ -195,13 +208,16 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
             tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
             // allocate failed
             if(!tracker) {
+                deleter = nullptr;
                 tracker = nullptr;
+                block   = nullptr;
                 throw diag::error(diag::Code::BAD_ALLOC);
             }
         }
 
         // shared block (union)
         block   = in.block;
+        deleter = in.deleter;
         pointer = in.pointer;
 
         // insert this
@@ -229,19 +245,15 @@ template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
 
         // move
         pointer    = in.pointer;
+        deleter    = in.deleter;
         tracker    = in.tracker;
         block      = in.block;
+
+        // move
         in.tracker = nullptr;
         in.block   = nullptr;
     }
     return *this;
-}
-
-// move
-template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept : pointer(in.pointer), tracker(in.tracker), block(in.block) {
-    // move
-    in.tracker = nullptr;
-    in.block   = nullptr; // union
 }
 
 // getter: ptr
