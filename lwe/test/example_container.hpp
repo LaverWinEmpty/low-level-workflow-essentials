@@ -53,7 +53,7 @@ void example_container() {
     }
     catch(std::out_of_range& e) {
         // catched
-        std::cout << "out of range\n";
+        std::cout << e.what() << "\n";
     } 
 
     // cout 6 -> circulation
@@ -83,7 +83,7 @@ void example_container() {
     // - e.g. size() == 10, end index == 9
     // It is like rbegin, rend, need itr - 1
     // Or, read itr finally from outside the loop.
-    // Reason: rear and bottom are iterators, but also mean "last element."
+    // Because, rear and bottom are iterators, but also mean "last element."
     //
     // Note 2
     // Iterator += value is supported.

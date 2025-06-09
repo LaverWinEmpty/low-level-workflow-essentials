@@ -50,24 +50,10 @@ template<typename, typename = std::void_t<>> struct ContainerCode {
     static constexpr Keyword VALUE = Keyword::UNREGISTERED;
 };
 
-//! @brief meta system internal type
+//! @brief unused type
 enum class Registered : bool {
     UNREGISTERED = 0,
     REGISTERED   = 1
-};
-constexpr Registered UNREGISTERED = Registered::UNREGISTERED; // convenience alias
-constexpr Registered REGISTERED   = Registered::REGISTERED;   // convenience alias
-
-//! @brief meta system internal type
-enum class Initializer : uint8_t {
-    INITIALIZER
-};
-constexpr Initializer INITIALIZER = Initializer::INITIALIZER; // convenience alias
-
-//! @brief meta system internal construct helper
-template<typename T> void initialize(T* in) {
-    new (in) typename T::Base();
-    new (in) T();
 };
 
 template<typename T> constexpr Keyword typecode(); //!< get type code

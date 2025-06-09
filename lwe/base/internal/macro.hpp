@@ -165,17 +165,12 @@
  * @brief class body for register
  */
 #define CLASS_BODY(TYPE, BASE)                                                                                         \
-    friend LWE::meta::Structure;                                                                                       \
-    friend struct TYPE##Meta;                                                                                          \
-    template<typename T> friend class LWE::meta::Registry;                                                             \
-    template<typename T> friend LWE::meta::Registered LWE::meta::registmethod();                                       \
-    template<typename T> friend void                  LWE::meta::initialize(T*);                                       \
-protected:                                                                                                             \
-    TYPE(LWE::meta::Initializer);                                                                                      \
 public:                                                                                                                \
-    using This = TYPE;                                                                                                 \
-    using Base = BASE;                                                                                                 \
-    virtual LWE::meta::Class* meta() const override
+	friend LWE::meta::Structure;                                                                                       \
+    friend struct TYPE##Meta;                                                                                          \
+    template<typename T> friend LWE::meta::Registered LWE::meta::registmethod();                                       \
+    virtual LWE::meta::Class* meta() const override;                                                                   \
+    using Base = BASE
 
  /*
   * @breif register class field (Type Name, Scope Name)
@@ -196,9 +191,6 @@ public:                                                                         
         static LWE::meta::Object* OBJ = nullptr;                                                                       \
         if(!OBJ) OBJ = LWE::meta::Registry<LWE::meta::Object>::find(#TYPE);                                            \
         return OBJ;                                                                                                    \
-    }                                                                                                                  \
-    SCOPE TYPE::TYPE(LWE::meta::Initializer) {                                                                         \
-        initialize(this);                                                                                              \
     }                                                                                                                  \
     struct TYPE##Meta: LWE::meta::Class {                                                                              \
         virtual const char* name() const override {                                                                    \
@@ -221,7 +213,7 @@ public:                                                                         
     template<> template<> const LWE::meta::Structure& LWE::meta::Structure::reflect<SCOPE TYPE>();                     \
     template<> LWE::meta::Registered LWE::meta::registclass<SCOPE TYPE>() {                                            \
         LWE::meta::Structure::reflect<SCOPE TYPE>();                                                                   \
-        LWE::meta::Registry<LWE::meta::Object>::add<SCOPE TYPE>(#TYPE, LWE::meta::INITIALIZER);                        \
+        LWE::meta::Registry<LWE::meta::Object>::add<SCOPE TYPE>(#TYPE);                                                \
         LWE::meta::Registry<LWE::meta::Class>::add<TYPE##Meta>(#TYPE);                                                 \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \

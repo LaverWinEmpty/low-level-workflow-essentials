@@ -8,7 +8,7 @@ async::Lock Object::lock;
 template<typename T> Registered registclass() {
    // default, other class -> template specialization
    Structure::reflect<Object>();
-   Registry<Object>::add<Object>("Object", INITIALIZER);
+   Registry<Object>::add<Object>("Object");
    Registry<Class>::add<ObjectMeta>("Object");
    return Registered::REGISTERED;
 }
@@ -16,10 +16,6 @@ template<typename T> Registered registclass() {
 /*
  * object methods
  */
-
- Object::Object(Initializer) {
-    // recursion end point: not working
- }
 
 std::string Object::serialize() const {
     const Structure& prop = meta()->fields();
@@ -198,7 +194,7 @@ Class* ObjectMeta::base() const {
 }
 
 Object* ObjectMeta::statics() const {
-    return meta::statics<Object>(INITIALIZER);
+    return meta::statics<Object>();
 }
 
 Registered Object_REGISTERED = registclass<Object>();
@@ -231,27 +227,17 @@ template<typename T> T* create() {
         return nullptr;
     }
 
-    void* ptr = nullptr;
+    T* ptr = nullptr;
     LOCKGUARD(Object::lock) {
-        // get size
-        size_t size = classof<T>()->size();
-
-        // size to hash, and find
-        auto result = Object::pool().find(size);
-
-        // not found -> new pool
+        size_t size   = classof<T>()->size();
+        auto   result = Object::pool().find(size);
         if(result == Object::pool().end()) {
             Object::pool()[size] = new mem::Pool(size);
-            ptr = Object::pool()[size]->allocate();
+            return Object::pool()[size]->allocate<T>();
         }
-
-        // allocate
-        else ptr = result->second->allocate();
-
-        // meta system default initializer
-        initialize<T>(static_cast<T*>(ptr));
+        ptr = result->second->allocate<T>();
     }
-    return static_cast<T*>(ptr);
+    return ptr;
 }
 
 template<typename T> void destroy(T* in) {
