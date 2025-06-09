@@ -205,6 +205,10 @@ public:                                                                         
         virtual LWE::meta::Object* statics() const override {                                                          \
             return LWE::meta::statics<SCOPE TYPE>();                                                                   \
         }                                                                                                              \
+        virtual LWE::meta::Object* construct(LWE::meta::Object* in) const override {                                   \
+            new (in) SCOPE TYPE();                                                                                     \
+            return in;                                                                                                 \
+        }                                                                                                              \
         virtual const LWE::meta::Structure& fields() const override;                                                   \
     };                                                                                                                 \
     LWE::meta::Class* SCOPE TYPE::meta() const {                                                                       \
@@ -256,7 +260,7 @@ public:                                                                         
 #define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::)
 #define Macro__register_method_begin_detail(TYPE, SCOPE)                                                               \
     template<> LWE::meta::Method* LWE::meta::method<SCOPE TYPE>(const std::string& in) {                               \
-        return Registry<Method>::find(#TYPE, in);                                                                      \
+        return Registry<LWE::meta::Method>::find(#TYPE, in);                                                           \
     }                                                                                                                  \
     template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();                                            \
     LWE::meta::Registered TYPE##_METHOD_REGISTERED = LWE::meta::registmethod<SCOPE TYPE>();                            \
@@ -264,7 +268,7 @@ public:                                                                         
         using TYPE_NAME = SCOPE TYPE;                                                                                  \
         static const string CLASS_NAME = { #TYPE }; // {
 #define REGISTER_METHOD(NAME)                                                                                          \
-            Registry<Method>::add(CLASS_NAME, #NAME, Method::lambdaize(&TYPE_NAME::NAME)) // ; }
+            Registry<LWE::meta::Method>::add(CLASS_NAME, #NAME, Method::lambdaize(&TYPE_NAME::NAME)) // ; }
 #define REGISTER_METHOD_END                                                                                            \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }
@@ -295,12 +299,12 @@ public:                                                                         
     };                                                                                                                 \
     template<> LWE::meta::Enum* LWE::meta::enumof<SCOPE TYPE>() {                                                      \
         static LWE::meta::Enum* ENUM = nullptr;                                                                        \
-        if(!ENUM) ENUM = LWE::meta::Registry<Enum>::find(#TYPE);                                                       \
+        if(!ENUM) ENUM = LWE::meta::Registry<LWE::meta::Enum>::find(#TYPE);                                            \
         return ENUM;                                                                                                   \
     }                                                                                                                  \
     template<> LWE::meta::Registered LWE::meta::registenum<SCOPE TYPE>() {                                             \
         LWE::meta::Enumeration::reflect<SCOPE TYPE>();                                                                 \
-        LWE::meta::Registry<Enum>::add<TYPE##Meta>(#TYPE);                                                             \
+        LWE::meta::Registry<LWE::meta::Enum>::add<TYPE##Meta>(#TYPE);                                                  \
         return LWE::meta::Registered::REGISTERED;                                                                      \
     }                                                                                                                  \
     LWE::meta::Registered TYPE##_REGISTERED = LWE::meta::registenum<SCOPE TYPE>();                                     \
