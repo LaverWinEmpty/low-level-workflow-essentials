@@ -2,6 +2,7 @@
 #define LWE_MEM_PTR
 
 #include "../base/base.h"
+#include "../diag/diag.h"
 
 LWE_BEGIN
 namespace mem {
@@ -22,7 +23,7 @@ template<typename T> class Ptr {
     struct External {
         T*       ptr  = nullptr;
         Tracker* head = nullptr;
-    }
+    };
 
 private:
     bool initialize(bool);
@@ -45,8 +46,8 @@ public:
 public:
     T*       operator->();
     const T* operator->() const;
-    T&       operator&();
-    const T& operator&();
+    T&       operator*();
+    const T& operator*() const;
 
 public:
     //! @return false: bad alloc
@@ -65,7 +66,8 @@ public:
     bool shared() const;
 
 private:
-    Tracker*& head();
+    Tracker*&      list();
+    const Tracker* list() const;
 
 private:
     Tracker* tracker;
