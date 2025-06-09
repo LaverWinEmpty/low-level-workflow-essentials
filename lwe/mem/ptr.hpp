@@ -56,6 +56,9 @@ public:
     bool operator!=(const Ptr&) const; //!< compare if the block ​​are the same
 
 public:
+    explicit operator bool() const; //! check nullptr
+
+public:
     //! @return false: bad alloc
     bool clone();
 

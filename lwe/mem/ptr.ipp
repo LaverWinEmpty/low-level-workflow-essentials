@@ -295,6 +295,10 @@ template<typename T> bool Ptr<T>::operator!=(const Ptr& in) const {
     return !operator==(in);
 }
 
+template<typename T> Ptr<T>::operator bool () const {
+    return tracker != nullptr;
+}
+
 template<typename T> bool Ptr<T>::clone() {
     // impossible
     if(unique() || tracker == nullptr) {
@@ -324,7 +328,6 @@ template<typename T> bool Ptr<T>::clone() {
 
     return true;
 }
-
 
 // block management
 template<typename T> bool Ptr<T>::push() {
