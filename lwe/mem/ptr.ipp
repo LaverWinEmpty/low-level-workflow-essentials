@@ -3,130 +3,380 @@
 LWE_BEGIN 
 namespace mem {
 
-template<typename T> template<typename... Args> Ptr<T>::Ptr(Args&&... in)  {
-    // allocate
-    handle  = static_cast<Handle*>(std::malloc(sizeof(Handle)));
-    handler = static_cast<Handler*>(std::malloc(sizeof(Handler)));
-
-    // check
-    if (handle == nullptr || handler == nullptr) {
-        if (handle) {
-            std::free(handle);
-            handle = nullptr;
-        }
-        if (handler) {
-            std::free(handler);
-            handler = nullptr;
-        }
-        throw std::bad_alloc(); // failed
-    }
-
-    // init
-    else {
-        new (handler) Handler();
-        new (handle)  Handle();
-    }
-
-    handler->link(handle); // add handle
-    new (handler->ptr) T(std::forward<Args>(in)...); // placement new
-}
-
-template<typename T> Ptr<T>::Ptr(Ptr&&): handler(in.handler), handle(in.handle) {
-    in.handler = nullptr;
-    in.handle = nullptr;
-}
- 
-
-template<typename T> Ptr<T>::Ptr(const Ptr& in) {
-    // new handle
-    handle = static_cast<Handle*>(std::malloc(sizeof(Handle)));
-
-    // check
-    if (handle == nullptr) {
-        throw std::bad_alloc(); // failed
-    }
-    else new (handle) Handle(); // init
-
-    handler = in.handler;  // shared
-    handler->link(handle); // add handle
-}
-
-template<typename T> Ptr<T>::~Ptr() {
-    if (handler) {
-        handler->unlink(handle); // pop
-
-        // null == empty
-        if (handler->head == nullptr) {
-            handler->data.~T(); // call deconstructor
-            free(handler);      // Handler destructor not required
-        }
-    }
-
-    // check for safe
-    if (handle) {
-        free(handle); // Handle destructor not required
-    }
-}
-
-template<typename T> bool Ptr<T>::clone() {
-    // unique
-    if (handler->unique() == true) {
-        return;
-    }
-
-    //  new for deep copy
-    Handler* newly = static_cast<Handler*>(malloc(sizeof(Handler))); 
-    if(!newly) {
+template<typename T> bool Ptr<T>::initialize(bool flag) {
+    tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
+    // allocate failed
+    if(!tracker) {
         return false;
     }
 
-    new (newly) Handler();             // init
-    new (newly->ptr) T(handler->data); // copy uses placement new
-
-    // move
-    handler->unlink(handle); // pop
-    handler = newly;         // new
-    handler->link(handle);   // set
-}
-
-
-template<typename T> bool Ptr<T>::Handler::unique() const {
-    return head == nullptr || head->next == nullptr;
-}
-
-template<typename T> void Ptr<T>::Handler::link(Handle* in) {
-    in->prev = nullptr; // [null]<--[ in ]-->[????]
-    in->next = head;    // [null]<--[ in ]-->[head]
-    if (head) head->prev = in;      // [null]<->[ in ]<->[head]
-    head = in;      // [null]<->[head]<->[....]
-}
-
-template<typename T> void Ptr<T>::Handler::unlink(Handle* in) {
-    if (in == head) {      // [head]<->[....]<->[....]
-        head = head->next; // [ in ]<->[head]<->[....]
+    // arg == ptr, store external
+    if(flag) {
+        block = std::malloc(sizeof(External));
+        // allocate failed
+        if(!external) {
+            free(tracker);
+            return false;
+        }
+    }
+    
+    // arg != ptr, store internal
+    else {
+        block = std::malloc(sizeof(Internal));
+        // allocate failed
+        if(!internal) {
+            free(tracker);
+            return false;
+        }
     }
 
-    if (in->prev) in->prev->next = in->next; // [prev]<--[ in ]-->[next] 
-    if (in->next) in->next->prev = in->prev; //    ^----------------^
-
-    in->prev = nullptr; // [prev]   [ in ]-->[next]
-    in->next = nullptr; // [prev]<---------->[next]
+    return true;
 }
 
+template<typename T> bool Ptr<T>::release() {
+    // set
+    if(!block) {
+        return false;
+    }
+
+    // call destructor
+    if(pointer) {
+        external->ptr->~T();
+    }
+    else internal->data.~T();
+
+    free(block); // union
+    block = nullptr; // for safe
+    return true;
+}
+
+// default
+template<typename T> Ptr<T>::Ptr(): pointer(true) {
+    // set nullptr
+    tracker = nullptr;
+    block   = nullptr; // union
+}
+
+// pointer
+template<typename T> Ptr<T>::Ptr(T* in): pointer(true) {
+    if(in == nullptr) {
+        return;
+    }
+
+    // init
+    if(!initialize(true)) {
+        // failed
+        tracker = nullptr;
+        block   = nullptr;
+        throw diag::error(diag::Code::BAD_ALLOC);
+    }
+    // insert
+    push();
+    // set
+    external->ptr = in;
+}
+
+// reference
+template<typename T> Ptr<T>::Ptr(const T& in): pointer(false) {
+    // init
+    if(!initialize(false)) {
+        // failed
+        tracker = nullptr;
+        block   = nullptr;
+        throw diag::error(diag::Code::BAD_ALLOC);
+    }
+    // insert
+    push();
+    // set
+    new (&internal->data) T(in);
+}
+
+// move
+template<typename T> Ptr<T>::Ptr(T&& in): pointer(false) {
+    // init
+    if(!initialize(false)) {
+        // failed
+        tracker = nullptr;
+        block   = nullptr;
+        throw diag::error(diag::Code::BAD_ALLOC);
+    }
+    // insert
+    push();
+    // set
+    new (&internal->data) T(std::move(in));
+}
+
+// T constructor
+template<typename T>
+template<typename... Args> Ptr<T>::Ptr(Args&&... in): pointer(false) {
+    // init
+    if(!initialize(false)) {
+        // failed
+        tracker = nullptr;
+        block   = nullptr;
+        throw diag::error(diag::Code::BAD_ALLOC);
+    }
+    // insert
+    push();
+    // set
+    new (&internal->data) T(std::forward<Args>(in)...);
+}
+
+// dtor
+template<typename T> Ptr<T>::~Ptr() {
+    // has tracker == has block
+    if(tracker) {
+        // shared, not free block, pop
+        if(shared()) {
+            // remove
+            pop();
+        }
+
+        // unique, free block, not pop
+        else release();
+
+        // free
+        free(tracker);
+    }
+}
+
+// copy
+template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer) {
+    // set nullptr
+    if(in.tracker == nullptr) {
+        tracker = nullptr;
+        block   = nullptr;
+    }
+
+    // shallow: to weak ptr
+    else {
+        tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
+        // allocate failed
+        if(!tracker) {
+            tracker = nullptr;
+            throw diag::error(diag::Code::BAD_ALLOC);
+        }
+
+        // shared block (union)
+        block = in.block;
+
+        // insert this
+        push();
+    }
+}
+
+// move
+template<typename T> Ptr<T>::Ptr(Ptr&& in) : pointer(in.pointer), tracker(in.tracker), block(in.block) {
+    // move
+    in.tracker = nullptr;
+    in.block   = nullptr; // union
+}
+
+// copy
+template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
+    pointer = in.pointer;
+
+    // tracking
+    if(tracker) {
+        // last
+        if(unqie()) {
+            release();
+        }
+        pop();
+    }
+
+    // set nullptr
+    if(in.tracker == nullptr) {
+        if(tracker) {
+            free(tracker); // delete
+        }
+        tracker = nullptr;
+        block   = nullptr;
+        return;
+    }
+
+    // copy
+    else {
+        // if nullptr
+        if(!tracker) {
+            tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
+            // allocate failed
+            if(!tracker) {
+                tracker = nullptr;
+                throw diag::error(diag::Code::BAD_ALLOC);
+            }
+        }
+
+        // shared block (union)
+        block = in.block;
+
+        // insert this
+        push();
+    }
+
+    return *this;
+}
+
+// move
+template<typename T> auto Ptr<T>::operator=(Ptr&& in) -> Ptr&{
+    pointer = in.pointer;
+
+    // tracking
+    if(tracker) {
+        // last
+        if(unqie()) {
+            release();
+        }
+        pop();
+    }
+
+    // set nullptr this
+    if(tracker) {
+        free(tracker); // delete
+    }
+
+    // move
+    tracker    = in.tracker;
+    block      = in.block;
+    in.tracker = nullptr;
+    in.block   = nullptr;
+
+    return *this;
+}
+
+// move
+template<typename T> Ptr<T>::Ptr(Ptr&& in) : pointer(in.pointer), tracker(in.tracker), block(in.block) {
+    // move
+    in.tracker = nullptr;
+    in.block   = nullptr; // union
+}
+
+// getter: ptr
 template<typename T> T* Ptr<T>::operator->() {
-    return &handler->data;
+    if(pointer) {
+        return external->ptr;
+    }
+    else return &internal->data;
 }
 
+// const getter: ptr
 template<typename T> const T* Ptr<T>::operator->() const {
-    return &handler->data;
+    if(pointer) {
+        return external->ptr;
+    }
+    else return &internal->data;
 }
 
+// getter: ref
 template<typename T> T& Ptr<T>::operator*() {
-    return handler->data;
+    if(pointer) {
+        return *external->ptr;
+    }
+    else return internal->data;
 }
 
+// const getter: ref
 template<typename T> const T& Ptr<T>::operator*() const {
-    return handler->data;
+    if(pointer) {
+        return *external->ptr;
+    }
+    else return internal->data;
+}
+
+template<typename T> bool Ptr<T>::clone() {
+    // impossible
+    if(unique() || tracker == nullptr) {
+        return true;
+    }
+
+    Internal* temp = static_cast<>(std::malloc(sizeof(Internal)))
+    // allocated failed
+    if(!temp) {
+        return false;
+    }
+    
+    // deep copy by placement new copy constructor
+    if(pointer) {
+        new (&temp->data) T(*external->ptr);
+    }
+    else new (&temp->data) T(internal->data);
+
+    // pop
+    pop();
+    // set
+    internal = temp;
+    pointer  = false;
+    // push
+    push(); // isnert to new block
+}
+
+
+// block management
+template<typename T> bool Ptr<T>::push() {
+    // check has data
+    if(tracker == nullptr) {
+        return false;
+    }
+
+    // get head
+    Tracker*& head = head();
+
+    // push front
+    tracker->prev        = nullptr; // [null]<--[this]-->[????]
+    tracker->next        = head;    // [null]<--[this]-->[head]
+    if (head) head->prev = tracker; // [null]<->[this]<->[head]
+    head                 = tracker; // [null]<->[head]<->[....]
+}
+
+// block management
+template<typename T> bool Ptr<T>::pop() {
+    // get head
+    Tracker*& head = head();
+
+    // size 0
+    if(head == nullptr) {
+        return false;
+    }
+
+    // pop front
+    if (in == head) {      // [head]<->[....]<->[....]
+        head = head->next; // [this]<->[head]<->[....]
+    }
+
+    // pop
+    if (tracker->prev) tracker->prev->next = tracker->next; // [prev]<--[ in ]-->[next] 
+    if (tracker->next) tracker->next->prev = tracker->prev; //    ^----------------^
+
+    // for safe
+    tracker->prev = nullptr; // [prev]   [ in ]-->[next]
+    tracker->next = nullptr; // [prev]<---------->[next]
+
+    return true;
+}
+
+template<typename T> bool Ptr<T>::unique() {
+    // get head
+    Tracker*& head = head();
+
+    // check
+    if(tracker) {
+        return head->next == nullptr;
+    }
+    return false;
+}
+
+template<typename T> bool Ptr<T>::shared() {
+    // get head
+
+    // check
+    if(tracker) {
+        return head->next != nullptr;
+    }
+    return false;
+}
+
+template<typename T> Tracker*& Ptr<T>::head() {
+    return  pointer ? external->head : internal->head;
 }
 
 }
