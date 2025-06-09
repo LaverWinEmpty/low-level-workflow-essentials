@@ -18,6 +18,7 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
             free(tracker);
             return false;
         }
+        external->head = nullptr; // init
     }
     
     // arg != ptr, store internal
@@ -28,6 +29,7 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
             free(tracker);
             return false;
         }
+        internal->head = nullptr; // init
     }
 
     return true;
@@ -372,7 +374,7 @@ template<typename T> bool Ptr<T>::shared() const {
 }
 
 template<typename T> Tracker*& Ptr<T>::list() {
-    return  pointer ? external->head : internal->head;
+    return pointer ? external->head : internal->head;
 }
 
 template<typename T> const Tracker* Ptr<T>::list() const {
