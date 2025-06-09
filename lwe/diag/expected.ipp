@@ -76,11 +76,12 @@ template<typename T> Expected<T>::operator const Alert& () const {
 	return msg;
 }
 
+template<typename T> Expected<T>::operator const T& () const {
+	return data;
+}
+
 template<typename T> Expected<T>::operator const char* () const {
-	if (flag) {
-		return "";
-	}
-	return msg.what();
+	return what();
 }
 
 template<typename T> T* Expected<T>::operator->() const {
@@ -91,6 +92,27 @@ template<typename T> T* Expected<T>::operator->() const {
 }
 
 template<typename T> const T& Expected<T>::operator*() const {
+	if (!flag) {
+		throw msg;
+	}
+	return data;
+}
+
+template<typename T> const char* Expected<T>::what() const {
+	if (flag) {
+		return "";
+	}
+	return msg.what();
+}
+
+template<typename T> T&& Expected<T>::move() {
+	if (!flag) {
+		throw msg;
+	}
+	return std::move(data);
+}
+
+template<typename T> T& Expected<T>::ref() {
 	if (!flag) {
 		throw msg;
 	}

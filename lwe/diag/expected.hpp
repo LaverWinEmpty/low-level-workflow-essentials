@@ -22,12 +22,18 @@ public:
 
 public:
 	explicit operator bool() const;
-	explicit operator const Alert& () const;
+	operator const Alert& () const;
+	operator const T&() const;
 	operator const char* () const;
 
 public:
-	T* operator->() const;
+	T*       operator->() const;
 	const T& operator*() const;
+
+public:
+	const char* what() const;
+	T&&         move();
+	T&          ref();
 
 private:
 	union {
