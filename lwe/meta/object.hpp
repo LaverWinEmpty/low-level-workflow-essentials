@@ -56,8 +56,9 @@ struct ObjectMeta: Class {
     virtual const char*      name() const override;
     virtual size_t           size() const override;
     virtual const Structure& fields() const override;
-    virtual Class*           base() const override;
-    virtual Object*          statics() const override;
+    virtual const Class*     base() const override;
+    virtual const Object*    statics() const override;
+    virtual Object*          construct(Object*) const override;
 };
 
 template<typename T> string serialize(const T&);                    //!< primitive type to string

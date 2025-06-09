@@ -189,13 +189,19 @@ const Structure& ObjectMeta::fields() const {
     return Structure::reflect<Object>();
 }
 
-Class* ObjectMeta::base() const {
+const Class* ObjectMeta::base() const {
     return nullptr;
 }
 
-Object* ObjectMeta::statics() const {
+const Object* ObjectMeta::statics() const {
     return meta::statics<Object>();
 }
+
+Object* ObjectMeta::construct(Object* in) const {
+    new (in) Object();
+    return in;
+}
+
 
 Registered Object_REGISTERED = registclass<Object>();
 
@@ -204,15 +210,32 @@ Registered Object_REGISTERED = registclass<Object>();
  */
 
 Object* create(const Class* in) {
-    size_t size   = in->size();
-    auto   result = Object::pool().find(size);
-    if(result == Object::pool().end()) {
-        Object::pool()[size] = new mem::Pool(size, 1); // not aligned
+    if (in == nullptr) {
+        return nullptr;
     }
-    Object* obj = static_cast<Object*>(result->second->allocate());
-    // TODO: create initializer
-    int discard = std::memcmp(obj, in->statics(), size);
-    return obj;
+
+    void* ptr = nullptr;
+    LOCKGUARD(Object::lock) {
+        // get size
+        size_t size = in->size();
+
+        // size to hash: if same size, use the same pool.
+        auto result = Object::pool().find(size);
+        if (result == Object::pool().end()) {
+            Object::pool()[size] = new mem::Pool(size);
+
+            // refind
+            result = Object::pool().find(size);
+        }
+
+        // allocate
+        ptr = result->second->allocate<void>();
+    }
+
+    if (!ptr) {
+        return nullptr;
+    }
+    return in->construct(static_cast<Object*>(ptr)); // ctor override;
 }
 
 void destroy(Object* in) {
@@ -229,12 +252,19 @@ template<typename T> T* create() {
 
     T* ptr = nullptr;
     LOCKGUARD(Object::lock) {
-        size_t size   = classof<T>()->size();
-        auto   result = Object::pool().find(size);
+        // get size
+        size_t size = classof<T>()->size();
+
+        // size to hash: if same size, use the same pool.
+        auto result = Object::pool().find(size);
         if(result == Object::pool().end()) {
             Object::pool()[size] = new mem::Pool(size);
-            return Object::pool()[size]->allocate<T>();
+
+            // refind
+            result = Object::pool().find(size);
         }
+
+        // allocate
         ptr = result->second->allocate<T>();
     }
     return ptr;
@@ -246,6 +276,7 @@ template<typename T> void destroy(T* in) {
     }
 
     LOCKGUARD(Object::lock) {
+        // get size to find pool
         size_t size = in->meta()->size();
         in->~T();
         Object::pool()[size]->deallocate<void>(in);

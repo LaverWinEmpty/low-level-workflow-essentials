@@ -104,15 +104,16 @@ struct Signature {
 class Object;
 //! @brief class metadata
 struct Class {
-    virtual const char*      name() const    = 0;
-    virtual size_t           size() const    = 0;
-    virtual const Structure& fields() const  = 0;
-    virtual const Class*     base() const    = 0;
-    virtual const Object*    statics() const = 0;
+    virtual const char*      name() const             = 0; //! get name
+    virtual size_t           size() const             = 0; //! get size
+    virtual const Structure& fields() const           = 0; //! get field list
+    virtual const Class*     base() const             = 0; //! get base class meta
+    virtual const Object*    statics() const          = 0; //! get static instance
+    virtual Object*          construct(Object*) const = 0; //!< constructor lambda
 
 public:
-    const Field& field(const char*) const;
-    const Field& field(const string&) const;
+    const Field& field(const char*) const;   //!< get filed
+    const Field& field(const string&) const; //!< get filed
 };
 
 //! @brief enum metadata
