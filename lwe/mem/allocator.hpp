@@ -28,7 +28,7 @@ private:
 //! @brief default allocator
 template<typename T, size_t ALIGN>
 class Allocator {
-    using Adapter = Allocator<util::Buffer<sizeof(T), int8_t>, ALIGN>;
+    using Adapter = Allocator<util::Buffer<core::align(sizeof(T), sizeof(void*)), int8_t>, ALIGN>;
 
 public:
     template<typename... Args> static T* allocate(Args&&...) noexcept; //!< @return false: bad alloc
