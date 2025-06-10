@@ -70,18 +70,18 @@ auto Pool::Block::find(void* in) noexcept -> Block* {
 }
 
 Pool::Pool(size_t chunk, size_t alignment) noexcept :
-    ALIGN(align(alignment)),                                  // power of 2
-    CHUNK(align(chunk + sizeof(void*), ALIGN)),               // block = chunk + ptr (block address storage)
-    COUNT((MAX_COUNT / chunk) < 8 ? 8 : (MAX_COUNT / chunk)), // if count has 8, set fixed count 8
-    META{ align(sizeof(Block) + sizeof(void*), ALIGN) },      // pool metadata
+    ALIGN(alignment <= sizeof(void*) ? sizeof(void*) : align(alignment)), // power of 2, min: size of pointer
+    CHUNK(align(chunk + sizeof(void*), ALIGN)),                           // block = chunk + ptr (block address storage)
+    COUNT((MAX_COUNT / chunk) < 8 ? 8 : (MAX_COUNT / chunk)),             // if count has 8, set fixed count 8
+    META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                  // pool metadata
     counter{ 0 }
 {}
 
 Pool::Pool(size_t chunk, size_t alignment, size_t count) noexcept:
-    ALIGN(align(alignment)),                             // power of 2
-    CHUNK(align(chunk + sizeof(void*), ALIGN)),          // block = chunk + ptr (block address storage)
-    COUNT(count),                                        // block count
-    META{ align(sizeof(Block) + sizeof(void*), ALIGN) }, // pool metadata
+    ALIGN(alignment <= sizeof(void*) ? sizeof(void*) : align(alignment)), // power of 2, min: size of pointer
+    CHUNK(align(chunk + sizeof(void*), ALIGN)),                           // block = chunk + ptr (block address storage)
+    COUNT(count),                                                         // block count
+    META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                  // pool metadata
     counter{ 0 }
 {}
 

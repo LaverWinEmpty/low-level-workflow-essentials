@@ -21,20 +21,20 @@
  *         | 16 |             | 24 |             | 32 |   | << padding
  *              +--- chunk ---+    +--- chunk ---+
  *
- * total: 320 byte (64 + 128 * 2)
+ * total: 320 bytes (64 + 128 * 2)
  *
- * - block : block header (struct) like node
- *   |-[ 8 byte]: next chunk pointer
- *   |-[ 8 byte]: next block pointer
- *   |-[ 8 byte]: prev block pointer
- *   |-[ 8 byte]: outer pool pointer
- *   |-[ 8 byte]: using chunk count
- *   +-[16 byte]: padding
+ * - block : block header (struct) like a node
+ *   |-[ 8 bytes]: next chunk pointer
+ *   |-[ 8 bytes]: next block pointer
+ *   |-[ 8 bytes]: prev block pointer
+ *   |-[ 8 bytes]: outer pool pointer
+ *   |-[ 8 bytes]: using chunk count
+ *   +-[16 bytes]: padding
  *
  * - chunk: not a struct, abstract object for dynamic chunk size.
- *   |-[ 8 byte]: outer block address (meta)
- *   |-[96 byte]: actual usable space  (data)
- *   +-[24 byte]: padding
+ *   |-[ 8 bytes]: outer block address (meta)
+ *   |-[96 bytes]: actual usable space  (data)
+ *   +-[24 bytes]: padding
  *
  * NOTE: align is intended for SIMD use and increases capacity.
  * block header padding reason: to ensures alignment for chunk start addresses.
