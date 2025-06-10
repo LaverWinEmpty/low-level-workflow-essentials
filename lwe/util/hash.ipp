@@ -11,7 +11,7 @@ Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
     }
 
     // to stirng, string size 17
-    snprintf(str, sizeof(str), "%016llX", val);
+    snprintf(str.data(), str.size(), "%016llX", val);
 }
 
 Hash::Hash(const string& in): Hash(in.c_str(), in.size()) {}
@@ -29,7 +29,7 @@ Hash::Hash(const char* in) : Hash(in, std::strlen(in)) {}
 template<typename T> Hash::Hash(const T& in): Hash(&in, sizeof(T)) {}
 
 const char* Hash::operator*() const {
-    return str;
+    return str.data();
 }
 
 Hash::operator hash_t() const {

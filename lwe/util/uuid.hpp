@@ -3,15 +3,12 @@
 
 
 #include "random.hpp"
+#include "buffer.hpp"
 
 LWE_BEGIN
 namespace util {
 
 struct UUID {
-    struct String {
-        char str[37];
-    };
-
 public:
     UUID();
 
@@ -27,7 +24,7 @@ public:
 
 private:
     uint64_t hi, lo;
-    std::shared_ptr<String> ptr;
+    std::shared_ptr<Buffer<37>> ptr;
 };
 
 }

@@ -4,7 +4,7 @@ LWE_BEGIN
 
 namespace util {
 
-UUID::UUID() : ptr(new String) {
+UUID::UUID() : ptr(new Buffer<37>) {
     hi  = Random::generate<uint64_t>(-1, 0),
     lo  = Random::generate<uint64_t>(-1, 0);
 
@@ -14,7 +14,7 @@ UUID::UUID() : ptr(new String) {
     hiptr[6] = (hiptr[6] & 0x0F) | 0x40; // 0x4~
     loptr[1] = (loptr[1] & 0x3F) | 0x80; // 0x8 | 0x9~ | 0xA~ | 0xB~
 
-    snprintf(ptr->str, sizeof(ptr->str),
+    snprintf(ptr->data(), ptr->size(),
         "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
         hiptr[0], hiptr[1], hiptr[2], hiptr[3],
         hiptr[4], hiptr[5],
@@ -33,19 +33,19 @@ bool UUID::operator!=(const UUID& in) const {
 }
 
 const char* UUID::operator*() const {
-    return ptr->str;
+    return ptr->data();
 }
 
 UUID::operator const char* () const {
-    return ptr->str;
+    return ptr->data();
 }
 
 UUID::operator std::string() const {
-    return ptr->str;
+    return ptr->data();
 }
 
 UUID::operator std::string_view() const {
-    return ptr->str;
+    return ptr->data();
 }
 
 }
