@@ -308,8 +308,8 @@ template<typename T> Ptr<T>::operator const T* () const {
 }
 
 template<typename T> bool Ptr<T>::clone() {
-    // impossible
-    if(unique() || tracker == nullptr) {
+    // not failed
+    if(block) {
         return true;
     }
 
