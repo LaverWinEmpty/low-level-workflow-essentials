@@ -63,17 +63,20 @@ struct Tracker {
 };
 
 template<typename T> class Ptr {
-    struct Internal {
+    struct Block {
+        Tracker* head  = nullptr;
+        size_t   count = 0;
+    };
+    struct Internal : Block {
         ~Internal() { /* not work */ }
         union {
             T       data;
             uint8_t ptr[sizeof(T)] = { 0 }; // memset
         };
-        Tracker* head = nullptr;
+;
     };
-    struct External {
-        T*       ptr  = nullptr;
-        Tracker* head = nullptr;
+    struct External : Block {
+        T* ptr = nullptr;
     };
 
 public:
@@ -123,6 +126,7 @@ public:
     operator const T*() const;      //! raw pointer const
 
 public:
+    //! @brief to unique, NEED: copy constructor
     //! @return false: bad alloc
     bool clone();
 
@@ -139,18 +143,17 @@ public:
     bool shared() const;
 
 private:
-    Tracker*&      list();
-    const Tracker* list() const;
+    T*       data();         //!< get
+    const T* data() const;   //!< get
+
+public:
+    size_t count() const;
 
 private:
     Tracker* tracker = nullptr;
 
 private:
-    union {
-        void*     block = nullptr; //!< copy, move, delete
-        Internal* internal;
-        External* external;
-    };
+    Block* block = nullptr;
 
 public:
     Deleter deleter; //!< @brief custom deleter

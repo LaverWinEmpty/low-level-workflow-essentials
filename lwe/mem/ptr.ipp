@@ -14,28 +14,26 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
 
     // arg == ptr, store external
     if(flag) {
-        block = std::malloc(sizeof(External));
+        block = new(std::nothrow) External;
         // allocate failed
-        if(!external) {
+        if(!block) {
             // free(tracker)
             Allocator<Tracker>::deallocate(tracker);
             tracker = nullptr; // restore
             return false;
         }
-        external->head = nullptr; // init
     }
     
     // arg != ptr, store internal
     else {
-        block = std::malloc(sizeof(Internal));
+        block = new(std::nothrow) Internal;
         // allocate failed
-        if(!internal) {
+        if(!block) {
             // free(tracker)
             Allocator<Tracker>::deallocate(tracker);
             tracker = nullptr; // restore
             return false;
         }
-        internal->head = nullptr; // init
     }
 
     return true;
@@ -50,13 +48,13 @@ template<typename T> bool Ptr<T>::release() {
     // call destructor
     if(pointer) {
         if(deleter) {
-            deleter(external->ptr);
+            deleter(data());
         }
-        else delete external->ptr; // default delete
+        else delete data(); // default delete
     }
-    else internal->data.~T();
+    else data()->~T();
 
-    free(block); // union
+    delete block;
     block   = nullptr; // for safe
     deleter = nullptr; // for safe
     return true;
@@ -66,7 +64,7 @@ template<typename T> bool Ptr<T>::release() {
 template<typename T> Ptr<T>::Ptr(): pointer(true), deleter(nullptr) {
     // set nullptr
     tracker = nullptr;
-    block   = nullptr; // union
+    block   = nullptr;
 }
 
 // pointer
@@ -82,10 +80,8 @@ template<typename T> Ptr<T>::Ptr(T* in, Deleter func): pointer(true), deleter(fu
         block   = nullptr;
         throw diag::error(diag::Code::BAD_ALLOC);
     }
-    // insert
-    push();
-    // set
-    external->ptr = in;
+    push(); // insert
+    reinterpret_cast<External*>(block)->ptr = in; // set
 }
 
 // reference
@@ -97,10 +93,8 @@ template<typename T> Ptr<T>::Ptr(const T& in): pointer(false), deleter(nullptr) 
         block   = nullptr;
         throw diag::error(diag::Code::BAD_ALLOC);
     }
-    // insert
-    push();
-    // set
-    new (&internal->data) T(in);
+    push(); // insert
+    new (reinterpret_cast<Internal*>(block)->ptr) T(in); // copy
 }
 
 // move
@@ -112,10 +106,8 @@ template<typename T> Ptr<T>::Ptr(T&& in): pointer(false), deleter(nullptr) {
         block   = nullptr;
         throw diag::error(diag::Code::BAD_ALLOC);
     }
-    // insert
-    push();
-    // set
-    new (&internal->data) T(std::move(in));
+    push(); // insert
+    new (reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
 }
 
 // T constructor
@@ -128,10 +120,8 @@ template<typename... Args, typename> Ptr<T>::Ptr(Args&&... in): pointer(false), 
         block   = nullptr;
         throw diag::error(diag::Code::BAD_ALLOC);
     }
-    // insert
-    push();
-    // set
-    new (&internal->data) T(std::forward<Args>(in)...);
+    push(); // insert
+    new (data()) T(std::forward<Args>(in)...); // create
 }
 
 // dtor
@@ -170,7 +160,7 @@ template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer), deleter(in
             throw diag::error(diag::Code::BAD_ALLOC);
         }
 
-        // shared block (union)
+        // shared block
         block = in.block;
 
         // insert this
@@ -183,7 +173,7 @@ template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept :
     pointer(in.pointer), tracker(in.tracker), block(in.block), deleter(in.deleter) {
     // move
     in.tracker = nullptr;
-    in.block   = nullptr; // union
+    in.block   = nullptr;
 }
 
 // copy
@@ -225,7 +215,7 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
             }
         }
 
-        // shared block (union)
+        // shared block
         block   = in.block;
         deleter = in.deleter;
         pointer = in.pointer;
@@ -269,41 +259,26 @@ template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
 
 // getter: ptr
 template<typename T> T* Ptr<T>::operator->() {
-    if(pointer) {
-        return external->ptr;
-    }
-    else return &internal->data;
+    return data();
 }
 
 // const getter: ptr
 template<typename T> const T* Ptr<T>::operator->() const {
-    if(pointer) {
-        return external->ptr;
-    }
-    else return &internal->data;
+    return data();
 }
 
 // getter: ref
 template<typename T> T& Ptr<T>::operator*() {
-    if(pointer) {
-        return *external->ptr;
-    }
-    else return internal->data;
+    return *data();
 }
 
 // const getter: ref
 template<typename T> const T& Ptr<T>::operator*() const {
-    if(pointer) {
-        return *external->ptr;
-    }
-    else return internal->data;
+    return *data();
 }
 
 template<typename T> bool Ptr<T>::operator==(void* in) const {
-    if(pointer) {
-        return external->ptr == in;
-    }
-    else return &internal->data == in;
+    return data() == in;
 }
 
 template<typename T> bool Ptr<T>::operator!=(void* in) const {
@@ -336,7 +311,7 @@ template<typename T> bool Ptr<T>::clone() {
         return true;
     }
 
-    Internal* temp = static_cast<Internal*>(std::malloc(sizeof(Internal)));
+    Internal* temp = new(std::nothrow) Internal;
     // allocated failed
     if(!temp) {
         return false;
@@ -344,18 +319,12 @@ template<typename T> bool Ptr<T>::clone() {
     temp->head = nullptr;
     
     // deep copy by placement new copy constructor
-    if(pointer) {
-        new (&temp->data) T(*external->ptr);
-    }
-    else new (&temp->data) T(internal->data);
+    new (temp->ptr) T(*data());
 
-    // pop
-    pop();
-    // set
-    internal = temp;
-    pointer  = false;
-    // push
-    push(); // isnert to new block
+    pop();            // pop
+    block = temp;     // set
+    pointer  = false; // internal
+    push();           // isnert to new block
 
     return true;
 }
@@ -367,15 +336,14 @@ template<typename T> bool Ptr<T>::push() {
         return false;
     }
 
-    // get head
-    Tracker*& head = list();
-
     // push front
-    tracker->prev        = nullptr; // [null]<--[this]-->[????]
-    tracker->next        = head;    // [null]<--[this]-->[head]
-    if (head) head->prev = tracker; // [null]<->[this]<->[head]
-    head                 = tracker; // [null]<->[head]<->[....]
+    tracker->prev                      = nullptr;     // [null]<--[this]-->[????]
+    tracker->next                      = block->head; // [null]<--[this]-->[head]
+    if (block->head) block->head->prev = tracker;     // [null]<->[this]<->[head]
+    block->head                        = tracker;     // [null]<->[head]<->[....]
 
+
+    ++block->count;
     return true;
 }
 
@@ -385,17 +353,14 @@ template<typename T> bool Ptr<T>::pop() {
         return false;
     }
 
-    // get head
-    Tracker*& head = list();
-
     // size 0
-    if(head == nullptr) {
+    if(block->head == nullptr) {
         return false;
     }
 
     // pop front
-    if (tracker == head) { // [head]<->[....]<->[....]
-        head = head->next; // [this]<->[head]<->[....]
+    if (tracker == block->head) {        // [head]<->[....]<->[....]
+        block->head = block->head->next; // [this]<->[head]<->[....]
     }
 
     // pop
@@ -406,37 +371,40 @@ template<typename T> bool Ptr<T>::pop() {
     tracker->prev = nullptr; // [prev]   [ in ]-->[next]
     tracker->next = nullptr; // [prev]<---------->[next]
 
+    --block->count;
     return true;
 }
 
 template<typename T> bool Ptr<T>::unique() const {
-    // get head
-    const Tracker* head = list();
-
-    // check
-    if(tracker) {
-        return head->next == nullptr;
+    if (!block) {
+        return false;
     }
-    return false;
+    return block->count == 1;
 }
 
 template<typename T> bool Ptr<T>::shared() const {
-    // get head
-    const Tracker* head = list();
-
-    // check
-    if(tracker) {
-        return head->next != nullptr;
+    if (!block) {
+        return false;
     }
-    return false;
+    return block->count > 1;
 }
 
-template<typename T> Tracker*& Ptr<T>::list() {
-    return pointer ? external->head : internal->head;
+template<typename T> T* Ptr<T>::data() {
+    if(!block) {
+        return nullptr;
+    }
+    if(pointer) {
+        return reinterpret_cast<External*>(block)->ptr;
+    }
+    else return &reinterpret_cast<Internal*>(block)->data;
 }
 
-template<typename T> const Tracker* Ptr<T>::list() const {
-    return pointer ? external->head : internal->head;
+template<typename T> const T* Ptr<T>::data() const {
+    return const_cast<Ptr*>(this)->data();
+}
+
+template<typename T> size_t Ptr<T>::count() const {
+    return block->count;
 }
 
 }
