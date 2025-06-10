@@ -33,10 +33,14 @@ private:
     bool release();        // free
 
 public:
-    Ptr();                                     //!< set nullptr
-    Ptr(const T&);                             //!< data is stored in the control block.
-    Ptr(T&&);                                  //!< data is moved in the control block.
-    Ptr(T*, Deleter = nullptr);                //!< external poitner (new T), and deallocator (null = default)
+    //! @param [in] T* exnernal pointer
+    //! @param [in] Deleter destructor lambda: default delete in, ignore nullptr
+    Ptr(T*, Deleter = [](void* in) { delete in; });
+
+public:
+    Ptr();         //!< set nullptr
+    Ptr(const T&); //!< data is stored in the control block.
+    Ptr(T&&);      //!< data is moved in the control block.
 
 public:
     //! @brief create data in control block (like make_shared<T>)
