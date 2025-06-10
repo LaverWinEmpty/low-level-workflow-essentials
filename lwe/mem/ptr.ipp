@@ -178,7 +178,7 @@ template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept :
 
 // copy
 template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr& {
-    if(this != &in) return *this;
+    if(this == &in) return *this;
 
     // tracking
     if(tracker) {
@@ -309,7 +309,7 @@ template<typename T> Ptr<T>::operator const T* () const {
 
 template<typename T> bool Ptr<T>::clone() {
     // not failed
-    if(block) {
+    if(!block) {
         return true;
     }
 
