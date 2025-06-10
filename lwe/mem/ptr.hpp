@@ -68,6 +68,8 @@ public:
 
 public:
     explicit operator bool() const; //! check nullptr
+    operator T*();                  //! raw pointer
+    operator const T*() const;      //! raw pointer const
 
 public:
     //! @return false: bad alloc

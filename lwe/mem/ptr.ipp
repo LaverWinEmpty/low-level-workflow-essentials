@@ -311,6 +311,14 @@ template<typename T> Ptr<T>::operator bool () const {
     return tracker != nullptr;
 }
 
+template<typename T> Ptr<T>::operator T* () {
+    return operator->();
+}
+
+template<typename T> Ptr<T>::operator const T* () const {
+    return operator->();
+}
+
 template<typename T> bool Ptr<T>::clone() {
     // impossible
     if(unique() || tracker == nullptr) {
