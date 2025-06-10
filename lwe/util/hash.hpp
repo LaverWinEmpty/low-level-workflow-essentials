@@ -12,7 +12,7 @@ class Hash {
     static constexpr unsigned long long FNV1A64_PRIME = 1099511628211ULL;
 
 public:
-    //! string proxy for safe const char* conversion
+    //! string proxy
     struct String;
 
 public:
