@@ -46,7 +46,7 @@ LWE_BEGIN
 namespace mem {
 namespace config {
 static constexpr size_t DEF_ALIGN = sizeof(void*);
-static constexpr size_t DEF_COUNT = 64;
+static constexpr size_t MAX_COUNT = 4096; // 4kb
 } // namespace config
 using namespace config;
 
@@ -83,9 +83,19 @@ public:
      *
      * @param [in] chunk - chunk size, it is padded to the pointer size.
      * @param [in] align - chunk align, it is adjusted to the power of 2.
+     * @param [in] count - chunk count in block. (default max / size, if chunk large size -> fixed 8)
+     */
+    Pool(size_t chunk, size_t alignment = DEF_ALIGN) noexcept;
+
+public:
+    /**
+     * @brief construct a new pool object
+     *
+     * @param [in] chunk - chunk size, it is padded to the pointer size.
+     * @param [in] align - chunk align, it is adjusted to the power of 2.
      * @param [in] count - chunk count in block.
      */
-    Pool(size_t chunk, size_t alignment = DEF_ALIGN, size_t count = DEF_COUNT) noexcept;
+    Pool(size_t chunk, size_t alignment, size_t count) noexcept;
 
 public:
     //! @brief destroy the pool object.
