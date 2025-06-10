@@ -50,7 +50,7 @@ template<typename T> bool Ptr<T>::release() {
         if(deleter) {
             deleter(data());
         }
-        else delete data(); // default delete
+        // else delete data(); // default delete X
     }
     else data()->~T();
 
@@ -85,7 +85,8 @@ template<typename T> Ptr<T>::Ptr(T* in, Deleter func): pointer(true), deleter(fu
 }
 
 // reference
-template<typename T> Ptr<T>::Ptr(const T& in): pointer(false), deleter(nullptr) {
+template<typename T>
+template<typename U, typename> Ptr<T>::Ptr(const U& in): pointer(false), deleter(nullptr) {
     // init
     if(!initialize(false)) {
         // failed
@@ -98,7 +99,8 @@ template<typename T> Ptr<T>::Ptr(const T& in): pointer(false), deleter(nullptr) 
 }
 
 // move
-template<typename T> Ptr<T>::Ptr(T&& in): pointer(false), deleter(nullptr) {
+template<typename T>
+template<typename U, typename> Ptr<T>::Ptr(U&& in): pointer(false), deleter(nullptr) {
     // init
     if(!initialize(false)) {
         // failed
@@ -110,19 +112,20 @@ template<typename T> Ptr<T>::Ptr(T&& in): pointer(false), deleter(nullptr) {
     new (reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
 }
 
-// T constructor
-template<typename T>
-template<typename... Args, typename> Ptr<T>::Ptr(Args&&... in): pointer(false), deleter(nullptr) {
-    // init
-    if(!initialize(false)) {
-        // failed
-        tracker = nullptr;
-        block   = nullptr;
-        throw diag::error(diag::Code::BAD_ALLOC);
-    }
-    push(); // insert
-    new (data()) T(std::forward<Args>(in)...); // create
-}
+//// T constructor
+//template<typename T>
+//template<typename... Args, typename>
+//Ptr<T>::Ptr(Args&&... in): pointer(false), deleter(nullptr) {
+//    // init
+//    if(!initialize(false)) {
+//        // failed
+//        tracker = nullptr;
+//        block   = nullptr;
+//        throw diag::error(diag::Code::BAD_ALLOC);
+//    }
+//    push(); // insert
+//    new (data()) T(std::forward<Args>(in)...); // create
+//}
 
 // dtor
 template<typename T> Ptr<T>::~Ptr() {

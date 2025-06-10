@@ -63,10 +63,19 @@ struct Tracker {
 };
 
 template<typename T> class Ptr {
+    // custom destructor
+    using Deleter = std::function<void(void*)>;
+
+    // constrcutor SFINAE for incomplete type
+    template<typename U, typename... Args> using Enable = std::enable_if_t<std::is_constructible_v<U, Args...>>;
+
+    //! block base
     struct Block {
         Tracker* head  = nullptr;
         size_t   count = 0;
     };
+
+    //! internal data control block
     struct Internal : Block {
         ~Internal() { /* not work */ }
         union {
@@ -75,16 +84,20 @@ template<typename T> class Ptr {
         };
 ;
     };
+
+    //! external data control block
     struct External : Block {
         T* ptr = nullptr;
     };
 
-public:
-    using Deleter = std::function<void(void*)>;
-
 private:
     bool initialize(bool); // malloc
     bool release();        // free
+
+
+public:
+    //! default set nullptr
+    Ptr();
 
 public:
     //! @param [in] T* exnernal pointer
@@ -92,13 +105,20 @@ public:
     Ptr(T*, Deleter = [](void* in) { delete in; });
 
 public:
-    Ptr();         //!< set nullptr
-    Ptr(const T&); //!< data is stored in the control block.
-    Ptr(T&&);      //!< data is moved in the control block.
+    //! @brief copy const
+    //! @param [in] U is T, for incomplete type
+    template<typename U, typename = Enable<T, const U&>>
+    Ptr(const U&);
 
 public:
-    //! @brief create data in control block (like make_shared<T>)
-    template<typename... Args, typename = std::enable_if_t<std::is_constructible_v<T, Args...>>>
+    //! @brief move 
+    //! @param [in] U is T, for incomplete type
+    template<typename U, typename = Enable<T, U&&>>
+    Ptr(U&&);
+
+public:
+    //! @brief crete (like a make_shared<T>)
+    template<typename... Args, typename = Enable<T, Args>>
     Ptr(Args&&...); 
 
 public:
@@ -155,7 +175,7 @@ private:
 private:
     Block* block = nullptr;
 
-public:
+private:
     Deleter deleter; //!< @brief custom deleter
 
 private:
