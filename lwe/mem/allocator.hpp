@@ -2,64 +2,39 @@
 #define LWE_MEM_ALLOCATOR
 
 #include "pool.hpp"
+#include "../util/buffer.hpp"
 
 LWE_BEGIN
 
 namespace mem {
 using namespace config;
-using namespace common;
 
-//! @brief locked memory pool
-class Allocator: public Pool {
+template<typename T, size_t ALIGN = DEF_ALIGN> class Allocator;
+
+//! @brief helper to use the same pool when sizes are the same.
+template<size_t SIZE, size_t ALIGN>
+class Allocator<util::Buffer<SIZE, int8_t>, ALIGN> {
 public:
-    template<typename T, size_t ALIGN = DEF_ALIGN, size_t COUNT = DEF_COUNT> class Statics {
-        DECLARE_NO_COPY(Statics);
-
-    public:
-        Statics()  = default;
-        ~Statics() = default;
-
-    public:
-        template<typename... Args> static T* allocate(Args&&...) noexcept;
-        template<typename U> static bool     deallocate(U*) noexcept;
-        static size_t                        release() noexcept;
-        static size_t                        generate(size_t) noexcept;
-        static Allocator&                    instance() noexcept;
-
-    private:
-        static Allocator allocator;
-    };
-
-public:
-    class Manager {
-    public:
-        ~Manager();
-    public:
-        static Allocator* instance(size_t in);
-    private:
-        static std::unordered_map<size_t, Allocator*> map;
-        static sync::Lock                             lock;
-    };
-
-public:
-    //! @brief overloading: non virtual override
-    template<typename T = void, typename... Args> T* allocate(Args&&...) noexcept;
-
-    //! @brief overloading: non virtual override
-    template<typename T> bool deallocate(T*) noexcept;
-
-    //! @brief overloading: non virtual override
-    size_t generate(size_t) noexcept;
-
-    //! @brief overloading: non virtual override
-    size_t release() noexcept;
-
-public:
-    Allocator(size_t chunk, size_t align = DEF_ALIGN, size_t count = DEF_COUNT) noexcept;
-    ~Allocator() noexcept = default;
+    template<typename T = void, typename... Args> static T* allocate(Args&&...) noexcept; //!< @return false: bad alloc
+    template<typename T = void> static bool                 deallocate(T*) noexcept;      //!< @return false: failed
+    static size_t                                           generate(size_t) noexcept;    //!< @return succeeded count
+    static size_t                                           release() noexcept;           //!< @return succeeded count
 
 private:
-    sync::Lock lock;
+    static Pool        pool;
+    static async::Lock lock;
+};
+
+//! @brief default allocator
+template<typename T, size_t ALIGN>
+class Allocator {
+    using Adapter = Allocator<util::Buffer<sizeof(T), int8_t>, ALIGN>;
+
+public:
+    template<typename... Args> static T* allocate(Args&&...) noexcept; //!< @return false: bad alloc
+    static bool                          deallocate(T*) noexcept;      //!< @return false: failed
+    static size_t                        generate(size_t) noexcept;    //!< @return succeeded count
+    static size_t                        release() noexcept;           //!< @return succeeded count
 };
 
 } // namespace mem

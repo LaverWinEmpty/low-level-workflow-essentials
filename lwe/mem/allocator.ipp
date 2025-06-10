@@ -2,17 +2,15 @@
 LWE_BEGIN
 namespace mem {
 
-template<typename T, size_t ALIGN, size_t COUNT>
-Allocator typename Allocator::Statics<T, ALIGN, COUNT>::allocator{ sizeof(T), ALIGN, COUNT };
+template<size_t SIZE, size_t ALIGN> Pool        Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::pool(SIZE, ALIGN);
+template<size_t SIZE, size_t ALIGN> async::Lock Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::lock;
 
-// inline static Allocator allocator = Allocator(sizeof(T), A, C);
-
-Allocator::Allocator(size_t chunk, size_t align, size_t count) noexcept: Pool(chunk, align, count) {}
-
-template<typename T, typename... Args> T* Allocator::allocate(Args&&... in) noexcept {
+template<size_t SIZE, size_t ALIGN>
+template<typename T, typename... Args>
+T* Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::allocate(Args&&... in) noexcept {
     void* ptr = nullptr;
     LOCKGUARD(lock) {
-        ptr = Allocator::allocate<void>();
+        ptr = pool.allocate<void>();
     }
     if constexpr(!std::is_void_v<T>) {
         new(ptr) T(std::forward<Args>(in)...);
@@ -20,18 +18,21 @@ template<typename T, typename... Args> T* Allocator::allocate(Args&&... in) noex
     return static_cast<T*>(ptr);
 }
 
-template<typename T> bool Allocator::deallocate(T* in) noexcept {
+template<size_t SIZE, size_t ALIGN>
+template<typename T>
+bool  Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::deallocate(T* in) noexcept {
     if constexpr(!std::is_void_v<T>) {
         in->~T();
     }
-    LOCKGUARD(lock) return Allocator::deallocate(in);
+    LOCKGUARD(lock) return pool.deallocate(in);
 }
 
-size_t Allocator::generate(size_t in) noexcept {
+template<size_t SIZE, size_t ALIGN>
+size_t Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::generate(size_t in) noexcept {
     for(size_t i = 0; i < in; ++i) {
         bool check = false;
         LOCKGUARD(lock) {
-            if(!Pool::generate()) {
+            if(!pool.generate()) {
                 return i;
             }
         }
@@ -39,63 +40,33 @@ size_t Allocator::generate(size_t in) noexcept {
     return in;
 }
 
-size_t Allocator::release() noexcept {
-    size_t i = 0;
-    while(freeable.head != nullptr) {
-        LOCKGUARD(lock) {
-            Block* ptr = freeable.dequeue();
-            all.erase(ptr);
-            memfree(ptr);
-            counter.generated -= 1;
-        }
+template<size_t SIZE, size_t ALIGN>
+size_t Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::release() noexcept {
+    size_t cnt = 0;
+    LOCKGUARD(lock) {
+        cnt = pool.release();
     }
-    return i;
+    return cnt;
 }
 
-template<typename T, size_t A, size_t C>
+template<typename T, size_t A>
 template<typename... Args>
-T* Allocator::Statics<T, A, C>::allocate(Args&&... in) noexcept {
-    return allocator.allocate<T>(std::forward<Args>(in)...);
+T* Allocator<T, A>::allocate(Args&&... in) noexcept {
+    return Adapter::template allocate<T>(std::forward<Args>(in)...);
 }
 
-template<typename T, size_t A, size_t C>
-template<typename U>
-bool Allocator::Statics<T, A, C>::deallocate(U* in) noexcept {
-    return allocator.deallocate(static_cast<T*>(in));
+template<typename T, size_t A>
+bool Allocator<T, A>::deallocate(T* in) noexcept {
+    return Adapter::template deallocate(static_cast<T*>(in));
 }
 
-template<typename T, size_t A, size_t C> size_t Allocator::Statics<T, A, C>::release() noexcept {
-    return allocator.release();
+template<typename T, size_t A> size_t Allocator<T, A>::release() noexcept {
+    return Adapter::release();
 }
 
-template<typename T, size_t A, size_t C> size_t Allocator::Statics<T, A, C>::generate(size_t in) noexcept {
-    return allocator.generate(in);
+template<typename T, size_t A> size_t Allocator<T, A>::generate(size_t in) noexcept {
+    return Adapter::generate(in);
 }
-
-template<typename T, size_t A, size_t C> Allocator& Allocator::Statics<T, A, C>::instance() noexcept {
-    return allocator;
-}
-
-Allocator::Manager::~Manager() {
-    for(auto& it : map) {
-        delete it.second;
-    }
-}
-
-Allocator* Allocator::Manager::instance(size_t size) {
-    if(map.find(size) == map.end()) {
-        // double-checked
-        LOCKGUARD(lock) {
-            if(map.find(size) == map.end()) {
-                map[size] = new Allocator(size);
-            }
-        }
-    }
-    return map[size];
-}
-
-std::unordered_map<size_t, Allocator*> Allocator::Manager::map;
-sync::Lock                             Allocator::Manager::lock;
 
 } // namespace MEM
 LWE_END
