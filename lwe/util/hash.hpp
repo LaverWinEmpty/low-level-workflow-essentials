@@ -22,15 +22,14 @@ public:
     bool operator!=(const Hash&) const;
 
 public:
-    const char* operator*() const; //!< get string (c_str)
-
-public:
     operator hash_t() const; //!< get value
+    operator string() const; //!< to string;
 
 private:
     hash_t val = 0;
-    Buffer<17> str;
+    static thread_local char buffer[17];
 };
+
 
 }
 LWE_END

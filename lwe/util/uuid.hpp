@@ -17,14 +17,13 @@ public:
     bool operator!=(const UUID&) const;
 
 public:
-    const char* operator*() const;
-    operator const char* () const;
     operator std::string() const;
-    operator std::string_view() const;
 
 private:
     uint64_t hi, lo;
-    std::shared_ptr<Buffer<37>> ptr;
+
+private:
+    static thread_local char buffer[37];
 };
 
 }
