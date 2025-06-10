@@ -404,6 +404,9 @@ template<typename T> const T* Ptr<T>::data() const {
 }
 
 template<typename T> size_t Ptr<T>::count() const {
+    if (!block) {
+        return 0;
+    }
     return block->count;
 }
 
