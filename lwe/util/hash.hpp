@@ -12,6 +12,10 @@ class Hash {
     static constexpr unsigned long long FNV1A64_PRIME = 1099511628211ULL;
 
 public:
+    //! string proxy for safe const char* conversion
+    struct String;
+
+public:
     Hash(const void*, size_t);
     Hash(const char*);
     Hash(const string&);
@@ -23,7 +27,10 @@ public:
 
 public:
     operator hash_t() const; //!< get value
-    operator string() const; //!< to string;
+    operator string() const; //!< to string
+
+public:
+    String operator*() const; //! get string adapter;
 
 private:
     hash_t val = 0;

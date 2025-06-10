@@ -2,7 +2,18 @@
 
 LWE_BEGIN
 namespace util {
-thread_local char Hash::buffer[] = { 0 };
+
+struct Hash::String {
+    String(const Hash* in) {
+        // to stirng, without null (fixed size)
+        snprintf(buffer, 16, "%016llX", in->val);
+        buffer[16] = 0;
+    }
+    operator string() { return buffer; }
+    operator const char* () { return buffer; }
+private:
+    char buffer[17];
+};
 
 Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
     const unsigned char* ptr = static_cast<const unsigned char*>(in);
@@ -27,9 +38,11 @@ Hash::Hash(const char* in) : Hash(in, std::strlen(in)) {}
 template<typename T> Hash::Hash(const T& in): Hash(&in, sizeof(T)) {}
 
 Hash::operator string () const {
-    // to stirng, without null (fixed size)
-    snprintf(buffer, sizeof(buffer) - 1, "%016llX", val);
-    return buffer;
+    return operator*();
+}
+
+auto Hash::operator*() const -> String {
+    return String(this);
 }
 
 Hash::operator hash_t() const {

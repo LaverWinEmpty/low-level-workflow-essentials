@@ -9,6 +9,9 @@ LWE_BEGIN
 namespace util {
 
 struct UUID {
+    //! string proxy
+    struct String;
+
 public:
     UUID();
 
@@ -17,13 +20,13 @@ public:
     bool operator!=(const UUID&) const;
 
 public:
-    operator std::string() const;
+    operator string() const; //! to string
+
+public:
+    String operator*() const; //! get string adapter
 
 private:
     uint64_t hi, lo;
-
-private:
-    static thread_local char buffer[37];
 };
 
 }
