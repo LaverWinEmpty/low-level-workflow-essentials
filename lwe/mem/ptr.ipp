@@ -4,7 +4,9 @@ LWE_BEGIN
 namespace mem {
 
 template<typename T> bool Ptr<T>::initialize(bool flag) {
-    tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
+    // malloc(sizeof(Tracker))
+    tracker = Allocator<Tracker>::allocate();
+
     // allocate failed
     if(!tracker) {
         return false;
@@ -15,7 +17,9 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
         block = std::malloc(sizeof(External));
         // allocate failed
         if(!external) {
-            free(tracker);
+            // free(tracker)
+            Allocator<Tracker>::deallocate(tracker);
+            tracker = nullptr; // restore
             return false;
         }
         external->head = nullptr; // init
@@ -26,7 +30,9 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
         block = std::malloc(sizeof(Internal));
         // allocate failed
         if(!internal) {
-            free(tracker);
+            // free(tracker)
+            Allocator<Tracker>::deallocate(tracker);
+            tracker = nullptr; // restore
             return false;
         }
         internal->head = nullptr; // init
@@ -141,8 +147,8 @@ template<typename T> Ptr<T>::~Ptr() {
         // unique, free block, not pop
         else release();
 
-        // free
-        free(tracker);
+        // free(tracker)
+        Allocator<Tracker>::deallocate(tracker);
     }
 }
 
@@ -156,10 +162,11 @@ template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer), deleter(in
 
     // shallow: to weak ptr
     else {
-        tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
+        // malloc(sizeof(Tracker));
+        tracker = Allocator<Tracker>::allocate();
+
         // allocate failed
         if(!tracker) {
-            tracker = nullptr;
             throw diag::error(diag::Code::BAD_ALLOC);
         }
 
@@ -193,8 +200,10 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
     // set nullptr
     if(in.tracker == nullptr) {
         if(tracker) {
-            free(tracker); // delete
+            // free(tracker)
+            Allocator<Tracker>::deallocate(tracker);
         }
+
         deleter = nullptr;
         tracker = nullptr;
         block   = nullptr;
@@ -205,11 +214,12 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
     else {
         // if nullptr
         if(!tracker) {
-            tracker = static_cast<Tracker*>(std::malloc(sizeof(Tracker)));
+            // malloc(sizeof(Tracker))
+            tracker = Allocator<Tracker>::allocate();
+
             // allocate failed
             if(!tracker) {
                 deleter = nullptr;
-                tracker = nullptr;
                 block   = nullptr;
                 throw diag::error(diag::Code::BAD_ALLOC);
             }
@@ -240,7 +250,8 @@ template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
 
         // set nullptr this
         if(tracker) {
-            free(tracker); // delete
+            // free(tracker)
+            Allocator<Tracker>::deallocate(tracker);
         }
 
         // move
