@@ -31,9 +31,9 @@ public:
 	const T& operator*() const;
 
 public:
-	const char* what() const;
-	T&&         move();
-	T&          ref();
+	const char* what() const; //!< error message, return "" when succeeded
+	T&&         move();       //!< move data, throw when failed 
+	T&          as();         //!< get reference, throw when failed
 
 private:
 	union {

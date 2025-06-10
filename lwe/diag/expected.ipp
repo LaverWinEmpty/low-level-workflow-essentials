@@ -112,7 +112,7 @@ template<typename T> T&& Expected<T>::move() {
 	return std::move(data);
 }
 
-template<typename T> T& Expected<T>::ref() {
+template<typename T> T& Expected<T>::as() {
 	if (!flag) {
 		throw msg;
 	}
