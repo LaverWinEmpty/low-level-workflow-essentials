@@ -177,7 +177,9 @@ template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept :
 }
 
 // copy
-template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
+template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr& {
+    if(this != &in) return *this;
+
     // tracking
     if(tracker) {
         // last
@@ -228,32 +230,32 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr&{
 
 // move
 template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
-    if (this != &in) {
-        // tracking
-        if(tracker) {
-            // last
-            if(unique()) {
-                release();
-            }
-            pop();
+    if(this == &in) return *this;
+
+    // tracking
+    if(tracker) {
+        // last
+        if(unique()) {
+            release();
         }
-
-        // set nullptr this
-        if(tracker) {
-            // free(tracker)
-            Allocator<Tracker>::deallocate(tracker);
-        }
-
-        // move
-        pointer    = in.pointer;
-        deleter    = in.deleter;
-        tracker    = in.tracker;
-        block      = in.block;
-
-        // move
-        in.tracker = nullptr;
-        in.block   = nullptr;
+        pop();
     }
+
+    // set nullptr this
+    if(tracker) {
+        // free(tracker)
+        Allocator<Tracker>::deallocate(tracker);
+    }
+
+    // move
+    pointer = in.pointer;
+    deleter = in.deleter;
+    tracker = in.tracker;
+    block   = in.block;
+
+    // move
+    in.tracker = nullptr;
+    in.block   = nullptr;
     return *this;
 }
 
