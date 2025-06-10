@@ -3,6 +3,57 @@
 
 #include "../base/base.h"
 #include "../diag/diag.h"
+#include "allocator.hpp"
+
+/**************************************************************************************************
+ * smart pointer
+ *
+ * it works like shared_ptr based on unique_ptr with weak_ptr
+ * because of this, there is no thread safety.
+ * 
+ **************************************************************************************************
+ * structure
+ *
+ *   +---------+ +---------+ +---------+         +---------+
+ *   | Ptr<A>  | | Ptr<A>  | | Ptr<A>  | < API > | Ptr<B>  |
+ *   +---------+ +---------+ +---------+         +---------+
+ *        |           |           |                   |
+ *   +---------+ +---------+ +---------+         +---------+
+ *   | Tracker | | Tracker | | Tracker |  < ID > | Tracker |
+ *   +---------+ +---------+ +---------+         +---------+
+ *        |           |           |                   | 
+ *        +-----------+-----------+              +---------+ 
+ *                    |                 unique > |  Block  |
+ *          +---------+---------+                +---------+
+ *          |  Block + internal | < shared            |
+ *          +-------------------+                +----------+
+ *                                      unique > | external |
+ *                                               +----------+
+ *
+ **************************************************************************************************
+ * Constructor
+ *
+ * `Ptr()`
+ *  - set nullptr
+ *
+ * `Ptr(const T&)`, `Ptr(T&&)`, `Ptr(Args...)`
+ *  - is create T and stored internally
+ *  - new `Tracker` for unique ID
+ *
+ * `Ptr(T*, std::function<void(void*)>)` 
+ *  - is get T* and stored externally
+ *  - call if function exists, otherwise ignore.
+ *  - function is customizable, default [](void* in) { delete in; }
+ *  - new `Tracker` for unique ID
+ *
+ * `Ptr(const Ptr&)`
+ *  - copy, shared
+ *  - new `Tracker` for unique ID
+ *
+ * `Ptr(Ptr&&)`
+ *  - move
+ *  - use existing `Tracker` address
+ **************************************************************************************************/
 
 LWE_BEGIN
 namespace mem {
