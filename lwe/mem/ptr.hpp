@@ -2,26 +2,48 @@
 #define LWE_MEM_PTR
 
 #include "../base/base.h"
+#include "../util/id.hpp"
 #include "../diag/diag.h"
-#include "allocator.hpp"
+#include "pool.hpp"
 
 /**************************************************************************************************
- * smart pointer (WIP)
+ * Ptr<T>: unique_ptr + weak_ptr hybrid smart pointer
+ *
+ * - Acts like std::unique_ptr when created directly.
+ * - Acts like std::weak_ptr when copied (non-owning).
+ * - Transfer ownership with `own()`.
+ * - Check ownership with `owned()`.
+ * - Validate pointer state (null/dangling) with `valid()`.
+ * - Perform copy-on-write with `clone()` method.
+ *
+ * Use case: lightweight smart pointer for memory safety with minimal overhead.
  **************************************************************************************************/
 
 LWE_BEGIN
 namespace mem {
+    template<typename T> class Slotmap {
+        using Adapter = Slotmap<util::Buffer<sizeof(T), int8_t>>;
+    public:
+        static T* acquire() {
+            LOCKGUARD(Adapter::lock) return Adapter::pool.allocate<T>();
+        }
+        static void release(T* in) {
+            LOCKGUARD(Adapter::lock) Adapter::pool.deallocate<T>(in);
+        }
+    };
 
-//template<typename> class Ptr;
-//template<typename T> struct Tracker {
-//    Ptr<T>
-//};
+    //! Pool for same-sized types
+    template<size_t N> class Slotmap<util::Buffer<N, int8_t>> {
+        template<typename> friend class Slotmap;
+        inline static async::Lock lock;
+        inline static Pool pool{ N };
+    };
 
 template<typename T> class Ptr {
-    // custom destructor
+    //! custom destructor
     using Deleter = void(*)(void*);
 
-    // constrcutor SFINAE for incomplete type
+    //! constrcutor SFINAE for incomplete type
     template<typename U, typename... Args> using Enable = std::enable_if_t<std::is_constructible_v<U, Args...>>;
 
     //! block base
@@ -117,11 +139,10 @@ private:
 
 private:
     // get id (WIP)
-    uint64_t gen() {
-        static std::atomic<uint64_t> id = 1;
-        return id.fetch_add(1, std::memory_order_relaxed);
-    }
+
 };
+
+
 
 }
 LWE_END

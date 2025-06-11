@@ -9,8 +9,8 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
 
     // arg == ptr, store external
     if(flag) {
-        block = Allocator<External>::allocate();
-        // allocate failed
+        block = Slotmap<External>::acquire();
+        // acquire failed
         if(!block) {
             return false;
         }
@@ -18,17 +18,18 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
     
     // arg != ptr, store internal
     else {
-        block = Allocator<Internal>::allocate();
-        // allocate failed
+        block = Slotmap<Internal>::acquire();
+        // acquire failed
         if(!block) {
             return false;
         }
     }
 
     // succeded
-    id           = gen(); // get id
-    block->id    = id;    // set block id
-    block->owner = this;  // set owner
+    id = util::ID<Ptr<T>>().value(); // get id
+
+    block->id    = id;   // set block id
+    block->owner = this; // set owner
     return true;
 }
 
@@ -45,12 +46,12 @@ template<typename T> bool Ptr<T>::release() {
             if (deleter) {
                 deleter(get());
             }
-            Allocator<External>::deallocate(reinterpret_cast<External*>(block)); // free
+            Slotmap<External>::release(reinterpret_cast<External*>(block)); // free
         }
         else {
             // else call dtor only
             get()->~T();
-            Allocator<Internal>::deallocate(reinterpret_cast<Internal*>(block)); // free
+            Slotmap<Internal>::release(reinterpret_cast<Internal*>(block)); // free
         }
     }
 
