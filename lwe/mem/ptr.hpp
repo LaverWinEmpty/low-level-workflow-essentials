@@ -2,6 +2,7 @@
 #define LWE_MEM_PTR
 
 #include "../base/base.h"
+#include "../util/buffer.hpp"
 #include "../util/id.hpp"
 #include "../diag/diag.h"
 #include "pool.hpp"
