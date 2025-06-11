@@ -37,7 +37,7 @@ class Static {
 enum class Uninit {
     UNINIT
 };
-static constexpr Unint UNINIT = Uninit::UNINIT; // using
+static constexpr Uninit UNINIT = Uninit::UNINIT; // using
 
 }
 LWE_END
