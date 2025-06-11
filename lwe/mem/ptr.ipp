@@ -4,6 +4,7 @@ LWE_BEGIN
 namespace mem {
 
 template<typename T> bool Ptr<T>::initialize(bool flag) {
+    pointer = flag;
     id = 0;
 
     // arg == ptr, store external
@@ -32,7 +33,6 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
 }
 
 template<typename T> bool Ptr<T>::release() {
-    // set
     if(!block) {
         return false;
     }
@@ -54,6 +54,7 @@ template<typename T> bool Ptr<T>::release() {
         }
     }
 
+    id      = 0;
     block   = nullptr; // for safe
     deleter = nullptr; // for safe
     return true;
@@ -63,7 +64,7 @@ template<typename T> bool Ptr<T>::release() {
 template<typename T> Ptr<T>::Ptr(): block(nullptr), deleter(nullptr), id(0), pointer(true) { }
 
 // pointer
-template<typename T> Ptr<T>::Ptr(T* in, Deleter func): deleter(func), pointer(true) {
+template<typename T> Ptr<T>::Ptr(T* in, Deleter func): deleter(func) {
     if(in == nullptr) {
         return;
     }
@@ -76,7 +77,7 @@ template<typename T> Ptr<T>::Ptr(T* in, Deleter func): deleter(func), pointer(tr
 
 // reference
 template<typename T>
-template<typename U, typename> Ptr<T>::Ptr(const U& in): deleter(nullptr), pointer(false) {
+template<typename U, typename> Ptr<T>::Ptr(const U& in): deleter(nullptr) {
     if(!initialize(false)) {
         throw diag::error(diag::Code::BAD_ALLOC); // init failed
     }
@@ -85,20 +86,11 @@ template<typename U, typename> Ptr<T>::Ptr(const U& in): deleter(nullptr), point
 
 // move
 template<typename T>
-template<typename U, typename> Ptr<T>::Ptr(U&& in): deleter(nullptr), pointer(false) {
+template<typename U, typename> Ptr<T>::Ptr(U&& in): deleter(nullptr) {
     if(!initialize(false)) {
         throw diag::error(diag::Code::BAD_ALLOC); // iit failed
     }
     new (reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
-}
-
-// T constructor
-template<typename T>
-template<typename... Args, typename> Ptr<T>::Ptr(Args&&... in): deleter(nullptr), pointer(false) {
-    if(!initialize(false)) {
-        throw diag::error(diag::Code::BAD_ALLOC); // init failed
-    }
-    new (get()) T(std::forward<Args>(in)...); // create
 }
 
 // dtor
@@ -205,8 +197,7 @@ template<typename T> bool Ptr<T>::clone() {
 
     T* data = get(); // pre-get
 
-    pointer = false; // internal
-    if(!initialize(pointer)) {
+    if(!initialize(false)) {
         return false; // failed
     }
     
@@ -251,8 +242,8 @@ template<typename T> void Ptr<T>::own() {
 }
 
 template<typename T> bool Ptr<T>::valid() const {
-    if(block) {
-        return id == block->id; // same
+    if(block && id) {
+        return id == block->id; // same and not 0
     }
     return false; // invalid
 }

@@ -19,7 +19,7 @@ namespace mem {
 
 template<typename T> class Ptr {
     // custom destructor
-    using Deleter = std::function<void(void*)>;
+    using Deleter = void(*)(void*);
 
     // constrcutor SFINAE for incomplete type
     template<typename U, typename... Args> using Enable = std::enable_if_t<std::is_constructible_v<U, Args...>>;
@@ -68,19 +68,11 @@ public:
     template<typename U, typename = Enable<T, U&&>> Ptr(U&&);
 
 public:
-    //! @brief crete (like a make_shared<T>)
-    template<typename... Args, typename = Enable<T, Args>> Ptr(Args&&...); 
-
-public:
     ~Ptr();
     Ptr(const Ptr&);                //!< shallow copy 
     Ptr(Ptr&&) noexcept;            //!< move
     Ptr& operator=(const Ptr&);     //!< shallow copy
     Ptr& operator=(Ptr&&) noexcept; //!< move
-
-public:
-    // template<typename U, typename = Enable<T, U&&>>       Ptr& operator=(U&&);      // move
-    // template<typename U, typename = Enable<T, const U&&>> Ptr& operator=(const U&); // copy
 
 public:
     T*       operator->();       //!< get ptr
