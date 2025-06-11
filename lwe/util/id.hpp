@@ -2,6 +2,7 @@
 #define LWE_UTIL_ID
 
 #include "../base/base.h"
+
 LWE_BEGIN
 namespace util {
 

@@ -12,11 +12,11 @@ template<typename T> ID<T>::ID(Uninit): id(0) {}
 
 template<typename T> ID<T>::ID(): id(next()) {}
 
-template<typename T> bool ID<T>::operator==(const ID<T>& in) {
+template<typename T> bool ID<T>::operator==(const ID& in) const {
     return id == in.id;
 }
 
-template<typename T> bool ID<T>::operator!=(const ID<T>& in) {
+template<typename T> bool ID<T>::operator!=(const ID& in) const {
     return id != in.id;
 }
 
@@ -28,7 +28,7 @@ template<typename T> uint64_t ID<T>::value() const {
     return id;
 }
 
-template<typename T> ID<T>::gen() {
+template<typename T> void ID<T>::gen() {
     if(!id) {
         id = next();
     }
@@ -36,5 +36,4 @@ template<typename T> ID<T>::gen() {
 
 }
 LWE_END
-#include "id.ipp"
 #endif
