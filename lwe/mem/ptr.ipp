@@ -4,38 +4,30 @@ LWE_BEGIN
 namespace mem {
 
 template<typename T> bool Ptr<T>::initialize(bool flag) {
-    // malloc(sizeof(Tracker))
-    tracker = Allocator<Tracker>::allocate();
-
-    // allocate failed
-    if(!tracker) {
-        return false;
-    }
+    id = 0;
 
     // arg == ptr, store external
     if(flag) {
-        block = new(std::nothrow) External;
+        block = Allocator<External>::allocate();
         // allocate failed
         if(!block) {
-            // free(tracker)
-            Allocator<Tracker>::deallocate(tracker);
-            tracker = nullptr; // restore
             return false;
         }
     }
     
     // arg != ptr, store internal
     else {
-        block = new(std::nothrow) Internal;
+        block = Allocator<Internal>::allocate();
         // allocate failed
         if(!block) {
-            // free(tracker)
-            Allocator<Tracker>::deallocate(tracker);
-            tracker = nullptr; // restore
             return false;
         }
     }
 
+    // succeded
+    id           = gen(); // get id
+    block->id    = id;    // set block id
+    block->owner = this;  // set owner
     return true;
 }
 
@@ -46,213 +38,109 @@ template<typename T> bool Ptr<T>::release() {
     }
 
     // call destructor
-    if(pointer) {
-        if(deleter) {
-            deleter(get());
+    if (block->owner == this) {
+        block->id = 0; // defeasance
+        if (pointer) {
+            // if external call deleter(ptr);
+            if (deleter) {
+                deleter(get());
+            }
+            Allocator<External>::deallocate(reinterpret_cast<External*>(block)); // free
         }
-        // else delete get(); // default delete X
+        else {
+            // else call dtor only
+            get()->~T();
+            Allocator<Internal>::deallocate(reinterpret_cast<Internal*>(block)); // free
+        }
     }
-    else get()->~T();
 
-    delete block;
     block   = nullptr; // for safe
     deleter = nullptr; // for safe
     return true;
 }
 
-// default
-template<typename T> Ptr<T>::Ptr(): pointer(true), deleter(nullptr) {
-    // set nullptr
-    tracker = nullptr;
-    block   = nullptr;
-}
+// default: set nullptr
+template<typename T> Ptr<T>::Ptr(): block(nullptr), deleter(nullptr), id(0), pointer(true) { }
 
 // pointer
-template<typename T> Ptr<T>::Ptr(T* in, Deleter func): pointer(true), deleter(func) {
+template<typename T> Ptr<T>::Ptr(T* in, Deleter func): deleter(func), pointer(true) {
     if(in == nullptr) {
         return;
     }
 
-    // init
     if(!initialize(true)) {
-        // failed
-        tracker = nullptr;
-        block   = nullptr;
-        throw diag::error(diag::Code::BAD_ALLOC);
+        throw diag::error(diag::Code::BAD_ALLOC); // init failed
     }
-    push(); // insert
     reinterpret_cast<External*>(block)->ptr = in; // set
 }
 
 // reference
 template<typename T>
-template<typename U, typename> Ptr<T>::Ptr(const U& in): pointer(false), deleter(nullptr) {
-    // init
+template<typename U, typename> Ptr<T>::Ptr(const U& in): deleter(nullptr), pointer(false) {
     if(!initialize(false)) {
-        // failed
-        tracker = nullptr;
-        block   = nullptr;
-        throw diag::error(diag::Code::BAD_ALLOC);
+        throw diag::error(diag::Code::BAD_ALLOC); // init failed
     }
-    push(); // insert
     new (reinterpret_cast<Internal*>(block)->ptr) T(in); // copy
 }
 
 // move
 template<typename T>
-template<typename U, typename> Ptr<T>::Ptr(U&& in): pointer(false), deleter(nullptr) {
-    // init
+template<typename U, typename> Ptr<T>::Ptr(U&& in): deleter(nullptr), pointer(false) {
     if(!initialize(false)) {
-        // failed
-        tracker = nullptr;
-        block   = nullptr;
-        throw diag::error(diag::Code::BAD_ALLOC);
+        throw diag::error(diag::Code::BAD_ALLOC); // iit failed
     }
-    push(); // insert
     new (reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
 }
 
 // T constructor
 template<typename T>
-template<typename... Args, typename>
-Ptr<T>::Ptr(Args&&... in): pointer(false), deleter(nullptr) {
-    // init
+template<typename... Args, typename> Ptr<T>::Ptr(Args&&... in): deleter(nullptr), pointer(false) {
     if(!initialize(false)) {
-        // failed
-        tracker = nullptr;
-        block   = nullptr;
-        throw diag::error(diag::Code::BAD_ALLOC);
+        throw diag::error(diag::Code::BAD_ALLOC); // init failed
     }
-    push(); // insert
     new (get()) T(std::forward<Args>(in)...); // create
 }
 
 // dtor
 template<typename T> Ptr<T>::~Ptr() {
-    // has tracker == has block
-    if(tracker) {
-        pop(); // unconditionally pop
-        if (block->head == nullptr) {
-            release(); // free block
-        }
-        Allocator<Tracker>::deallocate(tracker); // free(tracker)
-    }
+    release(); // if this is the owner, call free
 }
 
 // copy
-template<typename T> Ptr<T>::Ptr(const Ptr& in): pointer(in.pointer), deleter(in.deleter) {
-    // set nullptr
-    if(in.tracker == nullptr) {
-        tracker = nullptr;
-        block   = nullptr;
-    }
-
-    // shallow: to weak ptr
-    else {
-        // malloc(sizeof(Tracker));
-        tracker = Allocator<Tracker>::allocate();
-
-        // allocate failed
-        if(!tracker) {
-            throw diag::error(diag::Code::BAD_ALLOC);
-        }
-
-        // shared block
-        block = in.block;
-
-        // insert this
-        push();
-    }
-}
+template<typename T> Ptr<T>::Ptr(const Ptr& in): block(in.block), deleter(in.deleter), id(in.id), pointer(in.pointer) {}
 
 // move
-template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept :
-    pointer(in.pointer), tracker(in.tracker), block(in.block), deleter(in.deleter) {
+template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept : block(in.block), deleter(in.deleter), id(in.id), pointer(in.pointer) {
     // move
-    in.tracker = nullptr;
-    in.block   = nullptr;
+    in.block = nullptr;
+    if (block->owner == &in) {
+        block->owner = this;
+    }
 }
 
 // copy
 template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr& {
-    if(this == &in) return *this;
-
-    // tracking
-    if(tracker) {
-        // last
-        if(unique()) {
-            release();
-        }
-        pop();
-    }
-
-    // set nullptr
-    if(in.tracker == nullptr) {
-        if(tracker) {
-            // free(tracker)
-            Allocator<Tracker>::deallocate(tracker);
-        }
-
-        deleter = nullptr;
-        tracker = nullptr;
-        block   = nullptr;
-        return *this;
-    }
-
-    // copy
-    else {
-        // if nullptr
-        if(!tracker) {
-            // malloc(sizeof(Tracker))
-            tracker = Allocator<Tracker>::allocate();
-
-            // allocate failed
-            if(!tracker) {
-                deleter = nullptr;
-                block   = nullptr;
-                throw diag::error(diag::Code::BAD_ALLOC);
-            }
-        }
-
-        // shared block
-        block   = in.block;
-        deleter = in.deleter;
-        pointer = in.pointer;
-
-        // insert this
-        push();
-    }
+    if (this == &in) return *this;
+    block   = in.block;
+    deleter = in.deleter;
+    id      = in.id;
+    pointer = in.pointer;
     return *this;
 }
 
 // move
 template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
     if(this == &in) return *this;
-
-    // tracking
-    if(tracker) {
-        // last
-        if(unique()) {
-            release();
-        }
-        pop();
-    }
-
-    // set nullptr this
-    if(tracker) {
-        // free(tracker)
-        Allocator<Tracker>::deallocate(tracker);
-    }
-
     // move
-    pointer = in.pointer;
-    deleter = in.deleter;
-    tracker = in.tracker;
     block   = in.block;
+    deleter = in.deleter;
+    id      = in.id;
+    pointer = in.pointer;
 
-    // move
-    in.tracker = nullptr;
-    in.block   = nullptr;
+    in.block = nullptr;
+    if (block->owner == &in) {
+        block->owner = this;
+    }
     return *this;
 }
 
@@ -293,15 +181,15 @@ template<typename T> bool Ptr<T>::operator!=(const Ptr& in) const {
 }
 
 template<typename T> Ptr<T>::operator bool () const {
-    return tracker != nullptr;
+    return valid();
 }
 
 template<typename T> Ptr<T>::operator T* () {
-    return operator->();
+    return get();
 }
 
 template<typename T> Ptr<T>::operator const T* () const {
-    return operator->();
+    return get();
 }
 
 template<typename T> bool Ptr<T>::clone() {
@@ -310,21 +198,20 @@ template<typename T> bool Ptr<T>::clone() {
         return true;
     }
 
-    Internal* temp = new(std::nothrow) Internal;
-    // allocated failed
-    if(!temp) {
-        return false;
+    // is owner
+    if (block->owner == this) {
+        return true;
     }
-    temp->head = nullptr;
+
+    T* data = get(); // pre-get
+
+    pointer = false; // internal
+    if(!initialize(pointer)) {
+        return false; // failed
+    }
     
     // deep copy by placement new copy constructor
-    new (temp->ptr) T(*get());
-
-    pop();            // pop
-    block = temp;     // set
-    pointer  = false; // internal
-    push();           // isnert to new block
-
+    new (get()) T(*data);
     return true;
 }
 
@@ -350,71 +237,24 @@ template<typename T> template<typename U> const U* Ptr<T>::as() const {
     return reinterpret_cast<U*>(get());
 }
 
-// block management
-template<typename T> bool Ptr<T>::push() {
-    // check has data
-    if(tracker == nullptr) {
-        return false;
+template<typename T> bool Ptr<T>::owned() const {
+    if(block) {
+        return block->owner == this; // same
     }
-
-    // push front
-    tracker->prev                      = nullptr;     // [null]<--[this]-->[????]
-    tracker->next                      = block->head; // [null]<--[this]-->[head]
-    if (block->head) block->head->prev = tracker;     // [null]<->[this]<->[head]
-    block->head                        = tracker;     // [null]<->[head]<->[....]
-
-
-    ++block->count;
-    return true;
+    return false;
 }
 
-// block management
-template<typename T> bool Ptr<T>::pop() {
-    if (block == nullptr) {
-        return false;
+template<typename T> void Ptr<T>::own() {
+    if (block) {
+        block->owner = this;
     }
-
-    // size 0
-    if(block->head == nullptr) {
-        return false;
-    }
-
-    // pop front
-    if (tracker == block->head) {        // [head]<->[....]<->[....]
-        block->head = block->head->next; // [this]<->[head]<->[....]
-    }
-
-    // pop
-    if (tracker->prev) tracker->prev->next = tracker->next; // [prev]<--[ in ]-->[next] 
-    if (tracker->next) tracker->next->prev = tracker->prev; //    ^----------------^
-
-    // for safe
-    tracker->prev = nullptr; // [prev]   [ in ]-->[next]
-    tracker->next = nullptr; // [prev]<---------->[next]
-
-    --block->count;
-    return true;
 }
 
-template<typename T> bool Ptr<T>::unique() const {
-    if (!block) {
-        return false;
+template<typename T> bool Ptr<T>::valid() const {
+    if(block) {
+        return id == block->id; // same
     }
-    return block->count == 1;
-}
-
-template<typename T> bool Ptr<T>::shared() const {
-    if (!block) {
-        return false;
-    }
-    return block->count > 1;
-}
-
-template<typename T> size_t Ptr<T>::count() const {
-    if (!block) {
-        return 0;
-    }
-    return block->count;
+    return false; // invalid
 }
 
 }

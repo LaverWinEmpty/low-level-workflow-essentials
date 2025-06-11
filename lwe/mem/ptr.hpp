@@ -6,61 +6,16 @@
 #include "allocator.hpp"
 
 /**************************************************************************************************
- * smart pointer
- *
- * it works like shared_ptr based on unique_ptr with weak_ptr
- * because of this, there is no thread safety.
- * 
- **************************************************************************************************
- * structure
- *
- *   +---------+ +---------+ +---------+         +---------+
- *   | Ptr<A>  | | Ptr<A>  | | Ptr<A>  | < API > | Ptr<B>  |
- *   +---------+ +---------+ +---------+         +---------+
- *        |           |           |                   |
- *   +---------+ +---------+ +---------+         +---------+
- *   | Tracker | | Tracker | | Tracker |  < ID > | Tracker |
- *   +---------+ +---------+ +---------+         +---------+
- *        |           |           |                   | 
- *        +-----------+-----------+              +---------+ 
- *                    |                 unique > |  Block  |
- *          +---------+---------+                +---------+
- *          |  Block + internal | < shared            |
- *          +-------------------+                +----------+
- *                                      unique > | external |
- *                                               +----------+
- *
- **************************************************************************************************
- * Constructor
- *
- * `Ptr()`
- *  - set nullptr
- *
- * `Ptr(const T&)`, `Ptr(T&&)`, `Ptr(Args...)`
- *  - is create T and stored internally
- *  - new `Tracker` for unique ID
- *
- * `Ptr(T*, std::function<void(void*)>)` 
- *  - is get T* and stored externally
- *  - call if function exists, otherwise ignore.
- *  - function is customizable, default [](void* in) { delete in; }
- *  - new `Tracker` for unique ID
- *
- * `Ptr(const Ptr&)`
- *  - copy, shared
- *  - new `Tracker` for unique ID
- *
- * `Ptr(Ptr&&)`
- *  - move
- *  - use existing `Tracker` address
+ * smart pointer (WIP)
  **************************************************************************************************/
 
 LWE_BEGIN
 namespace mem {
 
-struct Tracker {
-    Tracker* next, *prev;
-};
+//template<typename> class Ptr;
+//template<typename T> struct Tracker {
+//    Ptr<T>
+//};
 
 template<typename T> class Ptr {
     // custom destructor
@@ -71,8 +26,8 @@ template<typename T> class Ptr {
 
     //! block base
     struct Block {
-        Tracker* head  = nullptr;
-        size_t   count = 0;
+        uint64_t id    = 0;
+        Ptr*     owner = nullptr;
     };
 
     //! internal data control block
@@ -82,7 +37,6 @@ template<typename T> class Ptr {
             T       data;
             uint8_t ptr[sizeof(T)] = { 0 }; // memset
         };
-;
     };
 
     //! external data control block
@@ -93,7 +47,6 @@ template<typename T> class Ptr {
 private:
     bool initialize(bool); // malloc
     bool release();        // free
-
 
 public:
     //! default set nullptr
@@ -107,19 +60,16 @@ public:
 public:
     //! @brief copy const
     //! @param [in] U is T, for incomplete type
-    template<typename U, typename = Enable<T, const U&>>
-    Ptr(const U&);
+    template<typename U, typename = Enable<T, const U&>> Ptr(const U&);
 
 public:
     //! @brief move 
     //! @param [in] U is T, for incomplete type
-    template<typename U, typename = Enable<T, U&&>>
-    Ptr(U&&);
+    template<typename U, typename = Enable<T, U&&>> Ptr(U&&);
 
 public:
     //! @brief crete (like a make_shared<T>)
-    template<typename... Args, typename = Enable<T, Args>>
-    Ptr(Args&&...); 
+    template<typename... Args, typename = Enable<T, Args>> Ptr(Args&&...); 
 
 public:
     ~Ptr();
@@ -127,6 +77,10 @@ public:
     Ptr(Ptr&&) noexcept;            //!< move
     Ptr& operator=(const Ptr&);     //!< shallow copy
     Ptr& operator=(Ptr&&) noexcept; //!< move
+
+public:
+    // template<typename U, typename = Enable<T, U&&>>       Ptr& operator=(U&&);      // move
+    // template<typename U, typename = Enable<T, const U&&>> Ptr& operator=(const U&); // copy
 
 public:
     T*       operator->();       //!< get ptr
@@ -141,9 +95,9 @@ public:
     bool operator!=(const Ptr&) const; //!< compare if the block ​​are the same
 
 public:
-    explicit operator bool() const; //! check nullptr
-    operator T*();                  //! raw pointer
-    operator const T*() const;      //! raw pointer const
+    explicit operator bool() const;     //! check nullptr
+    explicit operator T*();             //! raw pointer
+    explicit operator const T*() const; //! raw pointer const
 
 public:
     //! @brief to unique, NEED: copy constructor
@@ -158,32 +112,23 @@ public:
     template<typename U> U*       as();       //!< cast
     template<typename U> const U* as() const; //!< cast
 
-private:
-    //! @return false: block is nullptr
-    bool push();
-
-private:
-    //! @return false: call on empty
-    bool pop();
-
-private:
-    bool unique() const;
-    bool shared() const;
-
 public:
-    size_t count() const;
+    bool owned() const; //!< get ownership
+    void own();         //!< set owner
+    bool valid() const; //!< check null and dangling
 
 private:
-    Tracker* tracker = nullptr;
+    Block*   block;   //!< block
+    Deleter  deleter; //!< custom deleter
+    uint64_t id = 0;  //!< dangling checker
+    bool     pointer; //!< is pointer flag
 
 private:
-    Block* block = nullptr;
-
-private:
-    Deleter deleter; //!< @brief custom deleter
-
-private:
-    bool pointer;
+    // get id (WIP)
+    uint64_t gen() {
+        static std::atomic<uint64_t> id = 1;
+        return id.fetch_add(1, std::memory_order_relaxed);
+    }
 };
 
 }
