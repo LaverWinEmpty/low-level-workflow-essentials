@@ -150,6 +150,14 @@ public:
     //! @return false: bad alloc
     bool clone();
 
+public:
+    T*       get();         //!< get
+    const T* get() const;   //!< get
+
+public:
+    template<typename U> U*       as();       //!< cast
+    template<typename U> const U* as() const; //!< cast
+
 private:
     //! @return false: block is nullptr
     bool push();
@@ -158,13 +166,9 @@ private:
     //! @return false: call on empty
     bool pop();
 
-public:
+private:
     bool unique() const;
     bool shared() const;
-
-private:
-    T*       data();         //!< get
-    const T* data() const;   //!< get
 
 public:
     size_t count() const;
