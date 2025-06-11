@@ -14,13 +14,7 @@ template<typename T, size_t ALIGN = DEF_ALIGN> class Allocator;
 //! @brief helper to use the same pool when sizes are the same.
 template<size_t SIZE, size_t ALIGN>
 class Allocator<util::Buffer<SIZE, int8_t>, ALIGN> {
-public:
-    template<typename T = void, typename... Args> static T* allocate(Args&&...) noexcept; //!< @return false: bad alloc
-    template<typename T = void> static bool                 deallocate(T*) noexcept;      //!< @return false: failed
-    static size_t                                           generate(size_t) noexcept;    //!< @return succeeded count
-    static size_t                                           release() noexcept;           //!< @return succeeded count
-
-private:
+    template<typename, size_t> friend class Allocator;
     static Pool        pool;
     static async::Lock lock;
 };
