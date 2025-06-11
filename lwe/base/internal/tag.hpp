@@ -34,10 +34,10 @@ class Static {
     Static& operator=(Static&&)      noexcept = default;
 };
 
-enum Uninitialized {
+enum class Uninit {
     UNINIT
 };
-// using enum Uninitialized;
+static constexpr Unint UNINIT = Uninit::UNINIT; // using
 
 }
 LWE_END
