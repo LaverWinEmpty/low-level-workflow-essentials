@@ -131,8 +131,10 @@ Ptr<T>::Ptr(Args&&... in): pointer(false), deleter(nullptr) {
 template<typename T> Ptr<T>::~Ptr() {
     // has tracker == has block
     if(tracker) {
-        pop();                                   // unconditionally pop
-        release();                               // free block
+        pop(); // unconditionally pop
+        if (block->head == nullptr) {
+            release(); // free block
+        }
         Allocator<Tracker>::deallocate(tracker); // free(tracker)
     }
 }
