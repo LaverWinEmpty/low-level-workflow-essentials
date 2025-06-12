@@ -83,5 +83,5 @@ void deserialize(void*, const string&, const Keyword&); //!< runtime deserialize
 LWE_END
 
 #include "object.ipp"
-#include "internal/ref.hpp"
+#include "internal/rc.hpp"
 #endif

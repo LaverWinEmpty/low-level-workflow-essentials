@@ -87,11 +87,11 @@ bool RC<T>::clone() {
     return ptr.clone();
 }
 
-template<typename T> T& RC<T>::as() {
+template<typename T> T& RC<T>::get() {
     return *ptr;
 }
 
-template<typename T> const T& RC<T>::as() const {
+template<typename T> const T& RC<T>::get() const {
     return *ptr;
 }
 

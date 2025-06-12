@@ -50,5 +50,5 @@ private:
 
 }
 LWE_END
-#include "RC.ipp"
+#include "rc.ipp"
 #endif
