@@ -1,4 +1,4 @@
-#include "C:/Git/working/lwe/mem/ptr.hpp"
+#include "../mem/ptr.hpp"
 
 namespace test {
 

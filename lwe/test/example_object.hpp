@@ -1,5 +1,8 @@
 #pragma once
 
+#include "../meta/meta.h"
+#include "../stl/deque.hpp"
+
 namespace test {
     using namespace LWE;
     using namespace meta;
@@ -29,7 +32,7 @@ REGISTER_FIELD_BEGIN(Test, test) {
 REGISTER_FIELD_END;
 
 namespace test{
-int example_object() {
+void example_object() {
     /* Serialize format */
     // string:    " "
     // container: [ ]
@@ -137,7 +140,7 @@ int example_object() {
         // {} [] -> \[ \] \{ \}, for safe formatting
 
         // serialize
-        std::cout << test->serialize();
+        std::cout << test->serialize() << std::endl;
     }
 }
 }
