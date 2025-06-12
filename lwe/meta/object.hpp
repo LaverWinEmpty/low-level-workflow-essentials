@@ -15,7 +15,7 @@ struct Class; // meta class
  * @brief serializable object: template, array not support
  */
 class Object {
-    template<typename T> friend class Ref;
+    template<typename T> friend class RC;
 
 protected:
     template<typename T> static T*   constructor();
