@@ -64,13 +64,19 @@ template<typename T> template<typename U> RC<T>::RC(RC<U>&& in) {
     if(!in->isof<T>()) {
         throw diag::error(diag::Code::TYPE_MISMATCH);
     }
-
     ptr = std::move(in.ptr);
 }
+
+template<typename T> RC<T>::RC(std::nullptr_t ptr): ptr(nullptr) {}
+
 
 template<typename T> RC<T>::~RC() {}
 
 template<typename T> template<typename U> U* RC<T>::cast() {
+    if (!ptr) {
+        return nullptr;
+    }
+
     // checked
     if (ptr->isof<U>()) {
         return RC<U>(*this);
@@ -79,7 +85,10 @@ template<typename T> template<typename U> U* RC<T>::cast() {
 }
 
 template<typename T> template<typename U> U* RC<T>::as() {
-    return reinterpret_cast<U*>(ptr);
+    if (!ptr) {
+        return nullptr;
+    }
+    return ptr.as<U>();
 }
 
 template<typename T>
@@ -87,16 +96,23 @@ bool RC<T>::clone() {
     return ptr.clone();
 }
 
-template<typename T> T& RC<T>::get() {
-    return *ptr;
+template<typename T> T* RC<T>::get() {
+    if (!ptr) {
+        return nullptr;
+    }
+    return ptr.as<T>();
 }
 
-template<typename T> const T& RC<T>::get() const {
-    return *ptr;
+template<typename T> const T* RC<T>::get() const {
+    return const_cast<RC<T>*>(this)->get();
 }
 
 template<typename T> RC<T>::operator T*() {
-    return ptr;
+    return get();
+}
+
+template<typename T> RC<T>::operator const T* () const {
+    return const_cast<RC<T>*>(this)->get();
 }
 
 }

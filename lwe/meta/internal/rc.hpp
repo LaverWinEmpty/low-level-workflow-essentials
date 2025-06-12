@@ -19,6 +19,7 @@ public:
     RC(RC&&) noexcept;
     template<typename U> RC(const RC<U>&);
     template<typename U> RC(RC<U>&&);
+    RC(std::nullptr_t);
     ~RC();
 
 public:
@@ -31,8 +32,8 @@ public:
     template<typename U> U* cast();      //!< safe cast
     template<typename U> U* as();        //!< unsafe cast
     bool                    clone();     //!< set unique
-    T&                      get();       //!< get RCerence
-    const T&                get() const; //!< get RCerence const
+    T*                      get();       //!< get RCerence
+    const T*                get() const; //!< get RCerence const
 
 public:
     T*       operator->()       { return reinterpret_cast<T*>(&*ptr); }
