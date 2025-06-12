@@ -65,10 +65,11 @@ template<typename T> bool Ptr<T>::release() {
 template<typename T> Ptr<T>::Ptr(): block(nullptr), deleter(nullptr), id(0), pointer(true) { }
 
 // pointer
-template<typename T> Ptr<T>::Ptr(T* in, Deleter func): deleter(func) {
+template<typename T> Ptr<T>::Ptr(T* in, Deleter func): block(nullptr), deleter(nullptr), id(0), pointer(true) {
     if(in == nullptr) {
         return;
     }
+    deleter = func; // for safe
 
     if(!initialize(true)) {
         throw diag::error(diag::Code::BAD_ALLOC); // init failed
@@ -113,7 +114,13 @@ template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept : block(in.block), deleter(i
 
 // copy
 template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr& {
-    if (this == &in) return *this;
+    if(this == &in) return *this;
+
+    // reset
+    if(block) {
+        release();
+    }
+
     block   = in.block;
     deleter = in.deleter;
     id      = in.id;
@@ -124,14 +131,23 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr& {
 // move
 template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
     if(this == &in) return *this;
+
+    // reset
+    if(block) {
+        release();
+    }
+
     // move
     block   = in.block;
     deleter = in.deleter;
     id      = in.id;
     pointer = in.pointer;
 
+    // move
     in.block = nullptr;
-    if (block->owner == &in) {
+
+    // block not null
+    if (block && block->owner == &in) {
         block->owner = this;
     }
     return *this;
