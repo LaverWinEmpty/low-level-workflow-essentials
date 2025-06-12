@@ -1,10 +1,10 @@
-#ifdef LWE_META_REF
+#ifdef LWE_META_RC
 
 LWE_BEGIN
 namespace meta {
 
 // ctor: default
-template<typename T> Ref<T>::Ref():
+template<typename T> RC<T>::RC():
     ptr(
         static_cast<Object*>(Object::constructor<T>()),
         // custom deallocator
@@ -15,11 +15,11 @@ template<typename T> Ref<T>::Ref():
 {}
 
 // copy: shallow
-template<typename T> Ref<T>::Ref(const Ref& in): ptr(in.ptr) {}
+template<typename T> RC<T>::RC(const RC& in): ptr(in.ptr) {}
 
 template<typename T>
 template<typename U>
-Ref<T>::Ref(const Ref<U>& in) {
+RC<T>::RC(const RC<U>& in) {
     // check failed
     if (!in->isof<T>()) {
         throw diag::error(diag::Code::TYPE_MISMATCH);
@@ -28,19 +28,19 @@ Ref<T>::Ref(const Ref<U>& in) {
     ptr = in.ptr;
 }
 
-template<typename T> auto Ref<T>::operator=(const Ref<T>& in) -> Ref& {
+template<typename T> auto RC<T>::operator=(const RC<T>& in) -> RC& {
     ptr = in.ptr;
     return *this;
 }
 
-template<typename T> auto Ref<T>::operator=(Ref<T>&& in) noexcept -> Ref& {
+template<typename T> auto RC<T>::operator=(RC<T>&& in) noexcept -> RC& {
     if(this != &in) {
         ptr = std::move(in.ptr);
     }
     return *this;
 }
 
-template<typename T> template<typename U> auto Ref<T>::operator=(const Ref<U>& in) -> Ref& {
+template<typename T> template<typename U> auto RC<T>::operator=(const RC<U>& in) -> RC& {
     if(!in->isof<T>()) {
         throw diag::error(diag::Code::TYPE_MISMATCH);
     }
@@ -48,7 +48,7 @@ template<typename T> template<typename U> auto Ref<T>::operator=(const Ref<U>& i
     return *this;
 }
 
-template<typename T> template<typename U> auto Ref<T>::operator=(Ref<U>&& in) -> Ref& {
+template<typename T> template<typename U> auto RC<T>::operator=(RC<U>&& in) -> RC& {
     if(this != &in) {
         if(!in->isof<T>()) {
             throw diag::error(diag::Code::TYPE_MISMATCH);
@@ -58,9 +58,9 @@ template<typename T> template<typename U> auto Ref<T>::operator=(Ref<U>&& in) ->
     return *this;
 }
 
-template<typename T> Ref<T>::Ref(Ref&& in) noexcept: ptr(std::move(in.ptr)) {}
+template<typename T> RC<T>::RC(RC&& in) noexcept: ptr(std::move(in.ptr)) {}
 
-template<typename T> template<typename U> Ref<T>::Ref(Ref<U>&& in) {
+template<typename T> template<typename U> RC<T>::RC(RC<U>&& in) {
     if(!in->isof<T>()) {
         throw diag::error(diag::Code::TYPE_MISMATCH);
     }
@@ -68,31 +68,34 @@ template<typename T> template<typename U> Ref<T>::Ref(Ref<U>&& in) {
     ptr = std::move(in.ptr);
 }
 
-template<typename T> Ref<T>::~Ref() {}
+template<typename T> RC<T>::~RC() {}
 
-template<typename T>
-template<typename U> diag::Expected<Ref<U>> Ref<T>::cast() {
+template<typename T> template<typename U> U* RC<T>::cast() {
     // checked
     if (ptr->isof<U>()) {
-        return Ref<U>(*this);
+        return RC<U>(*this);
     }
-    else return diag::error(diag::Code::TYPE_MISMATCH); // cast failed
+    return nullptr;
+}
+
+template<typename T> template<typename U> U* RC<T>::as() {
+    return reinterpret_cast<U*>(ptr);
 }
 
 template<typename T>
-bool Ref<T>::clone() {
+bool RC<T>::clone() {
     return ptr.clone();
 }
 
-template<typename T> T& Ref<T>::as() {
+template<typename T> T& RC<T>::as() {
     return *ptr;
 }
 
-template<typename T> const T& Ref<T>::as() const {
+template<typename T> const T& RC<T>::as() const {
     return *ptr;
 }
 
-template<typename T> Ref<T>::operator T*() {
+template<typename T> RC<T>::operator T*() {
     return ptr;
 }
 
