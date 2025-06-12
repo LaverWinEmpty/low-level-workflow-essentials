@@ -12,7 +12,6 @@ template<typename T> constexpr Keyword typecode() {
     if constexpr(std::is_pointer_v<T>)                       return Keyword::POINTER;
     if constexpr(std::is_reference_v<T>)                     return Keyword::REFERENCE;
     if constexpr(std::is_union_v<T>)                         return Keyword::UNION;
-    if constexpr(std::is_class_v<T>)                         return Keyword::CLASS;
     if constexpr(std::is_void_v<T>)                          return Keyword::VOID;
     if constexpr(std::is_same_v<T, bool>)                    return Keyword::BOOL;
     if constexpr(std::is_same_v<T, signed char>)             return Keyword::SIGNED_CHAR;
@@ -29,6 +28,7 @@ template<typename T> constexpr Keyword typecode() {
     if constexpr(std::is_same_v<T, double>)                  return Keyword::DOUBLE;
     if constexpr(std::is_same_v<T, long double>)             return Keyword::LONG_DOUBLE;
     if constexpr(std::is_same_v<T, std::string>)             return Keyword::STD_STRING;
+    if constexpr(std::is_class_v<T>)                         return Keyword::CLASS; // unregistered class
     else                                                     return Keyword::UNREGISTERED;
 }
 // clang-format on
