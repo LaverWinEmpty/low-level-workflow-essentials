@@ -68,6 +68,7 @@
  * include 
  **************************************************************************************************/
 #include "type.hpp"
+#include "value.hpp"  // enum helper
 #include "lambda.hpp" // included type.hpp 
 #include "object.hpp" // included lambda.hpp 
 
@@ -80,6 +81,7 @@ using meta::Object;      //!< type: object class
 using meta::Class;       //!< type: meta class
 using meta::Enum;        //!< type: meta enum
 using meta::Container;   //!< type: container
+using meta::Value;       //!< type: enum helper
 using meta::serialize;   //!< function: serialize
 using meta::deserialize; //!< function: deserialize
 using meta::typeof;      //!< function: get type info
