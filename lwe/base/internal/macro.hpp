@@ -262,7 +262,7 @@ public:                                                                         
 #define Macro__register_method_begin_global(TYPE)        Macro__register_method_begin_detail(TYPE, ::)
 #define Macro__register_method_begin_scoped(TYPE, SCOPE) Macro__register_method_begin_detail(TYPE, SCOPE::)
 #define Macro__register_method_begin_detail(TYPE, SCOPE)                                                               \
-    template<> LWE::meta::Method* LWE::meta::method<SCOPE TYPE>(const std::string& in) {                               \
+    template<> LWE::meta::Method* LWE::meta::methodof<SCOPE TYPE>(const std::string& in) {                             \
         return Registry<LWE::meta::Method>::find(#TYPE, in);                                                           \
     }                                                                                                                  \
     template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>();                                            \
@@ -304,6 +304,9 @@ public:                                                                         
         static LWE::meta::Enum* ENUM = nullptr;                                                                        \
         if(!ENUM) ENUM = LWE::meta::Registry<LWE::meta::Enum>::find(#TYPE);                                            \
         return ENUM;                                                                                                   \
+    }                                                                                                                  \
+    template<> LWE::meta::Enum* LWE::meta::enumof<SCOPE TYPE>(const SCOPE TYPE&) {                                     \
+        return enumof<SCOPE TYPE>();                                                                                   \
     }                                                                                                                  \
     template<> LWE::meta::Registered LWE::meta::registenum<SCOPE TYPE>() {                                             \
         LWE::meta::Enumeration::reflect<SCOPE TYPE>();                                                                 \

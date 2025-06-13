@@ -87,7 +87,7 @@ using meta::classof;     //!< function: get class metadata
 using meta::enumof;      //!< function: get enum metadata
 using meta::statics;     //!< function: get static object
 using meta::typestring;  //!< function: get typename
-using meta::method;      //!< function: get method
+using meta::methodof;    //!< function: get method
 
 /**************************************************************************************************
  * register type enum

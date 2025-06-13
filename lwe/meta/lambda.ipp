@@ -68,28 +68,28 @@ Method* Method::lambdaize(Ret(Cls::* name)(Args...) const) {
     return new Lambda<Cls, Ret, Args...>(name);
 }
 
-template<typename T> Method* method(const char* name) {
-    return method<T>(string{ name });
+template<typename T> Method* methodof(const char* name) {
+    return methodof<T>(string{ name });
 }
 
-template<typename T> Method* method(const string& name) {
+template<typename T> Method* methodof(const string& name) {
     // default, other class -> template specialization
     return nullptr;
 }
 
-Method* method(const char* cls, const char* name) {
+Method* methodof(const char* cls, const char* name) {
     return Registry<Method>::find(cls, name);
 }
 
-Method* method(const string& cls, const char* name) {
+Method* methodof(const string& cls, const char* name) {
     return Registry<Method>::find(cls, name);
 }
 
-Method* method(const char* cls, const string& name) {
+Method* methodof(const char* cls, const string& name) {
     return Registry<Method>::find(cls, name);
 }
 
-Method* method(const string& cls, const string& name) {
+Method* methodof(const string& cls, const string& name) {
     return Registry<Method>::find(cls, name);
 }
 

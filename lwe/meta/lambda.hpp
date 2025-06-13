@@ -49,12 +49,12 @@ private:
 };
 
 
-template<typename T> Method* method(const char*   name);                    //!< get method
-template<typename T> Method* method(const string& name);                    //!< get method
-Method*                      method(const char*   cls, const char*   name); //!< get method
-Method*                      method(const char*   cls, const string& name); //!< get method
-Method*                      method(const string& cls, const char*   name); //!< get method
-Method*                      method(const string& cls, const string& name); //!< get method
+template<typename T> Method* methodof(const char*   name);                    //!< get method
+template<typename T> Method* methodof(const string& name);                    //!< get method
+Method*                      methodof(const char*   cls, const char*   name); //!< get method
+Method*                      methodof(const char*   cls, const string& name); //!< get method
+Method*                      methodof(const string& cls, const char*   name); //!< get method
+Method*                      methodof(const string& cls, const string& name); //!< get method
 
 //! @brief reigstry class specialize
 template<> class Registry<Method> {
