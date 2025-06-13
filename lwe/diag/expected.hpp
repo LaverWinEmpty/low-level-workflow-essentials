@@ -27,7 +27,9 @@ public:
 	operator const char* () const;
 
 public:
-	T*       operator->() const;
+	T*       operator->();
+	T&       operator*();
+	const T* operator->() const;
 	const T& operator*() const;
 
 public:

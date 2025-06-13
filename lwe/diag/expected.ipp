@@ -84,18 +84,26 @@ template<typename T> Expected<T>::operator const char* () const {
 	return what();
 }
 
-template<typename T> T* Expected<T>::operator->() const {
+template<typename T> T* Expected<T>::operator->() {
 	if (!flag) {
 		throw msg;
 	}
 	return &data;
 }
 
-template<typename T> const T& Expected<T>::operator*() const {
+template<typename T> T& Expected<T>::operator*() {
 	if (!flag) {
 		throw msg;
 	}
 	return data;
+}
+
+template<typename T> const T* Expected<T>::operator->() const {
+	return const_cast<Expected<T>*>(this)->operator->();
+}
+
+template<typename T> const T& Expected<T>::operator*() const {
+	return const_cast<Expected<T>*>(this)->operator*();
 }
 
 template<typename T> const char* Expected<T>::what() const {
