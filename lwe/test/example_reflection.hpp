@@ -7,7 +7,6 @@
  * class reflection -> example_object.hpp
  */
 
-
 namespace test {
 
 enum class EnumTest : uint8_t {
@@ -29,7 +28,6 @@ public:
 using namespace LWE;
 using namespace meta;
 }
-
 
 /* -Parameters: (ClassName, namespace) or (ClassName) for global namespace
  * -Limitation : Method overloading is NOT SUPPORTED
@@ -103,6 +101,46 @@ void example_reflection() {
 		if (!info) {
 			printf("INFO IS NULL\n");
 		}
+	}
+
+	/* enum helper */ {
+		Value<EnumTest> value = 65; // Acts like an integer, but restricted to EnumTest values
+		std::cout << "value: " << value << "\n"; // print 'A'
+		std::cout << "value TO STRING: " << *value << "\n"; // to string (unregistered value = empty)
+
+		value = EnumTest::TRUE;
+		std::cout << "value TO STRING: " << *value << "\n"; // print TRUE (Only registered value are allowed)
+
+		// Bit operation supported
+		std::cout << "value & TRUE == " << (int)(value & EnumTest::TRUE) << "\n"; // print 1
+
+		Value<EnumUnregistered> other = 100;
+		std::cout << "other TO STRING " << *other << "\n"; // unregistered enum -> empty string
+
+		// get value info (unregistered -> error)
+		diag::Expected<Enumerator>info = other.meta();
+		if (!info) {
+			std::cout << info.what() << std::endl;
+		}
+
+		// get value info (unregistered -> error)
+		info = Value<EnumTest>::find(2);
+		if (!info) {
+			std::cout << info.what() << std::endl;
+		}
+
+		// get value info by index (out of range)
+		info = Value<EnumTest>::get(2);
+		if (!info) {
+			std::cout << info.what() << std::endl;
+		}
+
+		// get enum info by name
+		info = Value<EnumTest>::find("TRUE");
+		if (!info) {
+			std::cout << info.what() << std::endl;
+		}
+		else std::cout << (*info).name << ", " << info->value << "\n"; // print TRUE, 1
 	}
 
 	/* method */ {
