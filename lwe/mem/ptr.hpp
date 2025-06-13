@@ -137,13 +137,7 @@ private:
     Deleter  deleter; //!< custom deleter
     uint64_t id = 0;  //!< dangling checker
     bool     pointer; //!< is pointer flag
-
-private:
-    // get id (WIP)
-
 };
-
-
 
 }
 LWE_END
