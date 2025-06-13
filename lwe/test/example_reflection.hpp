@@ -1,230 +1,138 @@
 #pragma once
 
+#include "iostream"
 #include "../meta/meta.h"
 
 /*
-    serialize format
+ * class reflection -> example_object.hpp
+ */
 
-    { }: Class
-    [ ]: Container
-    " ": String
 
-    e.g.
-    std::string field
-    { "string" }
-    serialized ->
-    { "\{ \"class\" \}" }
-*/
-
-#include <iostream>
-
-// test class
 namespace test {
-    // test enum
-    enum ETest {
-        A, B, C
-    };
 
-    class Class : public lwe::Object {
-        // regsiter class
-        CLASS_BODY(Class, lwe::Object);
-
-    public:
-        // Currently serialize requires a default constructor.
-        // I plan to add an alternate constructor in the macro.
-        Class() {}
-        Class(int a, int b, int c) : a(a), b(b), c(c) {}
-
-    public:
-        void print() {
-            std::cout << a << ", " << b << ", " << c << "\n";
-        }
-
-    private:
-        int sum() {
-            return a + b + c;
-        }
-
-        void set(int inA, int inB, int inC) {
-            a = inA;
-            b = inB;
-            c = inC;
-        }
-
-    private:
-        int a, b;
-
-    public:
-        int c;
-    };
+enum class EnumTest : uint8_t {
+	FALSE, TRUE, WHAT
 };
 
-// Register code sample
-// Automation using tools is planned to be introduced.
+enum class EnumUnregistered : uint8_t {
+	A, B
+};
 
-// Negister class filelds,
-// param 1: Class name
-// param 2: namespace or struct, class (optional)
-// e.g.
-// - a::B::C  -> (C, a::B);
-// - global A -> (A);
-REGISTER_FIELD_BEGIN(Class, test) { // No need {}
-    REGISTER_FIELD(a);
-    REGISTER_FIELD(b);
-    // except c
-} // But if you use it, the format will be cleaner.
-REGISTER_FIELD_END;
+class MethodTest {
+// private possible: Object derived class only
+public:
+	void print() const { std::cout << "Hello, world!\n"; }
+	int  sum(int a, int b) const { return a + b; }
+	int  sub(int a, int b) const { return a - b; }
+};
 
-// Register method
-REGISTER_METHOD_BEGIN(Class, test) {
-    REGISTER_METHOD(sum);
-    REGISTER_METHOD(set);
-} 
+using namespace LWE;
+using namespace meta;
+}
+
+
+/* -Parameters: (ClassName, namespace) or (ClassName) for global namespace
+ * -Limitation : Method overloading is NOT SUPPORTED
+ * -Note : Registration macros must be used in global namespace only
+ */
+REGISTER_METHOD_BEGIN(MethodTest, test) {
+	REGISTER_METHOD(print);
+	REGISTER_METHOD(sum);
+}
 REGISTER_METHOD_END;
-
-// Register enum
-REGISTER_ENUM_BEGIN(ETest, test) {
-    REGISTER_ENUM(A);
-    REGISTER_ENUM(B);
-    REGISTER_ENUM(C);
+// enum
+REGISTER_ENUM_BEGIN(EnumTest, test) {
+	REGISTER_ENUM(FALSE);
+	REGISTER_ENUM(TRUE);
 }
 REGISTER_ENUM_END;
 
-using Test = test::Class;
-
-// main
 namespace test {
 
 void example_reflection() {
-    using namespace lwe;
+	/* Serialize format
+	 * string:    " "
+	 * container: [ ]
+	 * class:     { }
+	 * need "object.hpp"
+	 */
 
-    // to replace new(), use memory pool
-    Test* test = create<Test>();
+	/* Type info class (without RTTI) */ {
+		int variable;
 
-    // meta::Class
-    // Duplicates test::Class, but is syntactically correct.
-    meta::Class* metaclass = test->meta();
+		Type a = typeof<int>();    // by template
+		Type b = typeof(variable); // by variable
 
-    // enum test
-    uint64_t value = 0;
+		// * operator returns const char
+		printf("%s\n", *a); // print int
+		printf("%s\n", *b); // print int
 
-    // meta::Enum
-    Enum* eval = enumof<test::ETest>();
-    if (!eval) {
-        std::cout << "ETest not found";
-    }
-    else {
-        // get enum info
-        const meta::Enumeration& enumReflector = eval->enums();
+		Type c = typeof<Test>(); // registered class
+		Type d = typeof<Temp>(); // unregistered class
 
-        // 3rd enum value
-        value = enumReflector[2].value;
-    }
-    test->c = static_cast<int>(value);
+		printf("%s\n", *c); // print Test
+		printf("%s\n", *d); // print class
 
-    // class test
-    // find filed
-    const meta::Field& foundField = metaclass->field("c");
-    if (foundField) {
-        std::cout << serialize(false) << foundField.name << "found\n";
-    }
-    else std::cout << serialize(false) << ": c not found\n";
+		// composite type
+		Type e = typeof<const void**>();
+		Type f = typeof<void** const>();
+		Type g = typeof<const void** const>();
+		printf("%s\n", *e); // print const void**
+		printf("%s\n", *f); // print void** const
+		printf("%s\n", *g); // print const void** const
+	}
 
+	/* get enum info */ {
+		Enum* info = nullptr;
 
-    // get fields
-    const meta::Structure& classReflector = metaclass->fields();
+		// get by template
+		info = enumof<EnumTest>();
+		std::cout << info->name() << "\n"; // print name
 
-    // for (auto& itr : classReflector)
-    for (int i = 0; i < classReflector.size(); ++i) {
-        // casting
-        char* ptr = reinterpret_cast<char*>(test);
+		EnumTest e;
+		info = enumof(e);                     // get by variable
+ 		const Enumeration& a = info->enums(); // get enum values
+		std::cout << a[0].name << " ";        // print [0] enum name
+		
+		info = enumof("EnumTest");            // get by name
+		const Enumeration& b = info->enums(); // get enum values
+		std::cout << b[0].value << "\n";      // print [0] enum value
 
-        // get filed info
-        const meta::Field& f = classReflector[i];
-        
-        // move
-        ptr += f.offset;
+		// unregistered == nullptr
+		info = enumof<EnumUnregistered>();
+		if (!info) {
+			printf("INFO IS NULL\n");
+		}
+	}
 
-        // get enum
-        const meta::Enumerator& e = eval->enums()[i];
+	/* method */ {
+		Method* m;
 
-        std::cout << f.name << " = " << eval->name() << "::" << e.name << "\n";
+		// Get by template + method name
+		m = methodof<MethodTest>("print");
 
-        // memcpy
-        std::memcpy(ptr, &e.value, f.size); // int32 = uint64
-    }
+		// Param is std::vector<util::Any>, `Any` is RTTI-free custom any
+		m->invoke(nullptr, {});
 
-    // serialize test
-    std::string str = test->serialize();
-    std::cout << str << std::endl;
-    
-    // deserialize test
-    // 2 values register
-    test->deserialize("{ 100, 200 }");
-    std::cout << test->serialize() << "\n";
+		// Get by name + method name
+		m = methodof("MethodTest", "sum");
 
-    // method test
-    meta::Method* func;
-    
-    // set test
-    func = method<Test>("set");
-    if (!func) {
-        std::cout << "set not found\n";
-    }
-    else func->invoke(test, { 100, 200, 300 }); // call, param auto cast
+		// Return `util::Any`
+		util::Any any = m->invoke(nullptr, { 1 , 2 });
 
-    // print test
-    func = method<Test>("print");
-    if (!func) {
-        std::cout << "print not found\n";
-        test->print(); // call
-    }
-    else func->invoke(test, {}); // call
+		// Auto inference
+		int value = any;
+		std::cout << value << "\n";
 
-    // sum test
-    func = method<Test>("sum");
-    if (!func) {
-        std::cout << "print not sum\n";
-    }
-    else {
-        int value = func->invoke(test, {}); // call, and auto cast
-        std::cout << "sum: " << value << "\n"; // 100 + 200 + 300
-    }
+		// Or cast
+		std::cout << any.cast<int>() << "\n";
 
-    // check derived
-    Object* obj = new Object;
-    std::cout << "obj = new Obejct;\n";
-
-    // false
-    std::cout << "obj is Test: " << serialize<bool>(obj->isof<Test>()) << "\n";
-
-    delete obj;
-
-    obj = test; // set test
-    std::cout << "obj = test;\n";
-
-    // true
-    std::cout << "obj is Test: " << serialize<bool>(obj->isof<Test>()) << "\n";
-
-    // true
-    std::cout << "obj is Object: " << serialize<bool>(obj->isof<Object>()) << "\n";
-
-    // out (console)
-    /*
-        false: c not found
-        a = ETest::A
-        b = ETest::B
-        { 0, 1 }
-        { 100, 200 }
-        print not found
-        100, 200, 300
-        sum: 600
-        obj = new Obejct;
-        obj is Test: false
-        obj = test;
-        obj is Test: true
-        obj is Object: true
-    */
+		// Exist, but unregistered method
+		m = methodof<Method>("sub");
+		if (!m) {
+			printf("METHOD IS NULL\n");
+		}
+	}
 }
 
 }
