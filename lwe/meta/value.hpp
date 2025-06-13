@@ -12,8 +12,14 @@ template<typename E, typename = std::enable_if_t<std::is_enum_v<E>>> struct Valu
     using U = std::make_unsigned_t<std::underlying_type_t<E>>;
 
 public:
-    //! @brief get enum value by index
-    static const Enumerator& meta(size_t);
+    static diag::Expected<Enumerator> find(uint64_t);      //! @brief get enum by value
+    static diag::Expected<Enumerator> find(const char*);   //! @brief get enum by name
+    static diag::Expected<Enumerator> find(const string&); //! @brief get enum by name
+    static diag::Expected<Enumerator> get(size_t);         //! @brief get enum by index
+
+public:
+    //! @brief get enum value info (O(n))
+    diag::Expected<Enumerator> meta();
 
 public:
     //! @brief get enum type info
@@ -35,35 +41,18 @@ public:
     Value& operator=(Value &&) noexcept = default;
 
 public:
-    //! @brief this AND enum other
-    Value operator&(E) const noexcept;
+    Value operator&(E) const noexcept; //!< AND
+    Value operator|(E) const noexcept; //!< OR
+    Value operator^(E) const noexcept; //!< XOR
 
 public:
-    //! @brief this OR enum other
-    Value operator|(E) const noexcept;
-
-    //! @brief this XOR enum other
-    Value operator^(E) const noexcept;
+    Value& operator&=(E) noexcept;     //!< AND
+    Value& operator|=(E) noexcept;     //!< OR
+    Value& operator^=(E) noexcept;     //!< XOR
 
 public:
-    //! @brief this AND enum other
-    Value& operator&=(E) noexcept;
-
-public:
-    //! @brief this AND enum other
-    Value& operator|=(E) noexcept;
-
-public:
-    //! @brief this XOR enum other
-    Value& operator^=(E) noexcept;
-
-public:
-    //! @brief this NOT
-    Value operator~() const noexcept;
-
-public:
-    //! @brief this NOT
-    bool  operator!() const noexcept;
+    Value operator~() const noexcept; //!< NOT
+    bool  operator!() const noexcept; //!< NOT bool
 
 public:
     //! @brief to string

@@ -4,16 +4,55 @@ namespace meta {
     
 template<typename E, typename Enable> const Enum* Value<E, Enable>::info = enumof<E>();
 
-template<typename E, typename Enable> const Enumerator& Value<E, Enable>::meta(size_t in) {
+// find by value
+template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E, Enable>::find(uint64_t in) {
     if (!info) {
-        throw diag::Alert("NOT REGISTERED TYPE");
+        return diag::error(diag::Code::TYPE_MISMATCH);
     }
+    const Enumeration& data = info->enums();
+    // find same value
+    for (auto& e : data) {
+        if (e.value == in) {
+            return e; // found
+        }
+    }
+    return diag::error(diag::Code::INVALID_DATA); // not found
+}
 
+// find by name
+template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E, Enable>::find(const char* in) {
+    if (!info) {
+        return diag::error(diag::Code::TYPE_MISMATCH);
+    }
+    const Enumeration& data = info->enums();
+    // find same value
+    for (auto& e : data) {
+        if (strcmp(e.name, in) == 0) {
+            return e; // found
+        }
+    }
+    return diag::error(diag::Code::INVALID_DATA); // not found
+}
+
+// find by name
+template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E, Enable>::find(const string& in) {
+    return find(in.c_str());
+}
+
+// get by index
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::get(size_t in) {
+    if (!info) {
+        return diag::error(diag::Code::TYPE_MISMATCH);
+    }
     const Enumeration& data = info->enums();
     if (in >= data.size()) {
-        throw std::out_of_range("");
+        return diag::error(diag::Code::OUT_OF_RANGE);
     }
     return info->enums()[in];
+}
+
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::meta() {
+    return find(value);
 }
 
 template<typename E, typename Enable> const Type& Value<E, Enable>::type() {
