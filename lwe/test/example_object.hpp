@@ -33,36 +33,6 @@ REGISTER_FIELD_END;
 
 namespace test{
 void example_object() {
-    /* Serialize format */
-    // string:    " "
-    // container: [ ]
-    // class:     { }
-
-    /* Type info class (with out RTTI) */ {
-        int variable;
-
-        Type a = typeof<int>();    // by template
-        Type b = typeof(variable); // by variable
-
-        // *type -> get const char*
-        printf("%s\n", *a); // print int
-        printf("%s\n", *b); // print int
-
-        Type c = typeof<Test>(); // registered class
-        Type d = typeof<Temp>(); // unregistered class
-
-        printf("%s\n", *c); // print Test
-        printf("%s\n", *d); // print class
-
-        // composite type
-        Type e = typeof<const void**>();
-        Type f = typeof<void** const>();
-        Type g = typeof<const void** const>();
-        printf("%s\n", *e); // print const void**
-        printf("%s\n", *f); // print void** const
-        printf("%s\n", *g); // print const void** const
-    }
-
     /* RC (Reflectable Class)*/ {
         // This class behaves exactly like Ptr: unique for construction and weak for copying.
         RC<Test> temp;        // create with instance (Required: default constructor)
