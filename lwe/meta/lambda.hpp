@@ -86,7 +86,6 @@ private:
     static Table& instance();
 };
 
-
 }
 LWE_END
 #include "lambda.ipp"
