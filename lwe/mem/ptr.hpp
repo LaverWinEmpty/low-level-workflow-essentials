@@ -1,4 +1,4 @@
-#ifndef LWE_MEM_PTR
+﻿#ifndef LWE_MEM_PTR
 #define LWE_MEM_PTR
 
 #include "../base/base.h"
