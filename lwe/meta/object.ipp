@@ -458,7 +458,7 @@ template<typename Derived> void deserialize(Container* ptr, const string& in) {
     for(; i < end; ++i, ++len) {
         if constexpr(std::is_same_v<Element, string>) {
             // find <",> but ignore \"
-            if(in[i] == '\"' && in[i + 1] == ',', in[i - 1] != '\\') {
+            if(in[i] == '\"' && in[i + 1] == ',' && in[i - 1] != '\\') {
                 Element data;
                 // len + 1: with '\"'
                 meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
