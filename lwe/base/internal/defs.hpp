@@ -17,9 +17,9 @@ using ssize_t = ::ssize_t;
 using ssize_t = std::make_signed_t<size_t>;
 #endif
 
-using byte_t    = uint8_t;       //!< byte unsigned
-using word_t    = signed int;    //!< signed
-using ubyte_t   = unsigned int;  //!< unsigned
+using uint      = unsigned int;  //!< uint
+using byte_t    = signed char;   //!< byte signed
+using ubyte_t   = unsigned char; //!< byte unsigned
 using fast8_t   = int_fast8_t;   //!< fast signed
 using fast16_t  = int_fast16_t;  //!< fast signed
 using fast32_t  = int_fast32_t;  //!< fast signed
