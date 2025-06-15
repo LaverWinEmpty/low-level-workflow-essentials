@@ -142,7 +142,7 @@ diag::Alert D3D11::begin(const std::vector<Vertex>& vertexList, const std::vecto
 
 diag::Alert D3D11::end() {
     // TODO: blue (temp)
-    float fill[4] = { 0.0f, 0.0f, 1.0f, 1.0f };
+    float fill[4] = { 0 };
 
     // resteriszer state
     context->RSSetState(rasterizerState.Get());
@@ -372,7 +372,7 @@ diag::Alert D3D11::createInputLayout() {
 #endif
     HRESULT result;
 
-    LPCWSTR filename = L"C:/Git/working/lwe/gfx/internal/temp.hlsl";
+    LPCWSTR filename = L"C:/Git/working/lwe/gfx/internal/shader.hlsl";
     
     // vertex shader compile
     result = D3DCompileFromFile(
@@ -407,9 +407,10 @@ diag::Alert D3D11::createInputLayout() {
 
     // vertex info
     D3D11_INPUT_ELEMENT_DESC param[] = {
-        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,    0, 0,  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR",    0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,       0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
-    // { "COLOR", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 
     // create input layout
     result = device->CreateInputLayout(

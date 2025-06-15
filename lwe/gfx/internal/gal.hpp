@@ -9,9 +9,16 @@ namespace gfx {
 //! @brief vertex
 struct Vertex {
     float x, y, z;
-    // color
-    // uv
+    float r, g, b, a;
+    float u, v;
 };
+
+////! @brief constants / uniform buffer
+//struct Uniform {
+//    float matrix[4][4]; // matrix
+//    float color[4];     // color (r, g, b, a)
+//    float time[4];      // time with padding
+//};
 
 //! @brief screen information structure
 struct Screen {
