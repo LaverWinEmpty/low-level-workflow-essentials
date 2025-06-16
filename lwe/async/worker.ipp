@@ -28,7 +28,12 @@ void Worker::submit(Task in) {
 void Worker::run() {
     while (!end.load(std::memory_order_relaxed)) {
         std::unique_lock guard(lock);
-        event.wait(guard, [this]() { return end.load(std::memory_order_relaxed) || !tasks.empty(); });
+        event.wait(guard, [this]() {
+                return end.load(std::memory_order_relaxed)  || // terminated
+                       stop.load(std::memory_order_acquire) || // no more submit
+                       !tasks.empty();                         // has message
+            }
+        );
 
         // check end and empty
         if (end.load(std::memory_order_relaxed)) {
