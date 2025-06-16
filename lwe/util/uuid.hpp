@@ -25,6 +25,9 @@ public:
 public:
     String operator*() const; //! get string adapter
 
+public:
+    Strign stringify() const;
+
 private:
     uint64_t hi, lo;
 };

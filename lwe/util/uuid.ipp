@@ -23,7 +23,6 @@ struct UUID::String {
         );
         buffer[36] = 0;
     }
-    operator string()       { return buffer; }
     operator const char* () { return buffer; }
 private:
     char buffer[37];
@@ -53,6 +52,10 @@ UUID::operator string() const {
 }
 
 auto UUID::operator* () const -> String {
+    return stringify(this);
+}
+
+auto stringify() const -> Strign {
     return String(this);
 }
 

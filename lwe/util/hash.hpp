@@ -27,10 +27,12 @@ public:
 
 public:
     operator hash_t() const; //!< get value
-    operator string() const; //!< to string
 
 public:
     String operator*() const; //! get string adapter;
+
+public:
+    String stringify() const;
 
 private:
     hash_t val = 0;

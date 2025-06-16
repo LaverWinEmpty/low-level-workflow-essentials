@@ -9,7 +9,6 @@ struct Hash::String {
         snprintf(buffer, 16, "%016llX", in->val);
         buffer[16] = 0;
     }
-    operator string() { return buffer; }
     operator const char* () { return buffer; }
 private:
     char buffer[17];
@@ -37,16 +36,16 @@ Hash::Hash(const char* in) : Hash(in, std::strlen(in)) {}
 
 template<typename T> Hash::Hash(const T& in): Hash(&in, sizeof(T)) {}
 
-Hash::operator string () const {
-    return operator*();
-}
-
 auto Hash::operator*() const -> String {
-    return String(this);
+    return stringify();
 }
 
 Hash::operator hash_t() const {
     return val;
+}
+
+auto Hash::stringify() const -> String {
+    return String(this);
 }
 
 }
