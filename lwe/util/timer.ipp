@@ -9,11 +9,11 @@ struct Timer::String {
     //! @brief object time
     //! @param [in] compact: 86400.01 -> false "24:00:00" / true "01d_00:00:00"
     //! @param [in] detail:  86400.01 -> false "24:00:00" / true "24:00:00.01" 
-    String(const Timer& in, bool compact, bool detail) {
+    String(const Timer* in, bool compact, bool detail) {
         std::ostringstream oss;
 
         // get and limit
-        float elapsed = in.sec();
+        float elapsed = in->sec();
         if (elapsed >= MAX) {
             elapsed = MAX;
         }
@@ -42,9 +42,9 @@ struct Timer::String {
         // branch
         if(compact) {
             if(detail) {
-                snprintf(str, sizeof(str), "%02dd_%02d:%02d:%02d.%02d", day, hour, min, sec, ms);
+                snprintf(str, sizeof(str), "%02dd %02d:%02d:%02d.%02d", day, hour, min, sec, ms);
             }
-            else snprintf(str, sizeof(str), "%02dd_%02d:%02d:%02d", day, hour, min, sec);
+            else snprintf(str, sizeof(str), "%02dd %02d:%02d:%02d", day, hour, min, sec);
         }
         else {
             if (detail) {
@@ -53,8 +53,6 @@ struct Timer::String {
             else snprintf(str, sizeof(str), "%03d:%02d:%02d", hour, min, sec);
         }
     }
-
-public:
     //! system time
     String(const char* format, bool utc) {
         std::time_t t = std::chrono::system_clock::to_time_t(std::chrono::system_clock::now());
@@ -75,11 +73,7 @@ public:
         }
         std::strftime(str, 20, format, &info);
     }
-
-public:
     operator const char* () const { return str; }
-    operator string() const { return str; }
-
 private:
     char str[20] = { 0 }; //!< "1900-01-01_00:00:00"
 };
@@ -93,11 +87,11 @@ float Timer::sec() const {
 }
 
 auto Timer::timestamp(bool ms) const -> String {
-    return String(*this, false, ms); // porxy
+    return String(this, ms, false); // porxy
 }
 
 auto Timer::process(bool day) -> String {
-    return String(statics, false, day); // proxy
+    return String(&statics, day, false); // proxy
 }
 
 auto Timer::system(string format, bool utc) -> String {
@@ -178,7 +172,7 @@ float Tick::fixed(bool scaled) {
 }
 
 int Tick::fps() {
-    return frame.last.n * correct;
+    return int(frame.last.n * correct);
 }
 
 int Tick::count() {
