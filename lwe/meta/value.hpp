@@ -2,7 +2,7 @@
 #define LWE_META_VALUE
 
 #include "type.hpp"
-#include "../diag/expected.hpp"
+#include "../diag/diag.h"
 
 LWE_BEGIN
 namespace meta {
