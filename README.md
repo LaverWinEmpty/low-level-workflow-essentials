@@ -1,16 +1,13 @@
-# LiteWindowsEngine
-
-**LiteWindowsEngine** (LWE) is a lightweight, modular C++ engine focused on performance, low-level reflection, and future scalability.
-
+# Low-level Workflow Essentials
+**Low-level Workflow Essentials** (LWE) is a lightweight, modular C++ utility library focused on compile-time reflection, essential utilities, and performance.
 > Project by [LaverWinEmpty](https://github.com/LaverWinEmpty)
 
 ---
 
 ## 🔍 Overview
-
-LiteWindowsEngine is a personal engine project aiming to be minimal, efficient, and practical.  
-Reflection is already implemented at around 80% without relying on RTTI.  
-The current goal is to build a realistic engine structure that is **thread-safe** and **performance-oriented**, even if it's mainly for learning.
+LWE is a comprehensive utility library providing RTTI-free reflection, smart pointers, containers, and other essential C++ utilities.  
+The reflection system is implemented using compile-time macros, achieving near-complete functionality without runtime type information overhead.  
+This library aims to be minimal, efficient, and practical for modern C++ development.
 
 ---
 
@@ -66,22 +63,31 @@ root/
   test::example_name();
   ```
 
-⚠️ Examples are work-in-progress and may change as the engine evolves.
+⚠️ Examples are work-in-progress and may change as the library evolves.
 
 ---
 
 
 ## 📋 Development Status
 
-**Implemented:**
-- RTTI-free Reflection system (~80%)
-  - ✅ Basic type reflection and serialization
-  - ✅ Enum type reflection and serialization 
-  - ⚠️ Object type rfelection and serialization (Need: default constructor, pointer serialization)
-  - ⚠️ Custom container type reflection and serialization (current implementation Deque only)
-
-**Planned:**
-- ❌ Custom async IO API
-- ❌ Custom rendering API
+**Core Features**
+- ✅ RTTI-free Reflection system
+  - ✅ Type reflection and serialization
+  - ✅ Enum reflection and serialization
+  - ✅ Object reflection and serialization 
+  - ✅ Method reflection and invocation
+- ✅ Utility Components
+  - ✅ Custom Any type (RTTI-free)
+  - ✅ Smart pointers
+  - ✅ ID/UUID system
+  - ✅ Memory pool
+- ⚠️ Container system
+  - ✅ Container reflection framework
+  - ✅ Deque implementation (reference)
+  - ❌ Other container types (planned)
+- ⚠️ Smart pointer systme
+  - ✅ Custom smart pointer with unique/weak pointer semantics
+  - ❌ Smart pointer serialization (planned)
+  - ❌ Raw pointer handling (not supported by design)
 
 ---
