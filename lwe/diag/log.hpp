@@ -23,9 +23,10 @@ constexpr enum Verbosity ERROR   = Verbosity::ERROR;
 
 //! @brief log handler
 class Logger {
+    friend class Log;
+
 public:
     Logger() = default;
-    Logger(Verbosity in) : level(in) {}
 
 protected:
     virtual void onWrite(const string& in, Verbosity type) {
@@ -34,7 +35,7 @@ protected:
 
 protected:
     virtual bool onCheck(Verbosity in) {
-        return in >= level; // default
+        return level >= in; // default
     }
 
 public:
@@ -59,10 +60,14 @@ private:
 
 class Log {
 public:
-    static void add(Logger* in) {
+    template<typename T> static void add(Verbosity in = INFO) {
         worker.submit(
             [in]() {
-                log.handles.push_back(in);
+                Logger* handle = new T(); // no catch
+                handle->level = in;
+
+                // worker is single thread, no loack
+                log.handles.push_back(handle);
             }
         );
     }
