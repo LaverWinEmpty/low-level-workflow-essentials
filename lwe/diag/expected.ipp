@@ -21,16 +21,16 @@ template<typename T> Expected<T>::Expected(T&& in) noexcept : flag(true) {
 
 template<typename T> Expected<T>::Expected(const Expected& in) noexcept : flag(in.flag) {
 	if (flag) {
-		data = in.data;
+		new(&data) T(in.data);
 	}
-	else msg = in.msg;
+	else new(&msg) Alert(in.msg);
 }
 
 template<typename T> Expected<T>::Expected(Expected&& in) noexcept : flag(in.flag) {
 	if (flag) {
-		data = std::move(in.data);
+		new(&data) T(std::move(in.data));
 	}
-	else msg = std::move(in.msg);
+	else new(&msg) Alert(std::move(in.msg));
 }
 
 template<typename T> Expected<T>::~Expected() {
