@@ -17,7 +17,7 @@ Worker::~Worker() {
 }
 
 void Worker::submit(Task in) {
-    LOCKGUARD(lock) {
+    LOCKGUARD(mtx) {
         if (!stop.load(std::memory_order_acquire)) {
             tasks.push(std::move(in));
         }
@@ -42,7 +42,9 @@ void Worker::run() {
 
         // run
         Task task;
-        if(tasks.shift(task)) {
+        bool result;
+        LOCKGUARD(mtx) result = tasks.shift(task);
+        if (result) {
             task();
         }
 

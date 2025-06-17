@@ -34,7 +34,8 @@ public:
 private:
     std::vector<std::thread> workers; //!< thread pool
     std::condition_variable  event;   //!< submit wake condition
-    std::mutex               lock;    //!< mutex
+    std::mutex               lock;    //!< cv mutex
+    std::mutex               mtx;     //!< container mutex
     stl::Deque<Task>         tasks;   //!< task queue
     std::once_flag           flag;    //!< terminate called flag
     std::atomic_bool         stop;    //!< submit stop flag
