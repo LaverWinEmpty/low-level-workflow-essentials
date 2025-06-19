@@ -70,7 +70,7 @@ namespace stl {
 
 template<typename T, size_t SVO = 0> class Deque: public meta::Container {
 public:
-    CONTAINER_BODY(Deque, T, SVO);
+    CONTAINER_BODY(T, Deque, T, SVO); // <T, SVO>
 
 private:
    template<typename, size_t> friend class Deque;
