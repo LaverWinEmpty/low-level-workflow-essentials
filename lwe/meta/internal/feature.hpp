@@ -35,6 +35,9 @@ enum class Keyword : uint8_t {
     FUNCTION,
     STD_STRING,
     STL_DEQUE,
+    STL_SET,
+    STL_MAP,
+    STL_PAIR,
     CONST,
 };
 
