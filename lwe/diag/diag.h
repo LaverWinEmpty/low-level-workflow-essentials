@@ -13,8 +13,11 @@
    X(INVALID_DATA)  /* null, not found, already ...   */ \
    X(UNKNOWN_ERROR) /*                                */
 
-#define REGISTER_ERROR_CODE(NAME) NAME,
+#define ERROR_USING(NAME) static constexpr int32_t NAME = Code::##NAME;
+
+#define REGISTER_ERROR_CODE(NAME)    NAME,
 #define REGISTER_ERROR_MESSAGE(NAME) #NAME,
+#define REGISTER_ERROR_USING(NAME)   constexpr Code NAME = Code::NAME;
 
 LWE_BEGIN 
 namespace diag {
@@ -22,6 +25,7 @@ namespace diag {
 enum class Code : int32_t {
 	ERROR_BODY(REGISTER_ERROR_CODE)
 };
+ERROR_BODY(REGISTER_ERROR_USING);
 
 Alert error(int32_t code) {
 	static constexpr const char* ERROR_MESSAGE[] = {

@@ -5,7 +5,7 @@
 #include "../util/timer.hpp"
 #include "../async/worker.hpp"
 #include "../mem/ptr.hpp"
-#include "alert.hpp"
+#include "diag.h"
 
 LWE_BEGIN
 namespace diag {
@@ -35,7 +35,7 @@ protected:
 
 protected:
     virtual bool onCheck(Verbosity in) {
-        return level >= in; // default
+        return in >= level; // default
     }
 
 public:
@@ -67,20 +67,29 @@ public:
                 handle->level = in;
 
                 // worker is single thread, no loack
-                log.handles.push_back(handle);
+                instance.handles.push_back(handle);
             }
         );
     }
 
 public:
-    static void write(Alert in, Verbosity type = INFO) {
+    static void write(const Alert& in, Verbosity type = INFO) {
         worker.submit(
-            [in = std::move(in), type]() {
-                for(auto& itr : log.handles) {
+            [in, type]() {
+                for(auto& itr : instance.handles) {
                     itr->write(in, type);
                 }
             }
         );
+    }
+
+public:
+    template<typename T> static void write(const Expected<T>& in) {
+        // succeeded
+        if(in) {
+            write(error(SUCCESS), INFO);
+        }
+        else write(in, ERROR);
     }
 
 private:
@@ -99,10 +108,10 @@ private:
     std::vector<Logger*> handles; 
 
 private:
-    static Log log;
+    static Log instance;
 };
 
-Log Log::log;
+Log Log::instance;
 
 
 }
