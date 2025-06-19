@@ -15,7 +15,7 @@ private:
 };
 
 Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
-    const unsigned char* ptr = static_cast<const unsigned char*>(in);
+    const uint8_t* ptr = static_cast<const uint8_t*>(in);
     for (size_t i = 0; i < n; i++) {
         val ^= ptr[i];
         val *= FNV1A64_PRIME;
@@ -24,6 +24,10 @@ Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
 
 Hash::Hash(const string& in): Hash(in.c_str(), in.size()) {}
 
+Hash::Hash(const char* in) : Hash(in, std::strlen(in)) {}
+
+template<typename T> Hash::Hash(const T& in): val(hashof<T>()) {}
+
 bool Hash::operator==(const Hash& in) const {
     return val == in.val;
 }
@@ -31,10 +35,6 @@ bool Hash::operator==(const Hash& in) const {
 bool Hash::operator!=(const Hash& in) const {
     return val != in.val;
 }
-
-Hash::Hash(const char* in) : Hash(in, std::strlen(in)) {}
-
-template<typename T> Hash::Hash(const T& in): Hash(&in, sizeof(T)) {}
 
 auto Hash::operator*() const -> String {
     return stringify();

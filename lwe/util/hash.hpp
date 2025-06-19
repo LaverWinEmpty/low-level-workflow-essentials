@@ -39,6 +39,10 @@ private:
     static thread_local char buffer[17];
 };
 
+//! @brief type hash for specialization
+template<typename T> hash_t hashof(const T& in) {
+    return Hash(&in, sizeof(in));
+}
 
 }
 LWE_END
