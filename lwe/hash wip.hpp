@@ -5,12 +5,11 @@
 using uint = unsigned int;
 using hash_t  = size_t;
 using index_t = int;
-using uint8_t = unsigned char;
 
 // temp define
 namespace util {
     template<typename T> hash_t hashof(const T&) { return 0; }
-    template<int> hash_t hashof(const int& in) { return std::hash<int>()(in); }
+    template<> hash_t hashof<int>(const int& in) { return std::hash<int>()(in); }
 }
 
 template<typename T> class Set {
@@ -164,7 +163,7 @@ public:
 
 public:
     Iterator find(const T&);
-    Iterator find(index_t);
+    Iterator find(hash_t);
     Iterator at(size_t);
     Iterator begin();
     Iterator end();
@@ -187,18 +186,17 @@ private:
 
 template<typename T> Set<T>::~Set() {
     for (size_t i = 0; i < capacitor; ++i) {
-        Bucket& bucket = buckets[i];
         // delete bucket data
-        if (bucket.used == true) {
-            bucket.data.~T(); // bucket dtor
+        if (buckets[i].used == true) {
+            buckets[i].data.~T(); // bucket dtor
         }
         // has chain
-        if (bucket.capacity) {
-            Chain* chain = bucket.chain;
-            for(uint8_t j = 0; j < bucket.size; ++j) {
-                chain[j].data.~T(); // chain dtor
+        if (buckets[i].chain) {
+            for(uint8_t j = 0; j < buckets[i].size; ++j) {
+                // MSVC C6001 FALSE POSITIVE
+                buckets[i].chain[j].data.~T(); // chain dtor
             }
-            std::free(chain); // delete
+            std::free(buckets[i].chain); // delete
         }
     }
     std::free(buckets);
@@ -215,10 +213,10 @@ template<typename T> bool Set<T>::resize() {
     else size = INITIALIZE; // init
 
     // realloc
-    Bucket* old = buckets;
+    Bucket* old = buckets; // backup
     buckets = static_cast<Bucket*>(std::malloc(sizeof(Bucket) * size));
     if (!buckets) {
-        buckets = old; // back
+        buckets = old; // rollback
         return false;  // bad alloc
     }
 
@@ -230,28 +228,29 @@ template<typename T> bool Set<T>::resize() {
         buckets[i].capacity = 0;
     }
 
-    // move
-    for (size_t i = 0; i < capacitor; ++i) {
-        // main data
-        if(old[i].used == true) {
-            insert(std::move(old[i].data), old[i].hash); // move
-            old[i].data.~T();                            // delete
-        }
-        // chained datas
-        if (old[i].chain != nullptr) {
-            for(uint8_t j = 0; j < old[i].size; ++j) {
-                Chain& chain = old[i].chain[j];
-                insert(std::move(chain.data), chain.hash); // move
-                chain.data.~T();                           // delete
+    // has data
+    if(old) {
+        // move
+        for (size_t i = 0; i < capacitor; ++i) {
+            // main data
+            if (old[i].used == true) {
+                insert(std::move(old[i].data), old[i].hash); // move
+                old[i].data.~T();                            // delete
             }
-            std::free(old[i].chain); // delete
+            // chained datas
+            if (old[i].chain) {
+                for (uint8_t j = 0; j < old[i].size; ++j) {
+                    Chain& chain = old[i].chain[j];
+                    insert(std::move(chain.data), chain.hash); // move
+                    chain.data.~T();                           // delete
+                }
+                // MSVC C6001 FALSE POSITIVE
+                std::free(old[i].chain); // delete
+            }
         }
+        std::free(old); // delete
     }
 
-    // delete
-    if(old) {
-        std::free(old);
-    }
     capacitor = size;
     return true;
 }
@@ -328,12 +327,13 @@ template<typename T> auto Set<T>::find(const T& in) -> Iterator {
     // check has data
     if(bucket.used == true) {
         // not chain, or first data
-        if (bucket.size == 0 || bucket.data == in) {
+        if (bucket.hash == hashed && bucket.data == in) {
             return Iterator(this, index);
         }
         // return chain
         for (uint8_t i = 0; i < bucket.size; ++i) {
-            if(bucket.chain[i].data == in) {
+            Chain& chain = bucket.chain[i];
+            if(chain.hash == hashed && chain.data == in) {
                 return Iterator(this, index, i);
             }
         }
@@ -341,11 +341,9 @@ template<typename T> auto Set<T>::find(const T& in) -> Iterator {
     return end(); // not found
 }
 
-template<typename T> auto Set<T>::find(index_t) -> Iterator {
-    hash_t hashed = util::hashof<T>(in);
-    size_t index  = hash & (capacitor - 1);
-
-    if (bucket.used == true) {
+template<typename T> auto Set<T>::find(hash_t in) -> Iterator {
+    size_t index  = in& (capacitor - 1);
+    if (buckets[index].used == true) {
         return Iterator(this, index); // first data
     }
     return end(); // not exist
@@ -355,7 +353,7 @@ template<typename T> auto Set<T>::at(size_t index) -> Iterator {
     size_t pass = 0;
     // out of range
     if (index >= counter) {
-        throw std::out_of_range("");
+        return end();
     }
 
     // loop
@@ -366,7 +364,7 @@ template<typename T> auto Set<T>::at(size_t index) -> Iterator {
         }
         // check bucket pos
         if(pass == index) {
-            return buckets[i].data;
+            return Iterator(this, i);
         }
         pass += 1; // bucket pass
 
@@ -391,8 +389,7 @@ template<typename T> auto Set<T>::at(size_t index) -> Iterator {
     } // end for
 
     // ! MUST NOT BE ENTER THIS CODE: range check was performed. !
-    char dummy[sizeof(T)];
-    return *reinterpret_cast<T*>(dummy);
+    return end();
 }
 
 template<typename T>
@@ -466,7 +463,8 @@ bool Set<T>::insert(U&& in, hash_t hashed) {
     // check realloc condition
     if(size >= cap) {
         // ! CHAIN SIZE INCREASES BY 1: chains are allocated less frequently !
-        Chain* newly = static_cast<Chain*>(std::malloc((cap + 1) * sizeof(Chain)));
+        ++cap;
+        Chain* newly = static_cast<Chain*>(std::malloc((cap) * sizeof(Chain)));
         if (!newly) {
             return false; // bad alloc
         }
@@ -495,33 +493,4 @@ bool Set<T>::insert(U&& in, hash_t hashed) {
     ++bucket.size; // size
     ++counter;     // total size
     return true;
-}
-
-int main() {
-
-    {
-        Set<int> a;
-
-        a.push(1);
-        a.push(2);
-        a.push(3);
-        a.push(4);
-        a.push(5);
-        a.push(6);
-        a.push(7);
-        a.push(8);
-        a.push(9);
-        a.push(10);
-        a.push(11);
-        a.push(12);
-
-        int t = 0;
-        for (auto itr : a) {
-            std::cout << t << "\t" << itr << "\n";
-            ++t;
-        }
-    }
-
-
-    _CrtDumpMemoryLeaks();
 }
