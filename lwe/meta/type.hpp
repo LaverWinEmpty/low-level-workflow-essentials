@@ -2,6 +2,7 @@
 #define LWE_META_TYPE
 
 #include "internal/feature.hpp"
+#include "../util/hash.hpp"
 
 LWE_BEGIN
 namespace meta {
