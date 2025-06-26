@@ -1,0 +1,209 @@
+# prettier-ignore
+---
+# DisableFormat: true
+Language:    Cpp
+UseTab:      Never
+IndentWidth: 4
+ColumnLimit: 120
+LineEnding : LF
+
+#======================================================================================================================
+# STYLE
+#======================================================================================================================
+BreakBeforeBraces: Custom # {} line break
+# {} line break detail
+BraceWrapping:
+  AfterControlStatement: Never # if / for / ... (...) {
+  AfterCaseLabel:        false # case 0: { 
+  AfterFunction:         false # void f() {
+  AfterEnum:             false # enum {
+  AfterUnion:            false # union {
+  AfterStruct:           false # struct {
+  AfterClass:            false # class { 
+  AfterNamespace:        false # namespace {
+  AfterExternBlock:      false # extern "C" {
+  BeforeLambdaBody:      false # []() {
+  # control block
+  BeforeWhile: true            # do {} \n while(...)
+  BeforeCatch: true            # try {} \n catch(...) {}
+  BeforeElse:  true            # if(...) {} \n else {}
+  # other
+  SplitEmptyFunction:  false # void f() {}
+  SplitEmptyNamespace: false # AfterNamespace: true
+  IndentBraces:        false # not indent 
+
+SpaceBeforeParens: Custom # () space
+# () sapce detail
+SpaceBeforeParensOptions:
+  AfterControlStatements:       false # if(true) {}
+  AfterFunctionDeclarationName: false # void f();
+  AfterFunctionDefinitionName:  false # void f() {}
+  AfterOverloadedOperator:      false # opeartor++()
+  AfterPlacementOperator:       false # new(std::throw) T
+  AfterRequiresInClause:        false # ... requires(...)
+  AfterRequiresInExpression:    false # ... = requires(...)
+  BeforeNonEmptyParentheses:    false # void f(int a) ...
+
+# space
+SpaceAfterCStyleCast:              false  # (int)a
+SpaceAfterLogicalNot:              false  # !a
+SpaceAfterTemplateKeyword:         false  # template<...>
+SpaceAroundPointerQualifiers:      Before # void* const*
+SpaceBeforeAssignmentOperators:    true   # a += 1;
+SpaceBeforeCaseColon:              false  # case 0: break;
+SpaceBeforeCpp11BracedList:        false  # typename T{ 0 }
+SpaceBeforeCtorInitializerColon:   false  # A::A(): a(0) {}
+SpaceBeforeInheritanceColon:       false  # A: public B
+SpaceBeforeRangeBasedForLoopColon: true   # for(auto i : v) {}
+SpaceBeforeSquareBrackets:         false  # ...[1];
+SpaceInEmptyBlock:                 true   # { }
+SpacesInAngles:                    Never  # ...<T>
+# SpaceAfterOperatorKeyword:         false  # operator=(...) LLVM 21
+
+# allow short single line
+AllowShortBlocksOnASingleLine:              Empty         # one line: while(...) { }
+AllowShortLoopsOnASingleLine:               true          # one line: while(...) ...
+AllowShortEnumsOnASingleLine:               false         # enum { ... };
+AllowShortFunctionsOnASingleLine:           Inline        # void f() { ... }
+AllowShortIfStatementsOnASingleLine:        AllIfsAndElse # if(b) return;
+AllowShortLambdasOnASingleLine:             Inline        # []() { ... };
+AllowShortNamespacesOnASingleLine:          false         # namespace a {}
+AllowShortCompoundRequirementOnASingleLine: true          # { ... } -> ...<T>;
+
+# etc.
+Cpp11BracedListStyle:   false   # { {}, {} }
+PointerAlignment:       Left    # pointer
+ReferenceAlignment:     Left    # reference
+AlignArrayOfStructures: Left    # brace initializer
+BreakAfterAttributes:   Always  # attributes line break
+IndentExternBlock:      Indent  # extern indent
+IndentExportBlock:      true    # export indent
+IndentGotoLabels:       false   # goto   indent
+InsertTrailingCommas:   Wrapped # isnert comma, e.g. { a, b, }
+
+#======================================================================================================================
+# VARIABLE | OPERAND | OPERATOR
+#======================================================================================================================
+# operands with operator
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false  # ignore empty
+  AcrossComments:   false  # ignore comment
+  AlignCompound:    true   # e.g. += and =
+
+# operands / operators
+AlignOperands:               true       # operands align
+BreakBeforeTernaryOperators: true       # ternary operator align
+BreakBeforeBinaryOperators:  None       # operator location
+BreakBinaryOperations:       OnePerLine # opeartor line break
+
+# bit fileds
+AlignConsecutiveBitFields: Consecutive # align
+BitFieldColonSpacing:      After       # colon
+
+# string align
+AlwaysBreakBeforeMultilineStrings: false # str = "..." \n "..."
+BreakAdjacentStringLiterals:       true  # return "..." \n "..."
+BreakStringLiterals:               true  # string line break
+
+# integer delimiter
+IntegerLiteralSeparator:
+  Decimal: 3 # 100'000'000
+  Hex:     2 # 0x10'00
+  Binary:  4 # 0b1000'0000
+
+#======================================================================================================================
+# SWITCH
+#======================================================================================================================
+AlignConsecutiveShortCaseStatements:
+  Enabled:          true  # align (short cases)
+  AcrossEmptyLines: false # ignore empty
+  AcrossComments:   false # ignore comment
+  AlignCaseColons:  false # ignore colon
+  AlignCaseArrows:  false # not c++ option
+
+AllowShortCaseLabelsOnASingleLine: true  # allow case short one line
+IndentCaseLabels:                  true  # case indent
+IndentCaseBlocks:                  false # case block indent
+
+#======================================================================================================================
+# FUNCTION
+#======================================================================================================================
+AlignConsecutiveDeclarations:
+  Enabled:                   true   # on
+  AcrossEmptyLines:          false  # ignore empty
+  AcrossComments:            false  # ignore comment
+  AlignFunctionDeclarations: true   # declarations align
+  AlignFunctionPointers:     true   # function pointer
+
+AlignAfterOpenBracket:                     Align      # parameter align
+AllowAllArgumentsOnNextLine:               false      # allow function one line on call
+AllowAllParametersOfDeclarationOnNextLine: false      # allow function one line on declaration
+BinPackArguments:                          false      # arguments pack: for AllowAllArgumentsOnNextLine
+BinPackParameters:                         OnePerLine # parameters pack
+BreakAfterReturnType:                      Automatic  # return type line break
+BreakFunctionDefinitionParameters:         false      # function define line break
+AllowBreakBeforeNoexceptSpecifier:         Never      # extern keyword line break
+IndentWrappedFunctionNames:                false      # function line break indent
+LambdaBodyIndentation:                     Signature  # lambda indent
+
+#======================================================================================================================
+# CLASS
+#======================================================================================================================
+AccessModifierOffset:          -4          # reverse indent
+EmptyLineAfterAccessModifier:  Never       # empty line: public: ...
+EmptyLineBeforeAccessModifier: Leave       # empty line: ... public:
+PackConstructorInitializers:   CurrentLine # ctor parameter pack
+BreakConstructorInitializers:  AfterColon  # ctor parameter line break
+BreakInheritanceList:          AfterComma  # inheritance line break
+
+#======================================================================================================================
+# TEMPLATE
+#======================================================================================================================
+BreakTemplateDeclarations:      Leave         # template line break
+BreakBeforeConceptDeclarations: Never         # concept line break
+IndentRequiresClause:           false         # require not indent
+RequiresClausePosition:         WithPreceding # require not break
+RequiresExpressionIndentation:  OuterScope    # require default indent
+# BreakBeforeTemplateCloser:      true          # template closer line break, LLVM 21
+
+#======================================================================================================================
+# NAMESPACE
+#======================================================================================================================
+CompactNamespaces:    false # overwarp
+FixNamespaceComments: true  # comment
+NamespaceIndentation: None  # indent
+
+#======================================================================================================================
+# MACRO
+#======================================================================================================================
+AlignConsecutiveMacros: Consecutive # align
+IndentPPDirectives:     AfterHash   # indent
+PPIndentWidth:          -1          # indent size: default -1
+
+#======================================================================================================================
+# FILE | COMMENT
+#======================================================================================================================
+AlignEscapedNewlines:     LeftWithLastLine     # escpace align
+SeparateDefinitionBlocks: Leave                # empty line process
+MaxEmptyLinesToKeep:      1                    # allow empty line
+InsertNewlineAtEOF:       true                 # insert empty line end of file
+SortIncludes:             Never                # include sort
+SortUsingDeclarations:    LexicographicNumeric # using sort
+
+# empty line
+KeepEmptyLines:
+  AtStartOfBlock: false # space block first line
+  AtStartOfFile:  false # space file first line
+  AtEndOfFile:    false # space file end line
+
+# comment align
+ReflowComments: IndentOnly # refactor
+AlignTrailingComments:
+  Kind:           Always # enabled
+  OverEmptyLines: 0      # allowed empty line
+
+SpacesBeforeTrailingComments: 1 # comment space size e.g. ... //
+SpacesInLineCommentPrefix:     
+  Minimum:  1 # comment space size e.g. // ...
+  Maximum: -1 # unlimit -1
