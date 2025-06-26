@@ -6,26 +6,6 @@
 LWE_BEGIN
 namespace core {
 
-class Noncopy {
-private:
-    Noncopy(const Noncopy&)            = delete;
-    Noncopy& operator=(const Noncopy&) = delete;
-    
-public:
-    Noncopy() = default;
-    ~Noncopy() = default;
-};
-
-class Nomove {
-private:
-    Nomove(Nomove&&)            = delete;
-    Nomove& operator=(Nomove&&) = delete;
-
-public:
-    Nomove() = default;
-    ~Nomove() = default;
-};
-
 class Static {
     Static()                         noexcept = default;
     Static(const Static&)            noexcept = default;
