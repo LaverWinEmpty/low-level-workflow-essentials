@@ -2,13 +2,12 @@
 #define LWE_DIAG_LOG
 
 #include "../base/base.h"
-#include "../util/timer.hpp"
 #include "../async/worker.hpp"
-#include "../mem/ptr.hpp"
-#include "diag.h"
+#include "../diag/diag.h"
+#include "timer.hpp"
 
 LWE_BEGIN
-namespace diag {
+namespace util {
 
 //! @brief log level
 enum class Verbosity : uint8_t {
@@ -39,7 +38,7 @@ protected:
     }
 
 public:
-    void write(const Alert& in, Verbosity type = INFO) {
+    void write(const diag::Alert& in, Verbosity type = INFO) {
         static thread_local char buffer[256];
         if(onCheck(type) == false) {
             return;
@@ -70,7 +69,7 @@ public:
     }
 
 public:
-    static void write(const Alert& in, Verbosity type = INFO) {
+    static void write(const diag::Alert& in, Verbosity type = INFO) {
         worker.submit([in, type]() {
             for(auto& itr : instance.handles) {
                 itr->write(in, type);
@@ -79,7 +78,7 @@ public:
     }
 
 public:
-    template<typename T> static void write(const Expected<T>& in) {
+    template<typename T> static void write(const diag::Expected<T>& in) {
         // succeeded
         if(in) {
             write(error(SUCCESS), INFO);
@@ -110,6 +109,6 @@ Log Log::instance;
 
 lwe::async::Worker Log::worker;
 
-} // namespace diag
+} // namespace util
 LWE_END
 #endif

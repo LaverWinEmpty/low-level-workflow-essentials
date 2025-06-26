@@ -3,7 +3,6 @@
 
 #include "alert.hpp"
 #include "expected.hpp"
-#include "log.hpp"
 
 #define ERROR_BODY(X)                                     \
     X(SUCCESS)       /* not error                      */ \

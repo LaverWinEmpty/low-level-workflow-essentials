@@ -50,7 +50,7 @@ static constexpr size_t MAX_COUNT = 4'096; // 4kb
 } // namespace config
 using namespace config;
 
-class Pool: Noncopy {
+class Pool {
 protected:
     //! @brief memory pool block node
     //! @note  4 pointer = 32 byte in x64

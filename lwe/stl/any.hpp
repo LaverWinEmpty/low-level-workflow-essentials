@@ -1,10 +1,10 @@
-#ifndef LWE_UTIL_ANY
-#define LWE_UTIL_ANY
+#ifndef LWE_STL_ANY
+#define LWE_STL_ANY
 
 #include "../meta/type.hpp"
 
 LWE_BEGIN
-namespace util {
+namespace stl {
 
 class Any {
 public:
@@ -88,7 +88,7 @@ private:
     size_t     size;
 };
 
-} // namespace util
+} // namespace stl
 LWE_END
 #include "any.ipp"
 #endif

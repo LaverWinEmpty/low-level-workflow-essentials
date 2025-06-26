@@ -4,7 +4,7 @@
 #include "type.hpp" // use Signature { Type ... }
 #include "internal/feature.hpp"
 
-#include "../util/any.hpp"
+#include "../stl/any.hpp"
 #include "../diag/alert.hpp"
 
 LWE_BEGIN
@@ -15,9 +15,9 @@ class Method {
     template<typename T> friend Registered registmethod();
 
 public:
-    virtual const Signature& signature() const                                = 0;
-    virtual ~Method()                                                         = default;
-    virtual util::Any invoke(void*, const std::vector<util::Any>& args) const = 0;
+    virtual const Signature& signature() const                              = 0;
+    virtual ~Method()                                                       = default;
+    virtual stl::Any invoke(void*, const std::vector<stl::Any>& args) const = 0;
 
 private:
     template<typename Cls, typename Ret, typename... Args> static Method* lambdaize(Ret (Cls::*name)(Args...));
@@ -32,12 +32,12 @@ template<typename Cls, typename Ret, typename... Args>
 class Lambda: public Method {
     // tuple unpack use by index sequence
     template<size_t... Is>
-    Ret call(Cls* obj, const std::vector<util::Any>& args, std::index_sequence<Is...>) const;
+    Ret call(Cls* obj, const std::vector<stl::Any>& args, std::index_sequence<Is...>) const;
 
 public:
     Lambda(Ret (Cls::*name)(Args...));
     Lambda(Ret (Cls::*name)(Args...) const);
-    util::Any        invoke(void* instance, const std::vector<util::Any>& args) const override;
+    stl::Any         invoke(void* instance, const std::vector<stl::Any>& args) const override;
     const Signature& signature() const override;
 
 private:

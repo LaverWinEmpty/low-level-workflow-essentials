@@ -3,6 +3,9 @@
 #include "iostream"
 #include "../meta/meta.h"
 
+// for Test, Temp type
+#include "example_object.hpp"
+
 /*
  * class reflection -> example_object.hpp
  */
@@ -152,14 +155,14 @@ void example_reflection() {
         // Get by template + method name
         m = methodof<MethodTest>("print");
 
-        // Param is std::vector<util::Any>, `Any` is RTTI-free custom any
+        // Param is std::vector<stl::Any>, `Any` is RTTI-free custom any
         m->invoke(nullptr, {});
 
         // Get by name + method name
         m = methodof("MethodTest", "sum");
 
-        // Return `util::Any`
-        util::Any any = m->invoke(nullptr, { 1, 2 });
+        // Return `stl::Any`
+        stl::Any any = m->invoke(nullptr, { 1, 2 });
 
         // Auto inference
         int value = any;

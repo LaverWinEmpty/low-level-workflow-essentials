@@ -1,5 +1,5 @@
 LWE_BEGIN
-namespace util {
+namespace stl {
 
 Any::Any() {
     reset();
@@ -281,7 +281,7 @@ template<typename T> T&& Any::move() {
     return std::move(ret);
 }
 
-bool util::Any::valid() const {
+bool stl::Any::valid() const {
     // can be deleted but not copied == is moved
     if(deleter && !copier) {
         return false;
@@ -323,5 +323,5 @@ template<typename T> Any::operator T() const {
     return cast<T>();
 }
 
-} // namespace util
+} // namespace stl
 LWE_END
