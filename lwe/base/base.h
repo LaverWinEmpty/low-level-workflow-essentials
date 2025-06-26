@@ -4,13 +4,13 @@
 /**************************************************************************************************
  * include core filess
  **************************************************************************************************/
- #include "internal/std.hpp"
- #include "internal/defs.hpp"
- #include "internal/helper.hpp"
- #include "internal/tag.hpp"
- #include "internal/macro.hpp"
+#include "internal/std.hpp"
+#include "internal/defs.hpp"
+#include "internal/helper.hpp"
+#include "internal/tag.hpp"
+#include "internal/macro.hpp"
 
- /**************************************************************************************************
+/**************************************************************************************************
  * external exposure
  **************************************************************************************************/
 LWE_BEGIN
@@ -19,4 +19,4 @@ using namespace core;
 using std::string;
 LWE_END
 
- #endif
+#endif

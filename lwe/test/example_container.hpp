@@ -1,7 +1,7 @@
 #pragma once
 
 #include "example_reflection.hpp" // Test class reuse
-#include "../stl/deque.hpp" // include meta.h
+#include "../stl/deque.hpp"       // include meta.h
 
 // main
 namespace test {
@@ -23,7 +23,7 @@ void example_container() {
     testArray.push({ 2, 2, 2 });
     testArray.push({ 3, 3, 3 });
     testArray.push({ 4, 4, 4 });
-    
+
     // or pop_front for standard
     testArray.shift();
     // Supported: both pointer and reference
@@ -31,7 +31,7 @@ void example_container() {
     // Data is not moved, but the starting index is set to 1.
 
     // count 9, size 3 -> circulation
-    for (int i = 0; i < 9; ++i) {
+    for(int i = 0; i < 9; ++i) {
         std::cout << testArray[i].c << " ";
     }
     std::cout << "\n"; // 2 3 4 0 0 0 0 0 1 2
@@ -49,24 +49,24 @@ void example_container() {
 
     // if need throw, use at()
     try {
-        std::cout << testArray.at(1000000).c;
+        std::cout << testArray.at(1'000'000).c;
     }
     catch(std::out_of_range& e) {
         // catched
         std::cout << e.what() << "\n";
-    } 
+    }
 
     // cout 6 -> circulation
     auto itr = testArray.begin();
-    for (int i = 0; i < 6; ++i) {
+    for(int i = 0; i < 6; ++i) {
         std::cout << itr->c << " ";
         ++itr;
     }
     std::cout << "\n"; // 2 3 4 2 3 4 (Valid)
 
     // style -> stack
-    auto stackItr= testArray.top();
-    for (auto itr = testArray.front(); itr != testArray.rear() - 1; ++itr) {
+    auto stackItr = testArray.top();
+    for(auto itr = testArray.front(); itr != testArray.rear() - 1; ++itr) {
         std::cout << itr->c << " ";
     }
     std::cout << "\n"; // 4 3 2 (Valid)
@@ -111,4 +111,4 @@ void example_container() {
     */
 }
 
-}
+} // namespace test

@@ -4,15 +4,15 @@
 #include "../stl/deque.hpp"
 
 namespace test {
-    using namespace LWE;
-    using namespace meta;
-    using namespace stl;
+using namespace LWE;
+using namespace meta;
+using namespace stl;
 
 // unregistered class
-class Temp {};
+class Temp { };
 
 // registered class
-class Test : public Object {
+class Test: public Object {
     CLASS_BODY(Test, Object);
 
 public:
@@ -21,7 +21,7 @@ public:
 public:
     Deque<string> deque;
 };
-}
+} // namespace test
 
 // Register global namespace
 // namespace is optional (::Test => REGISTER_FIELD(Test))
@@ -31,14 +31,14 @@ REGISTER_FIELD_BEGIN(Test, test) {
 }
 REGISTER_FIELD_END;
 
-namespace test{
+namespace test {
 void example_object() {
     /* RC (Reflectable Class)*/ {
         // This class behaves exactly like Ptr: unique for construction and weak for copying.
-        RC<Test> temp;        // create with instance (Required: default constructor)
-        RC<Test> weak = temp; // weak_ptr
-        temp = nullptr;       // delete
-        if (!weak) {
+        RC<Test> temp;           // create with instance (Required: default constructor)
+        RC<Test> weak = temp;    // weak_ptr
+        temp          = nullptr; // delete
+        if(!weak) {
             std::cout << "DANGLING POINTER\n"; // enter this line
         }
     }
@@ -48,10 +48,10 @@ void example_object() {
         std::cout << "Test::value default: " << test->value << "\n"; // print 0
 
         test = nullptr; // delete
-        
+
         statics<Test>()->value = 100; // set default class
 
-        test = RC<Test>(); // create
+        test = RC<Test>();                                           // create
         std::cout << "Test::value default: " << test->value << "\n"; // print 100
     }
 
@@ -66,9 +66,9 @@ void example_object() {
         test = new Test();
 
         // isof: up/down cast check method
-        std::cout << "obj is of Test:\t\t"  << obj->isof<Test>()    << "\n"; // false
-        std::cout << "obj is of Object:\t"  << obj->isof<Object>()  << "\n"; // true
-        std::cout << "test is of Test:\t"   << test->isof<Test>()   << "\n"; // true
+        std::cout << "obj is of Test:\t\t" << obj->isof<Test>() << "\n";     // false
+        std::cout << "obj is of Object:\t" << obj->isof<Object>() << "\n";   // true
+        std::cout << "test is of Test:\t" << test->isof<Test>() << "\n";     // true
         std::cout << "test is of Object:\t" << test->isof<Object>() << "\n"; // true
     }
 
@@ -77,7 +77,7 @@ void example_object() {
 
         // Get meta class
         meta::Class* metaClass = temp->meta(); // meta Class
-        
+
         // Get base class meta class
         std::cout << "Test Base: " << metaClass->base()->name() << "\n"; // print Object
 
@@ -90,7 +90,7 @@ void example_object() {
 
         // Find: classof<Test>() == test->meta();
         const Structure& fields = classof<Test>()->fields();
-        for (auto& var : fields) {
+        for(auto& var : fields) {
             printf("%s\n", var.name);
         }
         // print private variable deque
@@ -104,7 +104,7 @@ void example_object() {
         uint8_t* ptr = test.as<uint8_t>();
 
         Deque<string>* deque = reinterpret_cast<Deque<string>*>(ptr += field.offset);
-        
+
         // use private variable
         deque->push("[{SERIALIZE TEST}]"); // print { ["\[\{SERIALIZE TEST\}\]"] }
         // {} [] -> \[ \] \{ \}, for safe formatting
@@ -113,4 +113,4 @@ void example_object() {
         std::cout << test->serialize() << std::endl;
     }
 }
-}
+} // namespace test

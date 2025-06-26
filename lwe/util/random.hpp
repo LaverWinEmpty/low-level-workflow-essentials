@@ -20,9 +20,9 @@ public:
     void initialize(uint64_t);
 
 public:
-    int64_t  sint(int64_t  = INT64_MAX,  int64_t  = INT64_MIN);
+    int64_t  sint(int64_t = INT64_MAX, int64_t = INT64_MIN);
     uint64_t uint(uint64_t = UINT64_MAX, uint64_t = 0);
-    double   real(double   = 1,          double   = 0);
+    double   real(double = 1, double = 0);
 
 private:
     uint64_t        xoshiro256();
@@ -32,10 +32,10 @@ public:
     template<typename T> static T generate(T a, T b) {
         static Random rand;
 
-        if constexpr (std::is_floating_point_v<T>) {
+        if constexpr(std::is_floating_point_v<T>) {
             return rand.real(a, b);
         }
-        else if constexpr (std::is_signed_v<T>) {
+        else if constexpr(std::is_signed_v<T>) {
             return rand.sint(a, b);
         }
         else {
@@ -47,7 +47,7 @@ private:
     State state;
 };
 
-}
+} // namespace util
 LWE_END
 
 #include "random.ipp"

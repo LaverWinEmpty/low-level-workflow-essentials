@@ -1,9 +1,7 @@
-#ifdef LWE_CONTAINER_DEQUE
 LWE_BEGIN
-
 namespace stl {
 
-template<typename T, size_t SVO> Deque<T, SVO>::Deque(): Container() {}
+template<typename T, size_t SVO> Deque<T, SVO>::Deque(): Container() { }
 
 template<typename T, size_t SVO> Deque<T, SVO>::~Deque() {
     clear();
@@ -159,7 +157,8 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::erase(index_t index, T* out
 
     if(out) {
         *out = std::move(container[relative(index)]);
-    } else container[relative(index)].~T();
+    }
+    else container[relative(index)].~T();
     --counter;
 
     // pop front -> move cursor only
@@ -351,7 +350,8 @@ template<typename T, size_t SVO> index_t Deque<T, SVO>::clamp(index_t in) const 
 template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexcept {
     if(in < DEF_SVO) {
         in = DEF_SVO; // set default min
-    } else in = align(in);
+    }
+    else in = align(in);
 
     // no reallocation required
     if(in == capacitor) {
@@ -375,16 +375,18 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexc
     index_t index = 0;
     for(index_t i = 0; i < counter; ++i) {
         if(index < static_cast<index_t>(in)) {
-            new (newly + index) T(std::move(container[relative(i)])); // move
+            new(newly + index) T(std::move(container[relative(i)])); // move
             ++index;
-        } else container[relative(i)].~T(); // delete
+        }
+        else container[relative(i)].~T(); // delete
     }
 
     // free
     if(container != stack) {
         if(capacitor > MIN) {
             free(container);
-        } else container = newly; // ctor not called
+        }
+        else container = newly; // ctor not called
     }
 
     // set
@@ -396,12 +398,12 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexc
 }
 
 template<typename T, size_t SVO>
-Deque<T, SVO>::Iterator::Iterator(const Deque* in, index_t idx) noexcept: outer(in), index(idx) {}
+Deque<T, SVO>::Iterator::Iterator(const Deque* in, index_t idx) noexcept: outer(in), index(idx) { }
 
 template<typename T, size_t SVO>
-Deque<T, SVO>::Iterator::Iterator(const Iterator& in) noexcept: outer(in.outer), index(in.index) {}
+Deque<T, SVO>::Iterator::Iterator(const Iterator& in) noexcept: outer(in.outer), index(in.index) { }
 
-template<typename T, size_t SVO> Deque<T, SVO>::Iterator::Iterator(const Reverser& in) noexcept: Iterator(in) {}
+template<typename T, size_t SVO> Deque<T, SVO>::Iterator::Iterator(const Reverser& in) noexcept: Iterator(in) { }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::Iterator::operator=(const Iterator& in) noexcept -> Iterator& {
     outer = in.outer;
@@ -511,12 +513,12 @@ template<typename T, size_t SVO> T* Deque<T, SVO>::Iterator::operator->() const 
 }
 
 template<typename T, size_t SVO>
-Deque<T, SVO>::Reverser::Reverser(const Deque* in, index_t idx) noexcept: iterator(in, idx) {}
+Deque<T, SVO>::Reverser::Reverser(const Deque* in, index_t idx) noexcept: iterator(in, idx) { }
 
 template<typename T, size_t SVO>
-Deque<T, SVO>::Reverser::Reverser(const Reverser& in) noexcept: iterator(in.iterator) {}
+Deque<T, SVO>::Reverser::Reverser(const Reverser& in) noexcept: iterator(in.iterator) { }
 
-template<typename T, size_t SVO> Deque<T, SVO>::Reverser::Reverser(const Iterator& in) noexcept: iterator(in) {}
+template<typename T, size_t SVO> Deque<T, SVO>::Reverser::Reverser(const Iterator& in) noexcept: iterator(in) { }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::Reverser::operator=(const Reverser& in) noexcept -> Reverser& {
     iterator = in.iterator;
@@ -625,6 +627,4 @@ template<typename T, size_t SVO> T* Deque<T, SVO>::Reverser::operator->() const 
 }
 
 } // namespace stl
-
 LWE_END
-#endif

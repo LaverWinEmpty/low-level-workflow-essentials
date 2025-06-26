@@ -34,8 +34,7 @@ using float64_t = double;        //!< floating
 using hash_t  = std::size_t;                //!< hash type
 using index_t = std::make_signed_t<size_t>; //!< index type
 
-} // namespace hal
+} // namespace core
 LWE_END
-
 
 #endif

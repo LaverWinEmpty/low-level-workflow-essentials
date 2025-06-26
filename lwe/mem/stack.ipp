@@ -1,5 +1,3 @@
-#include "stack.hpp"
-
 LWE_BEGIN
 namespace mem {
 

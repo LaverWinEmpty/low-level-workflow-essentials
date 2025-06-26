@@ -1,7 +1,3 @@
-#ifdef LWE_UTIL_ANY
-
-#include "../diag/alert.hpp"
-
 LWE_BEGIN
 namespace util {
 
@@ -24,12 +20,12 @@ Any::Any(Any&& in) noexcept: data(in.data), deleter(in.deleter), copier(in.copie
 
 Any::Any(const Any& in): deleter(in.deleter), copier(in.copier), size(in.size), info(in.info) {
     // primitive info (SVO)
-    if (!copier) {
+    if(!copier) {
         data = in.data; // shallow copy
     }
     else {
         data.ptr = malloc(size); // malloc
-        if (!data.ptr) {
+        if(!data.ptr) {
             reset();
             throw std::bad_alloc();
         }
@@ -37,13 +33,13 @@ Any::Any(const Any& in): deleter(in.deleter), copier(in.copier), size(in.size), 
     }
 }
 
-Any& Any::operator=(const Any& in){
-    if (data.ptr && deleter) {
+Any& Any::operator=(const Any& in) {
+    if(data.ptr && deleter) {
         deleter(data.ptr); // call destructor
     }
 
     // other is null
-    if (!in.data.ptr) {
+    if(!in.data.ptr) {
         reset();
     }
 
@@ -56,13 +52,13 @@ Any& Any::operator=(const Any& in){
         size    = in.size;
 
         // primitive type (SVO)
-        if (!copier) {
+        if(!copier) {
             data = in.data; // shallow copy
         }
         // else call copy constructor
         else {
             data.ptr = malloc(size); // malloc
-            if (!data.ptr) {
+            if(!data.ptr) {
                 reset();
                 throw std::bad_alloc();
             }
@@ -73,12 +69,12 @@ Any& Any::operator=(const Any& in){
     return *this;
 }
 
-Any& Any::operator=(Any && in) noexcept {
-    if (this != &in) {
+Any& Any::operator=(Any&& in) noexcept {
+    if(this != &in) {
         data.ptr = in.data.ptr;
-        deleter = in.deleter;
-        size = in.size;
-        info = std::move(in.info);
+        deleter  = in.deleter;
+        size     = in.size;
+        info     = std::move(in.info);
         in.reset();
     }
     return *this;
@@ -88,11 +84,11 @@ void Any::reset() {
     // has deleter == allocated
     if(deleter) {
         // has copier == exist, else moved
-        if (copier) {
+        if(copier) {
             deleter(data.ptr); // call destructor
         }
         else free(data.ptr); // else free only
-        deleter = nullptr; // reset lambda
+        deleter = nullptr;   // reset lambda
     }
     copier = nullptr; // reset lambda
 }
@@ -101,7 +97,7 @@ template<typename T> void Any::set(T&& in) {
     using Typename = std::remove_reference_t<T>;
 
     // reset
-    if (data.ptr && deleter) {
+    if(data.ptr && deleter) {
         deleter(data.ptr);
     }
 
@@ -110,16 +106,18 @@ template<typename T> void Any::set(T&& in) {
 
     // primitive, enum, pointer types do not call destructor
     // pointer: not sure if it's allocated
-    if constexpr (std::is_fundamental_v<Typename> ||
-        std::is_enum_v<Typename> ||
-        std::is_pointer_v<Typename>) {
+    if constexpr(std::is_fundamental_v<Typename> || std::is_enum_v<Typename> || std::is_pointer_v<Typename>) {
         deleter = nullptr;
         copier  = nullptr;
     }
     // else type
     else {
-        deleter = [](void* in)             { delete static_cast<Typename*>(in); };
-        copier  = [](void* dst, void* src) { new (dst) Typename(*static_cast<Typename*>(src)); };
+        deleter = [](void* in) {
+            delete static_cast<Typename*>(in);
+        };
+        copier = [](void* dst, void* src) {
+            new(dst) Typename(*static_cast<Typename*>(src));
+        };
     }
 
     // primitive, enum, pointer types use SVO (union)
@@ -127,32 +125,68 @@ template<typename T> void Any::set(T&& in) {
     // - new __int128  -> size exceeds max (64bit)
     // - new std::byte -> has deconstructor
     //
-    // clang-format off 
-    if      constexpr (std::is_same_v<T, char>)               { data.c   = in; }
-    else if constexpr (std::is_same_v<T, signed char>)        { data.sc  = in; }
-    else if constexpr (std::is_same_v<T, signed int>)         { data.si  = in; }
-    else if constexpr (std::is_same_v<T, signed long>)        { data.sl  = in; }
-    else if constexpr (std::is_same_v<T, signed short>)       { data.ss  = in; }
-    else if constexpr (std::is_same_v<T, signed long long>)   { data.sll = in; }
-    else if constexpr (std::is_same_v<T, unsigned char>)      { data.uc  = in; }
-    else if constexpr (std::is_same_v<T, unsigned int>)       { data.ui  = in; }
-    else if constexpr (std::is_same_v<T, unsigned long>)      { data.ul  = in; }
-    else if constexpr (std::is_same_v<T, unsigned short>)     { data.us  = in; }
-    else if constexpr (std::is_same_v<T, unsigned long long>) { data.ull = in; }
-    else if constexpr (std::is_same_v<T, bool>)               { data.b   = in; }
-    else if constexpr (std::is_same_v<T, float>)              { data.f   = in; }
-    else if constexpr (std::is_same_v<T, double>)             { data.d   = in; }
-    else if constexpr (std::is_same_v<T, long double>)        { data.ld  = in; }
-    else if constexpr (std::is_enum_v<T>)                     { data.ull = static_cast<uint64_t>(in); } // expand
-    else if constexpr (std::is_pointer_v<T>)                  { data.ptr = reinterpret_cast<void*>(in); }
+    // clang-format off
+    if constexpr(std::is_same_v<T, char>) {
+        data.c = in;
+    }
+    else if constexpr(std::is_same_v<T, signed char>) {
+        data.sc = in;
+    }
+    else if constexpr(std::is_same_v<T, signed int>) {
+        data.si = in;
+    }
+    else if constexpr(std::is_same_v<T, signed long>) {
+        data.sl = in;
+    }
+    else if constexpr(std::is_same_v<T, signed short>) {
+        data.ss = in;
+    }
+    else if constexpr(std::is_same_v<T, signed long long>) {
+        data.sll = in;
+    }
+    else if constexpr(std::is_same_v<T, unsigned char>) {
+        data.uc = in;
+    }
+    else if constexpr(std::is_same_v<T, unsigned int>) {
+        data.ui = in;
+    }
+    else if constexpr(std::is_same_v<T, unsigned long>) {
+        data.ul = in;
+    }
+    else if constexpr(std::is_same_v<T, unsigned short>) {
+        data.us = in;
+    }
+    else if constexpr(std::is_same_v<T, unsigned long long>) {
+        data.ull = in;
+    }
+    else if constexpr(std::is_same_v<T, bool>) {
+        data.b = in;
+    }
+    else if constexpr(std::is_same_v<T, float>) {
+        data.f = in;
+    }
+    else if constexpr(std::is_same_v<T, double>) {
+        data.d = in;
+    }
+    else if constexpr(std::is_same_v<T, long double>) {
+        data.ld = in;
+    }
+    else if constexpr(std::is_enum_v<T>) {
+        data.ull = static_cast<uint64_t>(in);
+    } // expand
+    else if constexpr(std::is_pointer_v<T>) {
+        data.ptr = reinterpret_cast<void*>(in);
+    }
     // clang-format on
     // else copy or move constructor
-    else { data.ptr = new Typename(std::forward<T>(in)); }
+    else {
+        data.ptr = new Typename(std::forward<T>(in));
+    }
 }
 
 template<typename T> T Any::cast(bool safety) const {
     // reference not allowed
-    if constexpr (std::is_reference_v<T>) {
+    if constexpr(std::is_reference_v<T>) {
         throw diag::Alert("BAD ANY CAST");
     }
 
@@ -192,7 +226,7 @@ template<typename T> T Any::cast(bool safety) const {
 
     // other: compare only size
     // use check<T>() for safety
-    if (sizeof(T) > size) {
+    if(sizeof(T) > size) {
         throw diag::Alert("BAD ANY CAST");
     }
     return *static_cast<T*>(data.ptr);
@@ -207,30 +241,30 @@ template<typename T> T& Any::ref() {
     }
 
     // pointer
-    if constexpr (std::is_pointer_v<T>) {
-        if (info == meta::Keyword::POINTER) {
+    if constexpr(std::is_pointer_v<T>) {
+        if(info == meta::Keyword::POINTER) {
             return static_cast<T>(data.ptr);
         }
     }
 
     // primitive
-    else if constexpr (std::is_fundamental_v<T> || std::is_enum_v<T>) {
-        if constexpr (std::is_same_v<T, char>)                return data.c;
-        if constexpr (std::is_same_v<T, signed char>)         return data.sc;
-        if constexpr (std::is_same_v<T, signed int>)          return data.si;
-        if constexpr (std::is_same_v<T, signed long>)         return data.sl;
-        if constexpr (std::is_same_v<T, signed short>)        return data.ss;
-        if constexpr (std::is_same_v<T, signed long long>)    return data.sll;
-        if constexpr (std::is_same_v<T, unsigned char>)       return data.uc;
-        if constexpr (std::is_same_v<T, unsigned int>)        return data.ui;
-        if constexpr (std::is_same_v<T, unsigned long>)       return data.ul;
-        if constexpr (std::is_same_v<T, unsigned short>)      return data.us;
-        if constexpr (std::is_same_v<T, unsigned long long>)  return data.ull;
-        if constexpr (std::is_same_v<T, bool>)                return data.b;
-        if constexpr (std::is_same_v<T, float>)               return data.f;
-        if constexpr (std::is_same_v<T, double>)              return data.d;
-        if constexpr (std::is_same_v<T, long double>)         return data.ld;
-        if constexpr (std::is_enum_v<T>)                      return static_cast<T>(data.ull);
+    else if constexpr(std::is_fundamental_v<T> || std::is_enum_v<T>) {
+        if constexpr(std::is_same_v<T, char>) return data.c;
+        if constexpr(std::is_same_v<T, signed char>) return data.sc;
+        if constexpr(std::is_same_v<T, signed int>) return data.si;
+        if constexpr(std::is_same_v<T, signed long>) return data.sl;
+        if constexpr(std::is_same_v<T, signed short>) return data.ss;
+        if constexpr(std::is_same_v<T, signed long long>) return data.sll;
+        if constexpr(std::is_same_v<T, unsigned char>) return data.uc;
+        if constexpr(std::is_same_v<T, unsigned int>) return data.ui;
+        if constexpr(std::is_same_v<T, unsigned long>) return data.ul;
+        if constexpr(std::is_same_v<T, unsigned short>) return data.us;
+        if constexpr(std::is_same_v<T, unsigned long long>) return data.ull;
+        if constexpr(std::is_same_v<T, bool>) return data.b;
+        if constexpr(std::is_same_v<T, float>) return data.f;
+        if constexpr(std::is_same_v<T, double>) return data.d;
+        if constexpr(std::is_same_v<T, long double>) return data.ld;
+        if constexpr(std::is_enum_v<T>) return static_cast<T>(data.ull);
     }
 
     // other
@@ -249,7 +283,7 @@ template<typename T> T&& Any::move() {
 
 bool util::Any::valid() const {
     // can be deleted but not copied == is moved
-    if (deleter && !copier) {
+    if(deleter && !copier) {
         return false;
     }
     return true;
@@ -269,10 +303,10 @@ Any::operator bool() const noexcept {
 
 template<typename T> Any::operator T() {
     // check strong type
-    if (!check<T>()) {
+    if(!check<T>()) {
         throw diag::Alert("BAD ANY CAST");
     }
-    if (std::is_reference_v<T>) {
+    if(std::is_reference_v<T>) {
         return ref<T>();
     }
     return cast<T>();
@@ -280,15 +314,14 @@ template<typename T> Any::operator T() {
 
 template<typename T> Any::operator T() const {
     // check strong type
-    if (!check<T>()) {
+    if(!check<T>()) {
         throw diag::Alert("BAD ANY CAST");
     }
-    if (std::is_reference_v<T>) {
+    if(std::is_reference_v<T>) {
         return ref<T>();
     }
     return cast<T>();
 }
 
-}
+} // namespace util
 LWE_END
-#endif

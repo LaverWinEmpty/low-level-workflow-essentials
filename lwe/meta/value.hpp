@@ -38,7 +38,7 @@ public:
 
 public:
     Value& operator=(const Value&) noexcept;
-    Value& operator=(Value &&) noexcept = default;
+    Value& operator=(Value&&) noexcept = default;
 
 public:
     Value operator&(E) const noexcept; //!< AND
@@ -46,9 +46,9 @@ public:
     Value operator^(E) const noexcept; //!< XOR
 
 public:
-    Value& operator&=(E) noexcept;     //!< AND
-    Value& operator|=(E) noexcept;     //!< OR
-    Value& operator^=(E) noexcept;     //!< XOR
+    Value& operator&=(E) noexcept; //!< AND
+    Value& operator|=(E) noexcept; //!< OR
+    Value& operator^=(E) noexcept; //!< XOR
 
 public:
     Value operator~() const noexcept; //!< NOT
@@ -65,12 +65,12 @@ public:
 private:
     U value = static_cast<E>(0);
 
-// info
+    // info
 private:
     static const Enum* info;
 };
 
-}
+} // namespace meta
 LWE_END
 #include "value.ipp"
 #endif

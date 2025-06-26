@@ -1,7 +1,6 @@
 #ifndef LWE_UTIL_UUID
 #define LWE_UTIL_UUID
 
-
 #include "random.hpp"
 #include "buffer.hpp"
 
@@ -32,7 +31,7 @@ private:
     uint64_t hi, lo;
 };
 
-}
+} // namespace util
 LWE_END
 
 #include "uuid.ipp"

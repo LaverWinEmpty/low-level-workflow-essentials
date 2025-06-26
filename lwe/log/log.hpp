@@ -44,12 +44,12 @@ public:
         if(onCheck(type) == false) {
             return;
         }
-        snprintf(buffer, sizeof(buffer),
-            "[%s](%s): %s",
-            static_cast<const char*>(util::Timer::system()),
-            static_cast<const char*>(util::Timer::process()),
-            in.what()
-        );
+        snprintf(buffer,
+                 sizeof(buffer),
+                 "[%s](%s): %s",
+                 static_cast<const char*>(util::Timer::system()),
+                 static_cast<const char*>(util::Timer::process()),
+                 in.what());
         onWrite(buffer, type);
     }
 
@@ -57,30 +57,25 @@ private:
     Verbosity level = Verbosity::INFO;
 };
 
-
 class Log {
 public:
     template<typename T> static void add(Verbosity in = INFO) {
-        worker.submit(
-            [in]() {
-                Logger* handle = new T(); // no catch
-                handle->level = in;
+        worker.submit([in]() {
+            Logger* handle = new T(); // no catch
+            handle->level  = in;
 
-                // worker is single thread, no loack
-                instance.handles.push_back(handle);
-            }
-        );
+            // worker is single thread, no loack
+            instance.handles.push_back(handle);
+        });
     }
 
 public:
     static void write(const Alert& in, Verbosity type = INFO) {
-        worker.submit(
-            [in, type]() {
-                for(auto& itr : instance.handles) {
-                    itr->write(in, type);
-                }
+        worker.submit([in, type]() {
+            for(auto& itr : instance.handles) {
+                itr->write(in, type);
             }
-        );
+        });
     }
 
 public:
@@ -104,8 +99,8 @@ public:
     }
 
 private:
-    inline static lwe::async::Worker worker;
-    std::vector<Logger*> handles; 
+    static lwe::async::Worker worker;
+    std::vector<Logger*>      handles;
 
 private:
     static Log instance;
@@ -113,8 +108,8 @@ private:
 
 Log Log::instance;
 
+lwe::async::Worker Log::worker;
 
-}
+} // namespace diag
 LWE_END
-// #include "log.ipp"
 #endif

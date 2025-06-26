@@ -46,11 +46,11 @@ LWE_BEGIN
 namespace mem {
 namespace config {
 static constexpr size_t DEF_ALIGN = sizeof(void*);
-static constexpr size_t MAX_COUNT = 4096; // 4kb
+static constexpr size_t MAX_COUNT = 4'096; // 4kb
 } // namespace config
 using namespace config;
 
-class Pool : Noncopy {
+class Pool: Noncopy {
 protected:
     //! @brief memory pool block node
     //! @note  4 pointer = 32 byte in x64

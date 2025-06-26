@@ -1,9 +1,7 @@
-#ifdef LWE_META_REFLECTOR
-
 LWE_BEGIN
 namespace meta {
 
-    template<typename T> Reflector<T>::Reflector(const Reflector& in): capacitor(in.capacitor), count(in.count) {
+template<typename T> Reflector<T>::Reflector(const Reflector& in): capacitor(in.capacitor), count(in.count) {
     // set
     capacitor = in.capacitor;
     count     = in.count;
@@ -148,10 +146,9 @@ template<typename T> template<typename Arg> void Reflector<T>::push(Arg&& in) {
 }
 
 template<typename T> std::unordered_map<string, Reflector<T>>& Reflector<T>::map() {
-     static std::unordered_map<string, Reflector<T>> instance;
-     return instance;
- }
-
+    static std::unordered_map<string, Reflector<T>> instance;
+    return instance;
 }
+
+} // namespace meta
 LWE_END
-#endif   

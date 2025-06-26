@@ -1,5 +1,3 @@
-#ifdef LWE_SYNC_LOCK
-
 #if (COMPILER == MSVC)
 #    include <immintrin.h>
 #endif
@@ -8,10 +6,16 @@ LWE_BEGIN
 namespace async {
 
 Lock::Lock(int sleep, int backoff, Function function):
-    SLEEP(sleep), BACKOFF(backoff), delegate(function), owner(NOBODY), locked(0) {
+    SLEEP(sleep),
+    BACKOFF(backoff),
+    delegate(function),
+    owner(NOBODY),
+    locked(0) {
     if(!function) {
         // default function
-        delegate = [](int x) { return x * 2; };
+        delegate = [](int x) {
+            return x * 2;
+        };
     }
     else delegate = function;
 }
@@ -29,28 +33,29 @@ void Lock::lock() {
     int  backoff   = BEGIN_BACKOFF;
     int  attempt   = BEGIN_ATTEMPT;
     bool liberated = false;
-    
+
     // try
     while(!owner.compare_exchange_weak(testThread, // from
                                        thisThread, // to
                                        std::memory_order_acquire)) {
         testThread = NOBODY; // reset
 
-        // exchange failed, not onwer, 
+        // exchange failed, not onwer,
         liberated = false;
 
         // spin
         for(int i = 0; i < attempt; ++i) {
             // cpu pause instruction for better performance
-        #if (COMPILER == MSVC)
+#if (COMPILER == MSVC)
             _mm_pause();
-        #elif defined(__x86_64__) || defined(_M_X64)
+#elif defined(__x86_64__) || defined(_M_X64)
             asm volatile("pause" ::: "memory");
-        #elif defined(__aarch64__)
+#elif defined(__aarch64__)
             asm volatile("yield" ::: "memory");
-        #else
-            volatile int dummy = 0; (void)dummy; // other os, avoid optimization
-        #endif
+#else
+            volatile int dummy = 0;
+            (void)dummy; // other os, avoid optimization
+#endif
             // owner is free, try exchange immediately
             if(owner.load(std::memory_order_relaxed) == NOBODY) {
                 liberated = true;
@@ -66,7 +71,8 @@ void Lock::lock() {
                 // initialize -> spin retry
                 backoff = BEGIN_BACKOFF;
                 attempt = BEGIN_ATTEMPT;
-            } else attempt = delegate(attempt);
+            }
+            else attempt = delegate(attempt);
         }
     }
 
@@ -88,4 +94,3 @@ void Lock::unlock() {
 
 } // namespace async
 LWE_END
-#endif

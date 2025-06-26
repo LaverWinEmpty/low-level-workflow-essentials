@@ -80,7 +80,7 @@ private:
         long double        ld;
     } data = { 0 };
 
-    void (*deleter)(void*) = nullptr;
+    void (*deleter)(void*)       = nullptr;
     void (*copier)(void*, void*) = nullptr;
 
 private:
@@ -88,7 +88,7 @@ private:
     size_t     size;
 };
 
-}
+} // namespace util
 LWE_END
 #include "any.ipp"
 #endif

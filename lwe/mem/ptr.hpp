@@ -1,4 +1,4 @@
-﻿#ifndef LWE_MEM_PTR
+#ifndef LWE_MEM_PTR
 #define LWE_MEM_PTR
 
 #include "../base/base.h"
@@ -22,27 +22,23 @@
 
 LWE_BEGIN
 namespace mem {
-    template<typename T> class Slotmap {
-        using Adapter = Slotmap<util::Buffer<sizeof(T), int8_t>>;
-    public:
-        static T* acquire() {
-            LOCKGUARD(Adapter::lock) return Adapter::pool.allocate<T>();
-        }
-        static void release(T* in) {
-            LOCKGUARD(Adapter::lock) Adapter::pool.deallocate<T>(in);
-        }
-    };
+template<typename T> class Slotmap {
+    using Adapter = Slotmap<util::Buffer<sizeof(T), int8_t>>;
+public:
+    static T*   acquire() { LOCKGUARD(Adapter::lock) return Adapter::pool.allocate<T>(); }
+    static void release(T* in) { LOCKGUARD(Adapter::lock) Adapter::pool.deallocate<T>(in); }
+};
 
-    //! Pool for same-sized types
-    template<size_t N> class Slotmap<util::Buffer<N, int8_t>> {
-        template<typename> friend class Slotmap;
-        inline static async::Lock lock;
-        inline static Pool pool{ N };
-    };
+//! Pool for same-sized types
+template<size_t N> class Slotmap<util::Buffer<N, int8_t>> {
+    template<typename> friend class Slotmap;
+    inline static async::Lock lock;
+    inline static Pool        pool{ N };
+};
 
 template<typename T> class Ptr {
     //! custom destructor
-    using Deleter = void(*)(void*);
+    using Deleter = void (*)(void*);
 
     //! constrcutor SFINAE for incomplete type
     template<typename U, typename... Args> using Enable = std::enable_if_t<std::is_constructible_v<U, Args...>>;
@@ -54,7 +50,7 @@ template<typename T> class Ptr {
     };
 
     //! internal data control block
-    struct Internal : Block {
+    struct Internal: Block {
         ~Internal() { /* not work */ }
         union {
             T       data;
@@ -63,7 +59,7 @@ template<typename T> class Ptr {
     };
 
     //! external data control block
-    struct External : Block {
+    struct External: Block {
         T* ptr = nullptr;
     };
 
@@ -86,13 +82,13 @@ public:
     template<typename U, typename = Enable<T, const U&>> Ptr(const U&);
 
 public:
-    //! @brief move 
+    //! @brief move
     //! @param [in] U is T, for incomplete type
     template<typename U, typename = Enable<T, U&&>> Ptr(U&&);
 
 public:
     ~Ptr();
-    Ptr(const Ptr&);                //!< shallow copy 
+    Ptr(const Ptr&);                //!< shallow copy
     Ptr(Ptr&&) noexcept;            //!< move
     Ptr& operator=(const Ptr&);     //!< shallow copy
     Ptr& operator=(Ptr&&) noexcept; //!< move
@@ -104,8 +100,8 @@ public:
     const T& operator*() const;  //!< get ref const
 
 public:
-    bool operator==(void*) const; //!< compare to pointer
-    bool operator!=(void*) const; //!< compare to pointer
+    bool operator==(void*) const;      //!< compare to pointer
+    bool operator!=(void*) const;      //!< compare to pointer
     bool operator==(const Ptr&) const; //!< compare if the block ​​are the same
     bool operator!=(const Ptr&) const; //!< compare if the block ​​are the same
 
@@ -120,8 +116,8 @@ public:
     bool clone();
 
 public:
-    T*       get();         //!< get
-    const T* get() const;   //!< get
+    T*       get();       //!< get
+    const T* get() const; //!< get
 
 public:
     template<typename U> U*       as();       //!< cast
@@ -139,7 +135,7 @@ private:
     bool     pointer; //!< is pointer flag
 };
 
-}
+} // namespace mem
 LWE_END
 #include "ptr.ipp"
 #endif

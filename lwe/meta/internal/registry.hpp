@@ -9,7 +9,7 @@ namespace meta {
 //! @brief static object registry
 //! @note  Registry<Class> == metadata registry
 //! @tparam T: Enum (enum metadata)
-//!            Class (class metadata) 
+//!            Class (class metadata)
 //!            Object (static instance)
 //!            Method (method lambda)
 template<typename T> class Registry {
@@ -32,7 +32,7 @@ private:
     static Table& instance();
 };
 
-}
+} // namespace meta
 LWE_END
 #include "registry.ipp"
 #endif

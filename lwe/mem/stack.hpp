@@ -14,7 +14,7 @@ namespace mem {
 template<typename T, size_t N, typename = void> struct Stack {
     operator T*() const noexcept;
 private:
-    T mem[N] = { }; // declare if SVO is not 0
+    T mem[N] = {}; // declare if SVO is not 0
 };
 
 // size 0 specialization

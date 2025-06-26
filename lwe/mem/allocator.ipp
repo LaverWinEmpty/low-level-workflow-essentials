@@ -1,4 +1,3 @@
-#ifdef LWE_MEM_ALLOCATOR
 LWE_BEGIN
 namespace mem {
 
@@ -12,7 +11,7 @@ T* Allocator<T, A>::allocate(Args&&... in) noexcept {
     LOCKGUARD(Adapter::lock) {
         ptr = Adapter::pool.allocate<void>();
     }
-    if constexpr (!std::is_void_v<T>) {
+    if constexpr(!std::is_void_v<T>) {
         new(ptr) T(std::forward<Args>(in)...);
     }
     return static_cast<T*>(ptr);
@@ -20,7 +19,7 @@ T* Allocator<T, A>::allocate(Args&&... in) noexcept {
 
 template<typename T, size_t A>
 bool Allocator<T, A>::deallocate(T* in) noexcept {
-    if constexpr (!std::is_void_v<T>) {
+    if constexpr(!std::is_void_v<T>) {
         in->~T();
     }
     LOCKGUARD(Adapter::lock) return Adapter::pool.deallocate(in);
@@ -35,10 +34,10 @@ template<typename T, size_t A> size_t Allocator<T, A>::release() noexcept {
 }
 
 template<typename T, size_t A> size_t Allocator<T, A>::generate(size_t in) noexcept {
-    for (size_t i = 0; i < in; ++i) {
+    for(size_t i = 0; i < in; ++i) {
         bool check = false;
         LOCKGUARD(Adapter::lock) {
-            if (!Adapter::pool.generate(1)) {
+            if(!Adapter::pool.generate(1)) {
                 return i;
             }
         }
@@ -46,6 +45,5 @@ template<typename T, size_t A> size_t Allocator<T, A>::generate(size_t in) noexc
     return in;
 }
 
-} // namespace MEM
+} // namespace mem
 LWE_END
-#endif

@@ -1,7 +1,3 @@
-#ifdef LWE_META_TYPE
-
-#include "../util/hash.hpp"
-
 LWE_BEGIN
 namespace meta {
 
@@ -29,7 +25,7 @@ void Type::push(Keyword in) {
     else if(next > STACK) {
         // reallocate
         if(next >= capacitor) {
-            capacitor    <<= 1;
+            capacitor      <<= 1;
             Keyword* newly   = static_cast<Keyword*>(realloc(heap, capacitor));
             if(!newly) {
                 capacitor >>= 1;
@@ -74,7 +70,7 @@ template<typename T> static const Type& Type::reflect() {
                 reflect<T>(&buf);
                 buf.shrink();
                 buf.hashed = util::Hash(buf.begin(), buf.count());
-                
+
                 // to string and caching
                 stringify(&str, buf, 0);
                 buf.str = str.c_str();
@@ -123,7 +119,7 @@ template<typename T> static void Type::reflect(Type* out) {
         if constexpr(std::is_class_v<T>) {
             out->push(Keyword::CLASS);
             Class* info = classof<T>();
-            if (!info) {
+            if(!info) {
                 registclass<T>(); // Try register
                 info = classof<T>();
             }
@@ -136,7 +132,7 @@ template<typename T> static void Type::reflect(Type* out) {
                 registenum<T>(); // try register
                 info = enumof<T>();
             }
-            if (info) str = info->name();
+            if(info) str = info->name();
         }
 
         // calculate size
@@ -164,7 +160,8 @@ template<typename T> static void Type::reflect(Type* out) {
             out->push(Keyword::CONST);
             out->push(Keyword::REFERENCE);
             reflect<typename std::remove_const_t<Temp>>(out);
-        } else {
+        }
+        else {
             out->push(Keyword::REFERENCE);
             reflect<Temp>(out); // dereference
         }
@@ -175,7 +172,8 @@ template<typename T> static void Type::reflect(Type* out) {
 Type::Type(const Type& in): counter(in.counter), hashed(in.hashed), str(in.str) {
     if(in.counter < STACK) {
         std::memcpy(stack, in.stack, sizeof(Keyword) * counter);
-    } else {
+    }
+    else {
         heap = static_cast<Keyword*>(malloc(sizeof(Keyword) * in.capacitor));
         if(!heap) {
             counter = 0;
@@ -189,7 +187,8 @@ Type::Type(const Type& in): counter(in.counter), hashed(in.hashed), str(in.str) 
 Type::Type(Type&& in) noexcept: counter(in.counter), hashed(in.hashed), str(in.str) {
     if(in.counter < STACK) {
         std::memcpy(stack, in.stack, counter); // copy
-    } else {
+    }
+    else {
         heap      = in.heap;
         capacitor = in.capacitor;
         hashed    = in.hashed;
@@ -223,7 +222,8 @@ Type& Type::operator=(const Type& in) {
             dest = static_cast<Keyword*>(malloc(sizeof(Keyword) * in.counter));
             if(dest) {
                 if(counter > STACK) free(heap); // counter is before moving
-            } else throw std::bad_alloc();    // error
+            }
+            else throw std::bad_alloc(); // error
         }
         std::memcpy(dest, in.heap, in.counter);
         heap      = dest;
@@ -240,8 +240,8 @@ Type& Type::operator=(Type&& in) noexcept {
         if(counter > STACK) {
             free(heap);
         }
-        counter  = in.counter;
-        hashed = in.hashed;
+        counter = in.counter;
+        hashed  = in.hashed;
         if(counter < STACK) {
             std::memcpy(stack, in.stack, counter); // copy
         }
@@ -251,10 +251,10 @@ Type& Type::operator=(Type&& in) noexcept {
 
             in.heap      = nullptr;
             in.capacitor = 0;
-            in.counter     = 0;
+            in.counter   = 0;
         }
         // cached string move
-        str = in.str;
+        str    = in.str;
         in.str = nullptr;
     }
     return *this;
@@ -263,7 +263,8 @@ Type& Type::operator=(Type&& in) noexcept {
 const Keyword& Type::operator[](size_t idx) const {
     if(counter < STACK) {
         return stack[idx];
-    } else return heap[idx];
+    }
+    else return heap[idx];
 }
 
 Type::operator Keyword() const {
@@ -363,7 +364,7 @@ size_t Type::stringify(string* out, const Type& in, size_t idx) {
     // class or enum
     if(in[idx] == Keyword::CLASS || in[idx] == Keyword::ENUM) {
         uint64_t len;
-        char*  ptr = reinterpret_cast<char*>(&len);
+        char*    ptr = reinterpret_cast<char*>(&len);
         for(int i = 0; i < sizeof(len); ++i) {
             ptr[i] = static_cast<uint8_t>(in[idx + 1 + i]); // read size
         }
@@ -397,12 +398,10 @@ const Field& Class::field(const char* name) const {
 }
 
 const Field& Class::field(const string& name) const {
-    static const Field failed = {
-        /*.type   = */ Type{},
-        /*.name   = */ nullptr,
-        /*.size   = */ 0,
-        /*.offset = */ size_t(-1)
-    };
+    static const Field failed = { /*.type   = */ Type{},
+                                  /*.name   = */ nullptr,
+                                  /*.size   = */ 0,
+                                  /*.offset = */ size_t(-1) };
 
     const Structure& temp = fields();
     for(auto& itr : temp) {
@@ -561,6 +560,5 @@ Object* statics(const string& in) {
     return Registry<Object>::find(in);
 }
 
-}
+} // namespace meta
 LWE_END
-#endif

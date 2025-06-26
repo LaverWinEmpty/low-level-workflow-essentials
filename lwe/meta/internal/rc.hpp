@@ -23,8 +23,8 @@ public:
     ~RC();
 
 public:
-    RC& operator=(const RC&);
-    RC& operator=(RC&&) noexcept;
+    RC&                      operator=(const RC&);
+    RC&                      operator=(RC&&) noexcept;
     template<typename U> RC& operator=(const RC<U>&);
     template<typename U> RC& operator=(RC<U>&&);
 
@@ -36,10 +36,10 @@ public:
     const T*                get() const; //!< get RCerence const
 
 public:
-    T*       operator->()       { return reinterpret_cast<T*>(&*ptr); }
+    T*       operator->() { return reinterpret_cast<T*>(&*ptr); }
     const T* operator->() const { return reinterpret_cast<const T*>(&*ptr); }
-    T&       operator*()        { return reinterpret_cast<T*>(*ptr); }
-    const T& operator*() const  { return reinterpret_cast<const T*>(*ptr); }
+    T&       operator*() { return reinterpret_cast<T*>(*ptr); }
+    const T& operator*() const { return reinterpret_cast<const T*>(*ptr); }
 
 public:
     operator T*();
@@ -49,7 +49,7 @@ private:
     mem::Ptr<Object> ptr;
 };
 
-}
+} // namespace meta
 LWE_END
 #include "rc.ipp"
 #endif

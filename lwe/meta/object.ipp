@@ -1,6 +1,8 @@
-#ifdef LWE_OBJECT
 LWE_BEGIN
 namespace meta {
+
+// clang-format off
+// for serialize
 
 async::Lock Object::lock;
 
@@ -716,4 +718,5 @@ void deserialize(void* out, const std::string& in, const Keyword& type) {
 
 }
 LWE_END
-#endif
+
+// clang-format on

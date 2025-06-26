@@ -1,11 +1,9 @@
-#ifdef LWE_MEM_PTR
-
-LWE_BEGIN 
+LWE_BEGIN
 namespace mem {
 
 template<typename T> bool Ptr<T>::initialize(bool flag) {
     pointer = flag;
-    id = 0;
+    id      = 0;
 
     // arg == ptr, store external
     if(flag) {
@@ -15,7 +13,7 @@ template<typename T> bool Ptr<T>::initialize(bool flag) {
             return false;
         }
     }
-    
+
     // arg != ptr, store internal
     else {
         block = Slotmap<Internal>::acquire();
@@ -39,11 +37,11 @@ template<typename T> bool Ptr<T>::release() {
     }
 
     // call destructor
-    if (block->owner == this) {
+    if(block->owner == this) {
         block->id = 0; // defeasance
-        if (pointer) {
+        if(pointer) {
             // if external call deleter(ptr);
-            if (deleter) {
+            if(deleter) {
                 deleter(get());
             }
             Slotmap<External>::release(reinterpret_cast<External*>(block)); // free
@@ -83,7 +81,7 @@ template<typename U, typename> Ptr<T>::Ptr(const U& in): deleter(nullptr) {
     if(!initialize(false)) {
         throw diag::error(diag::Code::BAD_ALLOC); // init failed
     }
-    new (reinterpret_cast<Internal*>(block)->ptr) T(in); // copy
+    new(reinterpret_cast<Internal*>(block)->ptr) T(in); // copy
 }
 
 // move
@@ -92,7 +90,7 @@ template<typename U, typename> Ptr<T>::Ptr(U&& in): deleter(nullptr) {
     if(!initialize(false)) {
         throw diag::error(diag::Code::BAD_ALLOC); // iit failed
     }
-    new (reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
+    new(reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
 }
 
 // dtor
@@ -101,13 +99,21 @@ template<typename T> Ptr<T>::~Ptr() {
 }
 
 // copy
-template<typename T> Ptr<T>::Ptr(const Ptr& in): block(in.block), deleter(in.deleter), id(in.id), pointer(in.pointer) {}
+template<typename T> Ptr<T>::Ptr(const Ptr& in):
+    block(in.block),
+    deleter(in.deleter),
+    id(in.id),
+    pointer(in.pointer) { }
 
 // move
-template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept : block(in.block), deleter(in.deleter), id(in.id), pointer(in.pointer) {
+template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept:
+    block(in.block),
+    deleter(in.deleter),
+    id(in.id),
+    pointer(in.pointer) {
     // move
     in.block = nullptr;
-    if (block->owner == &in) {
+    if(block->owner == &in) {
         block->owner = this;
     }
 }
@@ -129,7 +135,7 @@ template<typename T> auto Ptr<T>::operator=(const Ptr& in) -> Ptr& {
 }
 
 // move
-template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
+template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept -> Ptr& {
     if(this == &in) return *this;
 
     // reset
@@ -147,7 +153,7 @@ template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept-> Ptr&{
     in.block = nullptr;
 
     // block not null
-    if (block && block->owner == &in) {
+    if(block && block->owner == &in) {
         block->owner = this;
     }
     return *this;
@@ -189,15 +195,15 @@ template<typename T> bool Ptr<T>::operator!=(const Ptr& in) const {
     return !operator==(in);
 }
 
-template<typename T> Ptr<T>::operator bool () const {
+template<typename T> Ptr<T>::operator bool() const {
     return valid();
 }
 
-template<typename T> Ptr<T>::operator T* () {
+template<typename T> Ptr<T>::operator T*() {
     return get();
 }
 
-template<typename T> Ptr<T>::operator const T* () const {
+template<typename T> Ptr<T>::operator const T*() const {
     return get();
 }
 
@@ -208,7 +214,7 @@ template<typename T> bool Ptr<T>::clone() {
     }
 
     // is owner
-    if (block->owner == this) {
+    if(block->owner == this) {
         return true;
     }
 
@@ -217,17 +223,17 @@ template<typename T> bool Ptr<T>::clone() {
     if(!initialize(false)) {
         return false; // failed
     }
-    
+
     // deep copy by placement new copy constructor
-    new (get()) T(*data);
+    new(get()) T(*data);
     return true;
 }
 
 template<typename T> T* Ptr<T>::get() {
-    if (!block) {
+    if(!block) {
         return nullptr;
     }
-    if (pointer) {
+    if(pointer) {
         return reinterpret_cast<External*>(block)->ptr;
     }
     else return &reinterpret_cast<Internal*>(block)->data;
@@ -253,7 +259,7 @@ template<typename T> bool Ptr<T>::owned() const {
 }
 
 template<typename T> void Ptr<T>::own() {
-    if (block) {
+    if(block) {
         block->owner = this;
     }
 }
@@ -265,6 +271,5 @@ template<typename T> bool Ptr<T>::valid() const {
     return false; // invalid
 }
 
-}
+} // namespace mem
 LWE_END
-#endif

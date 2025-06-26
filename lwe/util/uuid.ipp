@@ -1,5 +1,3 @@
-#ifdef LWE_UTIL_UUID
-
 #include "../mem/allocator.hpp"
 #include "../async/lock.hpp"
 
@@ -13,24 +11,34 @@ struct UUID::String {
         unsigned const char* hiptr = reinterpret_cast<unsigned const char*>(&self->hi);
         unsigned const char* loptr = reinterpret_cast<unsigned const char*>(&self->lo);
         // copy: without null (fixed size)
-        snprintf(buffer, 36,
-            "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
-            hiptr[0], hiptr[1], hiptr[2], hiptr[3],
-            hiptr[4], hiptr[5],
-            hiptr[6], hiptr[7],
-            loptr[0], loptr[1],
-            loptr[2], loptr[3], loptr[4], loptr[5], loptr[6], loptr[7]
-        );
+        snprintf(buffer,
+                 36,
+                 "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
+                 hiptr[0],
+                 hiptr[1],
+                 hiptr[2],
+                 hiptr[3],
+                 hiptr[4],
+                 hiptr[5],
+                 hiptr[6],
+                 hiptr[7],
+                 loptr[0],
+                 loptr[1],
+                 loptr[2],
+                 loptr[3],
+                 loptr[4],
+                 loptr[5],
+                 loptr[6],
+                 loptr[7]);
         buffer[36] = 0;
     }
-    operator const char* () { return buffer; }
+    operator const char*() { return buffer; }
 private:
     char buffer[37];
 };
 
 UUID::UUID() {
-    hi  = Random::generate<uint64_t>(-1, 0),
-    lo  = Random::generate<uint64_t>(-1, 0);
+    hi = Random::generate<uint64_t>(-1, 0), lo = Random::generate<uint64_t>(-1, 0);
 
     unsigned char* hiptr = reinterpret_cast<unsigned char*>(&hi);
     unsigned char* loptr = reinterpret_cast<unsigned char*>(&lo);
@@ -51,7 +59,7 @@ UUID::operator string() const {
     return operator*();
 }
 
-auto UUID::operator* () const -> String {
+auto UUID::operator*() const -> String {
     return stringify(this);
 }
 
@@ -59,6 +67,5 @@ auto stringify() const -> Strign {
     return String(this);
 }
 
-}
+} // namespace util
 LWE_END
-#endif

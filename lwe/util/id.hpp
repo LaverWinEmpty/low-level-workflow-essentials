@@ -41,7 +41,7 @@ private:
 //! @brief universal id
 using UID = ID<void>;
 
-}
+} // namespace util
 LWE_END
 #include "id.ipp"
 #endif

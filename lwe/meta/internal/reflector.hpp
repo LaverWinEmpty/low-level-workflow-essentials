@@ -58,7 +58,7 @@ private:
 using Enumeration = Reflector<Enumerator>;
 using Structure   = Reflector<Field>;
 
-}
+} // namespace meta
 LWE_END
 #include "reflector.ipp"
 #endif

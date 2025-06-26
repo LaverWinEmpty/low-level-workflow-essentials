@@ -24,7 +24,7 @@
  *  a   b   X   Y   Z   c   d   e
  *          ^       ^   ^
  *          begin   |   end
- *          front   rear 
+ *          front   rear
  *          top     bottom
  *
  * iterator
@@ -36,13 +36,13 @@
  * - if to point to end(), sub 1 (auto itr = rear() - 1;)
  * - if going to begin(), add (auto itr = rear(); ++itr;)
  *
- * indexing 
+ * indexing
  *  [0] -> X (2)
  *  [2] -> Z (4)
  *  [3] -> c (5, out of range)
  *  [8] -> X (2, circulation)
  **************************************************************************************************
- * feature 
+ * feature
  *
  * - push_back:  push
  * - pop_back:   pop
@@ -73,20 +73,20 @@ public:
     CONTAINER_BODY(T, Deque, T, SVO); // <T, SVO>
 
 private:
-   template<typename, size_t> friend class Deque;
+    template<typename, size_t> friend class Deque;
 
 private:
-   static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : align(SVO));
+    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : align(SVO));
 
 public:
-   class Iterator; //!< iterator
-   class Reverser; //!< reverse iterator
-   friend class Iterator;
-   friend class Reverser;
+    class Iterator; //!< iterator
+    class Reverser; //!< reverse iterator
+    friend class Iterator;
+    friend class Reverser;
 
 public:
-   Deque();
-   ~Deque();
+    Deque();
+    ~Deque();
 
 public:
     template<size_t N> Deque(const Deque<T, N>&);

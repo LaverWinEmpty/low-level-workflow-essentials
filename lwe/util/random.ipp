@@ -1,5 +1,3 @@
-#ifdef LWE_UTIL_RANDOM
-
 LWE_BEGIN
 namespace util {
 
@@ -41,9 +39,9 @@ uint64_t Random::xoshiro256() {
 }
 
 uint64_t Random::splitmix64(uint64_t& inout) {
-    uint64_t result = inout += 0x9E3779B97F4A7C15;
-    result = (result ^ (result >> 30)) * 0xBF58476D1CE4E5B9;
-    result = (result ^ (result >> 27)) * 0x94D049BB133111EB;
+    uint64_t result = inout += 0x9E'37'79'B9'7F'4A'7C'15;
+    result                   = (result ^ (result >> 30)) * 0xBF'58'47'6D'1C'E4'E5'B9;
+    result                   = (result ^ (result >> 27)) * 0x94'D0'49'BB'13'31'11'EB;
     return result ^ (result >> 31);
 }
 
@@ -53,22 +51,22 @@ int64_t Random::sint(int64_t a, int64_t b) {
 
 uint64_t Random::uint(uint64_t a, uint64_t b) {
     // check
-    if (a == b) {
+    if(a == b) {
         return uint64_t(a); // same, one value
     }
 
     // cast
     uint64_t umin = uint64_t(a);
     uint64_t umax = uint64_t(b) + 1;
-    if (umin == umax) {
+    if(umin == umax) {
         return xoshiro256(); // overflowed, all values
     }
 
     // swap
-    if (a > b) {
+    if(a > b) {
         uint64_t temp = umin;
-        umin = umax;
-        umax = temp;
+        umin          = umax;
+        umax          = temp;
     }
 
     // set
@@ -76,9 +74,9 @@ uint64_t Random::uint(uint64_t a, uint64_t b) {
     uint64_t mask  = ~uint64_t(0);
     uint64_t limit = mask - mask % range;
 
-    // rejection sampling 
+    // rejection sampling
     uint64_t result = xoshiro256();
-    while (result >= limit) {
+    while(result >= limit) {
         result = xoshiro256();
     }
     return uint64_t(umin + result % range);
@@ -86,15 +84,15 @@ uint64_t Random::uint(uint64_t a, uint64_t b) {
 
 double Random::real(double a, double b) {
     // no calculate case
-    if (a == b) {
+    if(a == b) {
         return static_cast<double>(a);
     }
 
     // swap
-    if (a > b) {
+    if(a > b) {
         double temp = a;
-        a = b;
-        b = temp;
+        a           = b;
+        b           = temp;
     }
 
     static uint64_t ONE = 1ULL << 52; // IEEE754 exponent one bit
@@ -107,6 +105,5 @@ double Random::real(double a, double b) {
     return a + result * (b - a);
 }
 
-}
+} // namespace util
 LWE_END
-#endif

@@ -1,7 +1,3 @@
-#ifdef LWE_META_FEATURE
-
-#include "reflector.hpp"
-
 LWE_BEGIN
 namespace meta {
 
@@ -69,8 +65,8 @@ constexpr const char* typestring(Keyword code) {
 // clang-format on
 
 template<typename T> Registered registenum() {
-   // default, other enum -> template specialization
-   return Registered::REGISTERED;
+    // default, other enum -> template specialization
+    return Registered::REGISTERED;
 }
 
 Container::~Container() { }
@@ -90,6 +86,5 @@ template<> bool isSTL<Keyword>(const Keyword& code) {
     return false;
 }
 
-}
+} // namespace meta
 LWE_END
-#endif

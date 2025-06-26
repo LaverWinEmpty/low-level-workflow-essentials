@@ -42,7 +42,7 @@ private:
     std::atomic_bool         end;     //!< worker end flag
 }; // namespace async
 
-}
+} // namespace async
 LWE_END
 #include "worker.ipp"
 #endif

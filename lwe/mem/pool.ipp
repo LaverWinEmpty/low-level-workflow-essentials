@@ -1,4 +1,3 @@
-#ifdef LWE_MEM_POOL
 LWE_BEGIN
 namespace mem {
 
@@ -69,21 +68,19 @@ auto Pool::Block::find(void* in) noexcept -> Block* {
     return nullptr;
 }
 
-Pool::Pool(size_t chunk, size_t alignment) noexcept :
+Pool::Pool(size_t chunk, size_t alignment) noexcept:
     ALIGN(alignment <= sizeof(void*) ? sizeof(void*) : align(alignment)), // power of 2, min: size of pointer
     CHUNK(align(chunk + sizeof(void*), ALIGN)),                           // block = chunk + ptr (block address storage)
     COUNT((MAX_COUNT / chunk) < 8 ? 8 : (MAX_COUNT / chunk)),             // if count has 8, set fixed count 8
     META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                  // pool metadata
-    counter{ 0 }
-{}
+    counter{ 0 } { }
 
 Pool::Pool(size_t chunk, size_t alignment, size_t count) noexcept:
     ALIGN(alignment <= sizeof(void*) ? sizeof(void*) : align(alignment)), // power of 2, min: size of pointer
     CHUNK(align(chunk + sizeof(void*), ALIGN)),                           // block = chunk + ptr (block address storage)
     COUNT(count),                                                         // block count
     META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                  // pool metadata
-    counter{ 0 }
-{}
+    counter{ 0 } { }
 
 Pool::~Pool() noexcept {
     // assert(counter.chunks == 0);
@@ -163,7 +160,8 @@ bool Pool::generate() noexcept {
             block->initialize(this, COUNT);
             counter.generated += 1;
             all.insert(block);
-        } else return false; // failed
+        }
+        else return false; // failed
     }
     usable.enqueue(block); // set
 
@@ -243,4 +241,3 @@ void Pool::Queue::pop(Block* inout) noexcept {
 
 } // namespace mem
 LWE_END
-#endif

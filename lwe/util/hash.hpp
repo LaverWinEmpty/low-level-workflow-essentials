@@ -6,10 +6,10 @@
 
 LWE_BEGIN
 namespace util {
-    
+
 class Hash {
-    static constexpr unsigned long long FNV1A64_BASIS = 14695981039346656037ULL;
-    static constexpr unsigned long long FNV1A64_PRIME = 1099511628211ULL;
+    static constexpr unsigned long long FNV1A64_BASIS = 14'695'981'039'346'656'037ULL;
+    static constexpr unsigned long long FNV1A64_PRIME = 1'099'511'628'211ULL;
 
 public:
     //! string proxy
@@ -35,7 +35,7 @@ public:
     String stringify() const;
 
 private:
-    hash_t val = 0;
+    hash_t                   val = 0;
     static thread_local char buffer[17];
 };
 
@@ -44,7 +44,7 @@ template<typename T> hash_t hashof(const T& in) {
     return Hash(&in, sizeof(in));
 }
 
-}
+} // namespace util
 LWE_END
 
 #include "hash.ipp"

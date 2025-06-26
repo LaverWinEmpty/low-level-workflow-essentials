@@ -1,4 +1,3 @@
-
 #ifndef LWE_CORE_HELPER
 #define LWE_CORE_HELPER
 
@@ -54,12 +53,12 @@ inline static constexpr uint64_t align(uint64_t in, uint64_t unit) noexcept {
  * @param [in] alignment (optional) corrected to by powers of 2
  * @return void* allocated pointer
  */
-template<typename T = void>  inline T* memalloc(size_t size, size_t alignment = 0) noexcept {
+template<typename T = void> inline T* memalloc(size_t size, size_t alignment = 0) noexcept {
     void* ptr = nullptr; // real address
     void* out = nullptr; // user address
 
     if(alignment <= 1) {
-        ptr = malloc(size + sizeof(void*)); // add space for metadata;
+        ptr = malloc(size + sizeof(void*));                                  // add space for metadata;
         out = reinterpret_cast<void*>(reinterpret_cast<uintptr_t>(ptr) + 1); // make space void*
     }
 

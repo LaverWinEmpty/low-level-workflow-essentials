@@ -65,31 +65,31 @@
 #define REGISTER_ENUM_KEYWORD_FLAG 0
 
 /**************************************************************************************************
- * include 
+ * include
  **************************************************************************************************/
 #include "type.hpp"
 #include "value.hpp"  // enum helper
-#include "lambda.hpp" // included type.hpp 
-#include "object.hpp" // included lambda.hpp 
+#include "lambda.hpp" // included type.hpp
+#include "object.hpp" // included lambda.hpp
 
 LWE_BEGIN
 /**************************************************************************************************
  * external exposure
  **************************************************************************************************/
-using meta::Type;        //!< type: field type info
-using meta::Object;      //!< type: object class
 using meta::Class;       //!< type: meta class
-using meta::Enum;        //!< type: meta enum
 using meta::Container;   //!< type: container
-using meta::Value;       //!< type: enum helper
-using meta::serialize;   //!< function: serialize
 using meta::deserialize; //!< function: deserialize
+using meta::Enum;        //!< type: meta enum
+using meta::Object;      //!< type: object class
+using meta::serialize;   //!< function: serialize
+using meta::Type;        //!< type: field type info
+using meta::Value;       //!< type: enum helper
 using meta::typeof;      //!< function: get type info
 using meta::classof;     //!< function: get class metadata
 using meta::enumof;      //!< function: get enum metadata
+using meta::methodof;    //!< function: get method
 using meta::statics;     //!< function: get static object
 using meta::typestring;  //!< function: get typename
-using meta::methodof;    //!< function: get method
 
 /**************************************************************************************************
  * register type enum

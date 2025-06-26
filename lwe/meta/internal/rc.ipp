@@ -1,27 +1,24 @@
-#ifdef LWE_META_RC
-
 LWE_BEGIN
 namespace meta {
 
 // ctor: default
 template<typename T> RC<T>::RC():
-    ptr(
-        static_cast<Object*>(Object::constructor<T>()),
+    ptr(static_cast<Object*>(Object::constructor<T>()),
         // custom deallocator
         [](void* in) {
             Object::destructor(static_cast<Object*>(in));
         } // end lambda
-    ) // end ptr()
-{}
+        ) // end ptr()
+{ }
 
 // copy: shallow
-template<typename T> RC<T>::RC(const RC& in): ptr(in.ptr) {}
+template<typename T> RC<T>::RC(const RC& in): ptr(in.ptr) { }
 
 template<typename T>
 template<typename U>
 RC<T>::RC(const RC<U>& in) {
     // check failed
-    if (!in->isof<T>()) {
+    if(!in->isof<T>()) {
         throw diag::error(diag::Code::TYPE_MISMATCH);
     }
     // shallow copy
@@ -58,7 +55,7 @@ template<typename T> template<typename U> auto RC<T>::operator=(RC<U>&& in) -> R
     return *this;
 }
 
-template<typename T> RC<T>::RC(RC&& in) noexcept: ptr(std::move(in.ptr)) {}
+template<typename T> RC<T>::RC(RC&& in) noexcept: ptr(std::move(in.ptr)) { }
 
 template<typename T> template<typename U> RC<T>::RC(RC<U>&& in) {
     if(!in->isof<T>()) {
@@ -67,25 +64,24 @@ template<typename T> template<typename U> RC<T>::RC(RC<U>&& in) {
     ptr = std::move(in.ptr);
 }
 
-template<typename T> RC<T>::RC(std::nullptr_t ptr): ptr(nullptr) {}
+template<typename T> RC<T>::RC(std::nullptr_t ptr): ptr(nullptr) { }
 
-
-template<typename T> RC<T>::~RC() {}
+template<typename T> RC<T>::~RC() { }
 
 template<typename T> template<typename U> U* RC<T>::cast() {
-    if (!ptr) {
+    if(!ptr) {
         return nullptr;
     }
 
     // checked
-    if (ptr->isof<U>()) {
+    if(ptr->isof<U>()) {
         return RC<U>(*this);
     }
     return nullptr;
 }
 
 template<typename T> template<typename U> U* RC<T>::as() {
-    if (!ptr) {
+    if(!ptr) {
         return nullptr;
     }
     return ptr.as<U>();
@@ -97,7 +93,7 @@ bool RC<T>::clone() {
 }
 
 template<typename T> T* RC<T>::get() {
-    if (!ptr) {
+    if(!ptr) {
         return nullptr;
     }
     return ptr.as<T>();
@@ -111,10 +107,9 @@ template<typename T> RC<T>::operator T*() {
     return get();
 }
 
-template<typename T> RC<T>::operator const T* () const {
+template<typename T> RC<T>::operator const T*() const {
     return const_cast<RC<T>*>(this)->get();
 }
 
-}
+} // namespace meta
 LWE_END
-#endif

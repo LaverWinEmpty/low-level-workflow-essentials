@@ -26,7 +26,7 @@ public:
 public:
     //! @note [0] is main type
     //! e.g.
-    //! [0] DEQUE [1] INT == Deque<int> 
+    //! [0] DEQUE [1] INT == Deque<int>
     const Keyword& operator[](size_t) const;
     const Keyword* begin() const;
     const Keyword* end() const;
@@ -65,7 +65,7 @@ private:
     union {
         struct {
             Keyword* heap;
-            size_t capacitor;
+            size_t   capacitor;
         };
         Keyword stack[STACK] = { Keyword::UNREGISTERED };
     };
@@ -157,7 +157,7 @@ template<typename T> T* statics();              //!< get static class
 template<typename T> T* statics(const T&);      //!< get static class
 Object*                 statics(const char*);   //!< get static class
 Object*                 statics(const string&); //!< get static class
-}
+} // namespace meta
 LWE_END
 #include "type.ipp"
 #endif

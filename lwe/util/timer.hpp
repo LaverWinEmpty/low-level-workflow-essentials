@@ -11,7 +11,7 @@ class Timer {
     using MS    = std::chrono::milliseconds;
 
     static constexpr float MAX = 3599999.99f; // 999:59:59.99
-    
+
 private:
     //! string proxy
     struct String;
@@ -45,7 +45,7 @@ public:
 public:
     //! @brief get system timestamp
     //! @note the delimiter can only be 1 byte
-    static String system(const char* = "%Y-%m-%d %H:%M:%S", bool  = false);
+    static String system(const char* = "%Y-%m-%d %H:%M:%S", bool = false);
 
 private:
     Clock::time_point last = Clock::now();
@@ -57,7 +57,7 @@ private:
 Timer Timer::statics;
 
 // delta timer
-class Tick : Static {
+class Tick: Static {
     static constexpr float NOSIE_FILTER = 0.00005f; //!< sec, ignore micro delays
     static constexpr int   FRAME_SKIP   = 10;       //!< fps 60 -> 0.16 sec (delta time clamping)
 
@@ -87,7 +87,7 @@ public:
 public:
     //! @brief get delta time unit 0.016 sec (based on 60fps target)
     //! @param [in] bool false == ignore time scale, default: true
-    static float fixed(bool = true) ;
+    static float fixed(bool = true);
 
 public:
     //! @brief get last frame count
@@ -95,21 +95,21 @@ public:
 
 public:
     //! @brief get tick time to count
-    //! @note  Tick::count() * Tick::rate() = Tick::fixed() 
+    //! @note  Tick::count() * Tick::rate() = Tick::fixed()
     static int count();
 
 public:
     //! @brief get tick time step
-    //! @note  Tick::rate() * Tick::count() = Tick::fixed() 
+    //! @note  Tick::rate() * Tick::count() = Tick::fixed()
     static float step();
 
 public:
-    static void timescale(float); //!< set timescale
-    static float timescale();     //!< get timescale
+    static void  timescale(float); //!< set timescale
+    static float timescale();      //!< get timescale
 
 public:
-    static void refresh(float); //!< set fps refresh sec
-    static float refresh();     //!< get fps refresh sec
+    static void  refresh(float); //!< set fps refresh sec
+    static float refresh();      //!< get fps refresh sec
 
 private:
     inline static Timer timer; //!< main timer
@@ -127,7 +127,7 @@ private:
     inline static float skip     = 0; //!< delta time frame skip
 };
 
-}
+} // namespace util
 LWE_END
 #include "timer.ipp"
 #endif

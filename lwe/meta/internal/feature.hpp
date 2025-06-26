@@ -59,11 +59,11 @@ enum class Registered : bool {
     REGISTERED   = 1
 };
 
-template<typename T> constexpr Keyword typecode(); //!< get type code
-constexpr const char*                  typestring(Keyword);     //!< reflect type name string by enum
+template<typename T> constexpr Keyword typecode();          //!< get type code
+constexpr const char*                  typestring(Keyword); //!< reflect type name string by enum
 
-template<typename T> constexpr bool isSTL();                    //!< check container explicit
-template<typename T> constexpr bool isSTL(const T&);            //!< check container implicit
+template<typename T> constexpr bool isSTL();                        //!< check container explicit
+template<typename T> constexpr bool isSTL(const T&);                //!< check container implicit
 template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container type code
 
 //! @brief pre-registered metadata of T, return value is unused
@@ -75,8 +75,7 @@ template<typename T> Registered registenum();
 //! @brief pre-registered methods of T, return value is unused
 template<typename T> Registered registmethod();
 
-
-}
+} // namespace meta
 LWE_END
 #include "feature.ipp"
 #endif
