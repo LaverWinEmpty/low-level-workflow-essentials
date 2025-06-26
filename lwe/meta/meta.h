@@ -74,22 +74,26 @@
 
 LWE_BEGIN
 /**************************************************************************************************
- * external exposure
+ * external exposure (type)
  **************************************************************************************************/
-using meta::Class;       //!< type: meta class
-using meta::Container;   //!< type: container
-using meta::deserialize; //!< function: deserialize
-using meta::Enum;        //!< type: meta enum
-using meta::Object;      //!< type: object class
-using meta::serialize;   //!< function: serialize
-using meta::Type;        //!< type: field type info
-using meta::Value;       //!< type: enum helper
-using meta::typeof;      //!< function: get type info
-using meta::classof;     //!< function: get class metadata
-using meta::enumof;      //!< function: get enum metadata
-using meta::methodof;    //!< function: get method
-using meta::statics;     //!< function: get static object
-using meta::typestring;  //!< function: get typename
+using meta::Class;       //!< meta class
+using meta::Container;   //!< container
+using meta::Enum;        //!< meta enum
+using meta::Object;      //!< object class
+using meta::Type;        //!< field type info
+using meta::Value;       //!< enum helper
+
+/**************************************************************************************************
+ * external exposure (fucntion)
+ **************************************************************************************************/
+using meta::deserialize; //!< deserialize
+using meta::serialize;   //!< serialize
+using meta::typeof;      //!< get type info
+using meta::classof;     //!< get class metadata
+using meta::enumof;      //!< get enum metadata
+using meta::methodof;    //!< get method
+using meta::statics;     //!< get static object
+using meta::typestring;  //!< get typename
 
 /**************************************************************************************************
  * register type enum
