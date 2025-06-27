@@ -2,6 +2,7 @@
 #define LWE_SYS_EXCEPTIONAL
 
 #include "alert.hpp"
+#include <type_traits>
 
 LWE_BEGIN
 namespace diag {
@@ -33,16 +34,34 @@ public:
     const T& operator*() const;
 
 public:
-    const char* what() const; //!< error message, return "" when succeeded
-    T&&         move();       //!< move data, throw when failed
-    T&          as();         //!< get reference, throw when failed
+    const char* what() const;  //!< error message, return "" when succeeded
+    T&&         move();        //!< move data, throw when failed
+    T&          data();        //!< get reference, throw when failed
+    bool        valid() const; //!
 
 private:
     union {
         Alert msg;
-        T     data;
+        T     res;
     };
     bool flag;
+};
+
+// reference specialize
+template<typename T> class Expected<T&>: public Expected<std::remove_reference_t<T>*> {
+    using Type = std::remove_reference_t<T>;
+    using Base = Expected<Type*>;
+public:
+    Expected(Type& in): Base(&in) { }
+    Expected(const Alert& in): Base(in) { }
+    Expected(Alert&& in): Base(in) { }
+    using Base::data;
+    using Base::valid;
+public:
+    Type*       operator->() { return data(); }
+    Type&       operator*() { return *data(); }
+    const Type* operator->() const { return data(); }
+    const Type& operator*() const { return *data(); }
 };
 
 } // namespace diag
