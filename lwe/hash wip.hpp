@@ -435,15 +435,10 @@ bool Set<T>::insert(U&& in, hash_t hashed) {
     // false -> empty
     if(bucket.used == false) {
         // insert
-        try {
-            new(&bucket.data) T(std::forward<U>(in));
-        }
-        catch(...) {
-            return false;
-        }
-        bucket.used = true;   // check
-        bucket.hash = hashed; // store
-        ++counter;            // count
+        new(&bucket.data) T(std::forward<U>(in)); // copy or move, can throw
+        bucket.used = true;                       // check
+        bucket.hash = hashed;                     // store
+        ++counter;                                // count
         return true;
     }
 
@@ -463,7 +458,7 @@ bool Set<T>::insert(U&& in, hash_t hashed) {
         // remove old and move
         Chain* old = bucket.chain;
         for(uint8_t i = 0; i < size; ++i) {
-            new(&newly[i].data) T(std::move(old[i].data)); // move
+            new(&newly[i].data) T(std::move(old[i].data)); // move, maybe noexcept
             newly[i].hash = old[i].hash;                   // copy hash
             old[i].data.~T();                              // dtor
         }
@@ -473,13 +468,8 @@ bool Set<T>::insert(U&& in, hash_t hashed) {
     }
 
     // isnert data
-    try {
-        new(&bucket.chain[size].data) T(std::forward<U>(in));
-    }
-    catch(...) {
-        return false;
-    }
-    bucket.chain[size].hash = hashed; // insert hash
+    new(&bucket.chain[size].data) T(std::forward<U>(in)); // copy or move, can throw
+    bucket.chain[size].hash = hashed;                     // insert hash
 
     ++bucket.size; // size
     ++counter;     // total size
