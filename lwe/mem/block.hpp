@@ -1,28 +1,28 @@
-#ifndef LWE_MEM_BUFFER
-#define LWE_MEM_BUFFER
+#ifndef LWE_MEM_BLOCK
+#define LWE_MEM_BLOCK
 
 #include "../diag/diag.h"
 
 LWE_BEGIN
 namespace mem {
 
-template<size_t N, typename T = char> struct Buffer {
-    Buffer() noexcept                = default;
-    Buffer(const Buffer&)            = default;
-    Buffer(Buffer&&)                 = default;
-    ~Buffer()                        = default;
-    Buffer& operator=(const Buffer&) = default;
-    Buffer& operator=(Buffer&&)      = default;
+template<size_t N, typename T = char> struct Block {
+    Block() noexcept               = default;
+    Block(const Block&)            = default;
+    Block(Block&&)                 = default;
+    ~Block()                       = default;
+    Block& operator=(const Block&) = default;
+    Block& operator=(Block&&)      = default;
 
 public:
-    constexpr Buffer(const T*, size_t);
-    constexpr Buffer(const std::initializer_list<T>&);
+    constexpr Block(const T*, size_t);
+    constexpr Block(const std::initializer_list<T>&);
 
 private:
     template<typename T> using IsChar = std::enable_if_t<sizeof(T) == sizeof(char)>;
 public:
-    template<typename = IsChar<T>> constexpr Buffer(const string&);
-    template<typename = IsChar<T>> constexpr Buffer(const char*);
+    template<typename = IsChar<T>> constexpr Block(const string&);
+    template<typename = IsChar<T>> constexpr Block(const char*);
 
 public:
     constexpr T&       operator[](size_t) noexcept;
@@ -33,8 +33,8 @@ public:
     constexpr operator const T*() const noexcept;
 
 public:
-    constexpr diag::Expected<T&>            at(size_t) noexcept;
-    constexpr diag::Expected<const T&>      at(size_t) const noexcept;
+    constexpr T&                            at(size_t);
+    constexpr const T&                      at(size_t) const;
     constexpr T*                            data() noexcept;
     constexpr const T*                      data() const noexcept;
     template<typename U> constexpr U*       as() noexcept;
@@ -53,4 +53,5 @@ private:
 
 } // namespace mem
 LWE_END
+#include "block.ipp"
 #endif
