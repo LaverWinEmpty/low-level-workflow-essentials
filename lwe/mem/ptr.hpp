@@ -102,8 +102,8 @@ public:
 public:
     bool operator==(void*) const;      //!< compare to pointer
     bool operator!=(void*) const;      //!< compare to pointer
-    bool operator==(const Ptr&) const; //!< compare if the block ​​are the same
-    bool operator!=(const Ptr&) const; //!< compare if the block ​​are the same
+    bool operator==(const Ptr&) const; //!< compare if the block are the same
+    bool operator!=(const Ptr&) const; //!< compare if the block are the same
 
 public:
     explicit operator bool() const;     //! check nullptr
