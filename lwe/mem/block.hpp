@@ -19,7 +19,7 @@ public:
     constexpr Block(const std::initializer_list<T>&);
 
 private:
-    template<typename T> using IsChar = std::enable_if_t<sizeof(T) == sizeof(char)>;
+    template<typename U> using IsChar = std::enable_if_t<sizeof(U) == sizeof(char)>;
 public:
     template<typename = IsChar<T>> constexpr Block(const string&);
     template<typename = IsChar<T>> constexpr Block(const char*);

@@ -36,6 +36,9 @@ template<size_t N, typename T> constexpr Block<N, T>::Block(const T* in, size_t 
 template<size_t N, typename T> constexpr Block<N, T>::Block(const std::initializer_list<T>& in) {
     size_t loop = in.size();
     if(loop >= N) {
+        throw diag::error(diag::INVALID_DATA);
+    }
+    if(loop >= N) {
         loop = N;
     }
     auto itr = in.begin();
