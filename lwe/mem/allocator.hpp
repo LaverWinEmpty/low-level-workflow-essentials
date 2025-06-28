@@ -9,21 +9,10 @@ LWE_BEGIN
 namespace mem {
 using namespace config;
 
-template<typename T, size_t ALIGN = DEF_ALIGN> class Allocator;
-
-//! @brief helper to use the same pool when sizes are the same.
-template<size_t SIZE, size_t ALIGN>
-class Allocator<mem::Block<SIZE>, ALIGN> {
-    template<typename, size_t> friend class Allocator;
-    static Pool        pool;
-    static async::Lock lock;
-};
-
 //! @brief default allocator
-template<typename T, size_t ALIGN>
+template<typename T, size_t ALIGN = DEF_ALIGN>
 class Allocator {
-    using Adapter = Allocator<mem::Block<core::align(sizeof(T), sizeof(void*))>, ALIGN>;
-
+    using Adapter = Allocator<Block<core::align(sizeof(T), sizeof(void*))>, ALIGN>;
 public:
     template<typename... Args> static T* allocate(Args&&...) noexcept; //!< @return false: bad alloc
     static bool                          deallocate(T*) noexcept;      //!< @return false: failed

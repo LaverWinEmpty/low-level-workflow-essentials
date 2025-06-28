@@ -26,15 +26,8 @@ namespace mem {
 template<typename T> class Slotmap {
     using Adapter = Slotmap<mem::Block<sizeof(T)>>;
 public:
-    static T*   acquire() { LOCKGUARD(Adapter::lock) return Adapter::pool.allocate<T>(); }
-    static void release(T* in) { LOCKGUARD(Adapter::lock) Adapter::pool.deallocate<T>(in); }
-};
-
-//! Pool for same-sized types
-template<size_t N> class Slotmap<mem::Block<N>> {
-    template<typename> friend class Slotmap;
-    inline static async::Lock lock;
-    inline static Pool        pool{ N };
+    static T*   acquire();
+    static void release(T* in);
 };
 
 template<typename T> class Ptr {

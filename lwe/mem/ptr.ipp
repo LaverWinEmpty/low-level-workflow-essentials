@@ -1,6 +1,33 @@
 LWE_BEGIN
 namespace mem {
 
+//! specailizated pool for same-sized types
+template<size_t N> class Slotmap<Block<N>> {
+    static async::Lock lock;
+    static Pool        pool;
+public:
+    static void* acquire();
+    static void  release(void* in);
+};
+template<size_t N> async::Lock Slotmap<Block<N>>::lock;
+template<size_t N> Pool        Slotmap<Block<N>>::pool{ N };
+
+template<typename T> T* Slotmap<T>::acquire() {
+    return static_cast<T*>(Adapter::acquire());
+}
+
+template<typename T> void Slotmap<T>::release(T* in) {
+    Adapter::release(static_cast<void*>(in));
+}
+
+template<size_t N> void* Slotmap<Block<N>>::acquire() {
+    LOCKGUARD(lock) return pool.allocate();
+}
+
+template<size_t N> void Slotmap<Block<N>>::release(void* in) {
+    LOCKGUARD(lock) pool.deallocate(in);
+}
+
 template<typename T> bool Ptr<T>::initialize(bool flag) {
     pointer = flag;
     id      = 0;
