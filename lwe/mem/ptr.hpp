@@ -2,7 +2,7 @@
 #define LWE_MEM_PTR
 
 #include "../base/base.h"
-#include "../util/buffer.hpp"
+#include "../mem/block.hpp"
 #include "../util/id.hpp"
 #include "../diag/diag.h"
 #include "pool.hpp"
@@ -22,15 +22,16 @@
 
 LWE_BEGIN
 namespace mem {
+//! @brief a non-releasable memory pool dedicated to `Ptr`
 template<typename T> class Slotmap {
-    using Adapter = Slotmap<util::Buffer<sizeof(T), int8_t>>;
+    using Adapter = Slotmap<mem::Block<sizeof(T)>>;
 public:
     static T*   acquire() { LOCKGUARD(Adapter::lock) return Adapter::pool.allocate<T>(); }
     static void release(T* in) { LOCKGUARD(Adapter::lock) Adapter::pool.deallocate<T>(in); }
 };
 
 //! Pool for same-sized types
-template<size_t N> class Slotmap<util::Buffer<N, int8_t>> {
+template<size_t N> class Slotmap<mem::Block<N>> {
     template<typename> friend class Slotmap;
     inline static async::Lock lock;
     inline static Pool        pool{ N };

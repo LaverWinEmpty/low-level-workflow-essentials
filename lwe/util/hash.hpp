@@ -2,7 +2,7 @@
 #define LWE_UTIL_HASH
 
 #include "../base/base.h"
-#include "buffer.hpp"
+#include "../mem/block.hpp"
 
 LWE_BEGIN
 namespace util {
