@@ -62,7 +62,7 @@
 #include "config.hpp"
 #include "../base/base.h"
 #include "../meta/meta.h"
-#include "../mem/stack.hpp"
+#include "../mem/Block.hpp"
 
 LWE_BEGIN
 namespace stl {
@@ -160,7 +160,7 @@ private:
 
 private:
     union {
-        mem::Stack<T, MIN> stack; // stack, union for uninitialize
+        mem::Block<MIN, T> stack; // stack, union for uninitialize
     };
     T*      container = nullptr; //!< container
     size_t  capacitor = 0;       //!< size: container

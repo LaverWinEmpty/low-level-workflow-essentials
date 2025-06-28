@@ -1,8 +1,8 @@
 LWE_BEGIN
 namespace mem {
 
-template<size_t SIZE, size_t ALIGN> Pool        Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::pool(SIZE, ALIGN);
-template<size_t SIZE, size_t ALIGN> async::Lock Allocator<util::Buffer<SIZE, int8_t>, ALIGN>::lock;
+template<size_t SIZE, size_t ALIGN> Pool        Allocator<mem::Block<SIZE>, ALIGN>::pool(SIZE, ALIGN);
+template<size_t SIZE, size_t ALIGN> async::Lock Allocator<mem::Block<SIZE>, ALIGN>::lock;
 
 template<typename T, size_t A>
 template<typename... Args>
