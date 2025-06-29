@@ -203,8 +203,8 @@ template<typename Derived> void Codec::decode(Container* ptr, const string& in) 
     }
     Derived& out = *reinterpret_cast<Derived*>(ptr); // else
 
-    size_t begin = 1;             // "[", ignore 1
-    size_t end   = in.size() - 1; // "]", ignore 1
+    size_t begin = 2;             // "[ ", ignore 2
+    size_t end   = in.size() - 2; // " ]", ignore 2
     size_t len   = 0;
 
     // parsing
@@ -226,7 +226,7 @@ template<typename Derived> void Codec::decode(Container* ptr, const string& in) 
 
         // character
         else if constexpr(std::is_same_v<Element, char>) {
-            if(parsed<char>(in, i)) {
+            if(parsed<Element>(in, i)) {
                 Element data;
                 decode(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
                 i     += 2; // pass `, `
@@ -237,7 +237,7 @@ template<typename Derived> void Codec::decode(Container* ptr, const string& in) 
         }
 
         // primitive
-        else {
+        else if(parsed<Element>(in, i)) {
             Element data;
             decode(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
             i     += 2; // pass <, >
@@ -483,7 +483,9 @@ template<typename T> bool Codec::parsed(const string& in, size_t idx) {
 
     // primitive types
     else if constexpr(!std::is_same_v<char, T>) {
-        return true;
+        if(in[idx] == '\0') return true; // stirng, 0 is '0', \0 is end pos
+        if(in[idx] == ',') return true;  // primitive has not escape sequnce
+        return false;
     }
 
     // find `,`
