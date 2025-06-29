@@ -46,6 +46,7 @@ template<typename T> string Codec::from(const T& in) {
         std::stringstream ss;
         if constexpr(std::is_same_v<T, float>) ss << std::fixed << std::setprecision(6) << in;
         else if constexpr(std::is_same_v<T, double>) ss << std::fixed << std::setprecision(14) << in;
+        else if constexpr(std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) ss << int(in);
         else ss << in;
         return ss.str();
     }
@@ -75,8 +76,14 @@ template<typename T> T Codec::to(const string& in) {
             ++pos;
         }
         std::stringstream ss{ in.substr(0, pos) };
-        T                 result;
-        ss >> result;
+
+        T result;
+        if constexpr (std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
+            int temp;
+            ss >> temp;
+            result = T(temp);
+        }
+        else ss >> result;
         return result;
     }
 }
