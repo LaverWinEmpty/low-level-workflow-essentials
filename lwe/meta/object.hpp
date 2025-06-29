@@ -79,6 +79,8 @@ template<typename T> void deserialize(Container*, const string&); //!< string to
 void serialize(string*, const void*, const Keyword&);   //!< runtime serialize
 void deserialize(void*, const string&, const Keyword&); //!< runtime deserialize
 
+template<typename T> bool parsed(const string&, size_t); //!< internal, check escape sequence
+
 } // namespace meta
 LWE_END
 

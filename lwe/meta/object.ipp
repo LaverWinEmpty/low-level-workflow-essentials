@@ -1,3 +1,4 @@
+#include <type_traits>
 LWE_BEGIN
 namespace meta {
 
@@ -22,7 +23,7 @@ template<typename T> Registered registclass() {
 std::string Object::serialize() const {
     const Structure& prop = meta()->fields();
     if(prop.size() == 0) {
-        return {};
+        return "{}";
     }
 
     std::string buffer;
@@ -313,13 +314,34 @@ template<typename T> void Object::destructor(T* in) {
  * serialize functions
  */
 
-// primitive type to string
 template<typename T> string serialize(const T& in) {
-    std::stringstream ss;
-    if constexpr(std::is_same_v<T, float>)       ss << std::fixed << std::setprecision(6) << in;
-    else if constexpr(std::is_same_v<T, double>) ss << std::fixed << std::setprecision(14) << in;
-    else                                         ss << in;
-    return ss.str();
+    // object
+    if constexpr (std::is_same_v<Object, T> || std::is_base_of_v<Object, T>) {
+        return in.serialize();
+    }
+    // primitive type to string
+    else {
+        std::stringstream ss;
+        if constexpr(std::is_same_v<T, float>)       ss << std::fixed << std::setprecision(6) << in;
+        else if constexpr(std::is_same_v<T, double>) ss << std::fixed << std::setprecision(14) << in;
+        else                                         ss << in;
+        return ss.str();
+    }
+}
+
+// primitive type to string character specilaiize
+template<> string serialize<char>(const char& in) {
+    switch (in) {
+        case '\\': return ("\\\\");   
+        case '\"': return ("\\\"");   
+        case '\n': return ("\\n");    
+        case '\t': return ("\\t");    
+        case '[':  return ("\\[");    
+        case ']':  return ("\\]");    
+        case '{':  return ("\\{");    
+        case '}':  return ("\\}");    
+        default:   return string(1, in); 
+	}
 }
 
 // boolean type to string
@@ -333,17 +355,7 @@ template<> string serialize<string>(const string& in) {
     out.append("\"");
     size_t loop = in.size();
     for(size_t i = 0; i < loop; ++i) {
-        switch(in[i]) {
-            case '\\': out.append("\\\\");   break;
-            case '\"': out.append("\\\"");   break;
-            case '\n': out.append("\\n");    break;
-            case '\t': out.append("\\t");    break;
-            case '[':  out.append("\\[");    break;
-            case ']':  out.append("\\]");    break;
-            case '{':  out.append("\\{");    break;
-            case '}':  out.append("\\}");    break;
-            default:   out.append(1, in[i]); break;
-          }
+        out.append(serialize<char>(in[i]));
     }
     out.append("\"");
     return out;
@@ -364,7 +376,7 @@ template<typename T> string serialize(const Container* in) {
 
     // has data
     if(curr != last) {
-        out.append("[");
+        out.append("[ ");
         // for each
         while(true) {
             serialize(&out, &*curr, typecode<typename T::value_type>());
@@ -373,29 +385,56 @@ template<typename T> string serialize(const Container* in) {
                 out.append(", ");
             } else break;
         }
-        out.append("]");
+        out.append(" ]");
     } else return "[]";
     return out;
 } 
 
-// string to primitive type
 template<typename T> T deserialize(const string& in) {
+    // object
+    if constexpr (std::is_same_v<Object, T> || std::is_base_of_v<Object, T>) {
+        T data;
+        Object::deserialize(&data, in);
+        return data;
+    }
+
     // TODO: exeption
     // 1. out of range
     // 2. format mismatch
     // 3. type mismatch ?
 
-    size_t pos = 0;
-    while (true) {
-        if (in[pos] == '\0' || in[pos] == ',') {
-            break;
+    // string to primitive type
+    else {
+        size_t pos = 0;
+        while (true) {
+            if (in[pos] == '\0' || in[pos] == ',') {
+                break;
+            }
+            ++pos;
         }
-        ++pos;
+        std::stringstream ss{ in.substr(0, pos) };
+        T result;
+        ss >> result;
+        return result;
     }
-    std::stringstream ss{ in.substr(0, pos) };
-    T result;
-    ss >> result;
-    return result;
+}
+
+// string to primitive type character specialize
+template<> char deserialize<char>(const string& in) {
+    if(in[0] == '\\') {
+        switch (in[1]) {
+            case '\\': return '\\';
+            case '\"': return '\"';
+            case '[':  return '[';
+            case ']':  return ']';
+            case '{':  return '{';
+            case '}':  return '}';
+            case ',':  return ',';
+            case 'n':  return '\n';
+            case 't':  return '\t';
+        }
+    }
+    return in[0];
 }
 
 // string to boolean type
@@ -415,25 +454,12 @@ template<> string deserialize<string>(const string& in) {
         assert(false);
     }
     size_t pos = in.rfind('\"');
-    for(size_t i =  1; i < pos; ++i) {
+    for(size_t i = 1; i < pos; ++i) {
         if(in[i] == '\\') {
-            switch (in[i + 1]) {
-                case '\\': result.append("\\"); break;
-                case '\"': result.append("\""); break;
-                case '[':  result.append("["); break;
-                case ']':  result.append("]"); break;
-                case '{':  result.append("{"); break;
-                case '}':  result.append("}"); break;
-
-                // \n, \t, etc...
-                default:
-                    result.append(1, '\\');
-                    result.append(1, in[i + 1]);
-                    break;
-            }
+            result.append(1, deserialize<char>(in.substr(i, 2)));
             ++i;
         }
-        else result.append(1, in[i]);
+        else result.append(1, deserialize<char>(in.substr(i, 1)));
     }
     return result;
 }
@@ -458,45 +484,35 @@ template<typename Derived> void deserialize(Container* ptr, const string& in) {
     // parsing
     size_t i = begin;
     for(; i < end; ++i, ++len) {
-        if constexpr(std::is_same_v<Element, string>) {
-            // find <",> but ignore \"
-            if(in[i] == '\"' && in[i + 1] == ',' && in[i - 1] != '\\') {
+        // string / container / object
+        if constexpr(std::is_same_v<Element, string> || isSTL<Element>() ||
+            std::is_same_v<Element, Object> || std::is_base_of_v<Object, Element>) {
+            // find `,`
+            if(parsed<Element>(in, i)) {
                 Element data;
-                // len + 1: with '\"'
+                // len + 1: with word to pack (\" or \} or \])
                 meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                i     += 3; // pass <", >
+                i     += 3; // pass `", `
                 begin  = i; // next position
                 len    = 0; // next length
                 out.push(std::move(data));
             }
         }
 
-        else if constexpr(isSTL<Element>()) {
-            // find <],> but ignore \]
-            if(in[i] == ']' && in[i + 1] == ',' && in[i - 1] != '\\') {
+        // character
+        else if constexpr (std::is_same_v<Element, char>) {
+            if(parsed<char>(in, i))  { 
                 Element data;
-                // len + 1: with ']'
-                meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                i     += 3; // pass <], >
-                begin  = i; // next position
-                len    = 0; // next length
-                out.push(std::move(data));
-            }
-        }
-
-        else if constexpr(std::is_same_v<Element, Object> || std::is_base_of_v<Object, Element>) {
-            if(in[i] == '}' && in[i + 1] == ',' && in[i - 1] != '\\') {
-                Element data;
-
                 meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-                i     += 2; // pass <, >
+                i     += 2; // pass `, `
                 begin  = i; // next position
                 len    = 0; // next length
                 out.push(std::move(data));
             }
         }
 
-        else if(in[i] == ',') {
+        // primitive
+        else  {
             Element data;
             meta::deserialize(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
             i     += 2; // pass <, >
@@ -715,6 +731,54 @@ void deserialize(void* out, const std::string& in, const Keyword& type) {
         break;
     }
 }
+
+template<typename T> bool parsed(const string& in, size_t idx) {
+    // string -> find `\"`
+    if constexpr(std::is_same_v<T, string>) {
+        if(!in[idx] != '\"') return false;
+    }
+
+    // container -> find `],`
+    else if constexpr(isSTL<T>()) {
+        if(!in[idx] != ']') return false;
+    }
+
+    // object -> find `},`
+    else if constexpr(std::is_base_of_v<Object, T> || std::is_same_v<Object, T>) {
+        if(!in[idx] != '}') return false;
+    }
+
+    // find `,`
+    // <char>   e.g. `'A',` [idx] == `,` -> [idx]
+    // <object> e.g. `{A},` [idx] == `}` -> [idx + 1]
+    if constexpr(std::is_same_v<char, T>) {
+        if(in[idx] != ',') {
+            return false; // not parse end
+        }
+        // check escape character
+        if(in[idx - 1] == '\\') {
+            if(in[idx - 2] == '\\') {
+                return true; // `\\`
+            }
+            return false; // `*\,`
+        }
+        return true; // not escape
+    }
+
+    else {
+        if(in[idx + 1] != ',') {
+            return false; // not parse end
+        }
+        if(in[idx - 1] == '\\') {
+            // e.g. "{ "\\}," }, { "" }"
+            // safe reason 1. end brace ` }` (with space)
+            // safe reason 2. impossible `\\}` (valid: `\\\}` or `\}`)
+            return false;
+        }
+        return true;
+    }
+}
+
 
 }
 LWE_END
