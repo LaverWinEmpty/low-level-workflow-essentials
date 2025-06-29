@@ -347,12 +347,11 @@ public:                                                                         
 	friend LWE::meta::Container;                                                                                       \
     using CONTAINER##Element = ELEMENT;                                                                                \
     virtual std::string serialize() const override {                                                                   \
-        const LWE::meta::Container* ptr = static_cast<const Container*>(this);                                         \
-        return LWE::meta::serialize<CONTAINER<__VA_ARGS__>>(ptr);                                                      \
+        return lwe::meta::Codec::encode<Deque<T, SVO>>(*this);                                                         \
     }                                                                                                                  \
     virtual void deserialize(const string& in) override {                                                              \
         const LWE::meta::Container* ptr = const_cast<Container*>(static_cast<const Container*>(this));                 \
-        LWE::meta::deserialize<CONTAINER<__VA_ARGS__>>(this, in);                                                      \
+        LWE::meta::Codec::decode<CONTAINER<__VA_ARGS__>>(this, in);                                                    \
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 

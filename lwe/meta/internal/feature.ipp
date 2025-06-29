@@ -46,7 +46,6 @@ constexpr const char* typestring(Keyword code) {
     case Keyword::UNSIGNED_LONG_LONG: return "unsigned long long";
     case Keyword::BOOL:               return "bool";
     case Keyword::CHAR:               return "char";
-    case Keyword::WCHAR_T:            return "wchar_t";
     case Keyword::FLOAT:              return "float";
     case Keyword::DOUBLE:             return "double";
     case Keyword::LONG_DOUBLE:        return "long double";
@@ -54,7 +53,6 @@ constexpr const char* typestring(Keyword code) {
     case Keyword::UNION:              return "union";
     case Keyword::POINTER:            return "*";
     case Keyword::REFERENCE:          return "&";
-    case Keyword::FUNCTION:           return "function";
     case Keyword::STD_STRING:         return "string";
     case Keyword::STL_DEQUE:          return "Deque";
     case Keyword::CONST:              return "const";
@@ -72,6 +70,9 @@ template<typename T> Registered registenum() {
 Container::~Container() { }
 
 template<typename T> constexpr bool isSTL() {
+    if constexpr(std::is_same_v<Container, T>) {
+        return true;
+    }
     return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != Keyword::UNREGISTERED;
 };
 
@@ -82,8 +83,19 @@ template<typename T> constexpr bool isSTL(const T&) {
 template<> bool isSTL<Keyword>(const Keyword& code) {
     switch(code) {
         case Keyword::STL_DEQUE: return true;
+        case Keyword::STL_SET:   return true;
     }
     return false;
+}
+
+class Object;
+
+template<typename T> constexpr bool isOBJ() {
+    return std::is_same_v<Object, T> || std::is_base_of_v<Object, T>;
+}
+
+template<typename T> constexpr bool isOBJ(const T&) {
+    return isOBJ<T>();
 }
 
 } // namespace meta

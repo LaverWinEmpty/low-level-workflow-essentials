@@ -23,7 +23,7 @@ enum class Keyword : uint8_t {
     UNSIGNED_LONG_LONG,
     BOOL,
     CHAR,
-    WCHAR_T,
+    // WCHAR_T, unused
     FLOAT,
     DOUBLE,
     LONG_DOUBLE,
@@ -32,7 +32,7 @@ enum class Keyword : uint8_t {
     UNION,
     POINTER,
     REFERENCE,
-    FUNCTION,
+    // FUNCTION, unused
     STD_STRING,
     STL_DEQUE,
     STL_SET,
@@ -42,7 +42,8 @@ enum class Keyword : uint8_t {
 };
 
 //! my custom container interface
-struct Container {
+class Container {
+public:
     virtual ~Container() noexcept;
     virtual string serialize() const          = 0;
     virtual void   deserialize(const string&) = 0;
@@ -65,6 +66,9 @@ constexpr const char*                  typestring(Keyword); //!< reflect type na
 template<typename T> constexpr bool isSTL();                        //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&);                //!< check container implicit
 template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container type code
+
+template<typename T> constexpr bool isOBJ();
+template<typename T> constexpr bool isOBJ(const T&);
 
 //! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();

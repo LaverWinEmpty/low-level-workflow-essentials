@@ -71,23 +71,22 @@
 #include "value.hpp"  // enum helper
 #include "lambda.hpp" // included type.hpp
 #include "object.hpp" // included lambda.hpp
+#include "codec.hpp"  // for serialize
 
 LWE_BEGIN
 /**************************************************************************************************
  * external exposure (type)
  **************************************************************************************************/
-using meta::Class;       //!< meta class
-using meta::Container;   //!< container
-using meta::Enum;        //!< meta enum
-using meta::Object;      //!< object class
-using meta::Type;        //!< field type info
-using meta::Value;       //!< enum helper
+using meta::Class;     //!< meta class
+using meta::Container; //!< container
+using meta::Enum;      //!< meta enum
+using meta::Object;    //!< object class
+using meta::Type;      //!< field type info
+using meta::Value;     //!< enum helper
 
 /**************************************************************************************************
  * external exposure (fucntion)
  **************************************************************************************************/
-using meta::deserialize; //!< deserialize
-using meta::serialize;   //!< serialize
 using meta::typeof;      //!< get type info
 using meta::classof;     //!< get class metadata
 using meta::enumof;      //!< get enum metadata

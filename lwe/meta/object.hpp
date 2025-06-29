@@ -5,6 +5,7 @@
 #include "lambda.hpp"
 
 #include "../mem/pool.hpp"
+#include <type_traits>
 
 LWE_BEGIN
 namespace meta {
@@ -24,7 +25,7 @@ protected:
     static void                      destructor(Object*);
 
 public:
-    virtual ~Object();
+    virtual ~Object() = default;
 
 public:
     virtual Class* meta() const;
@@ -63,23 +64,6 @@ struct ObjectMeta: Class {
     virtual const Object*    statics() const override;
     virtual Object*          construct(Object*) const override;
 };
-
-template<typename T> string serialize(const T&);                    //!< primitive type to string
-template<> string           serialize<bool>(const bool&);           //!< boolean type to string
-template<> string           serialize<string>(const string&);       //!< string to string
-template<> string           serialize<Container>(const Container&); //!< container to string
-template<typename T> string serialize(const Container*);            //!< container to string, T is derived type
-
-template<typename T> T    deserialize(const string&);             //!< string to primitive type
-template<> bool           deserialize<bool>(const string&);       //!< string to boolean type
-template<> string         deserialize<string>(const string&);     //!< string to string
-void                      deserialize(Container*, const string&); //!< string to container
-template<typename T> void deserialize(Container*, const string&); //!< string to container, T is dervied type
-
-void serialize(string*, const void*, const Keyword&);   //!< runtime serialize
-void deserialize(void*, const string&, const Keyword&); //!< runtime deserialize
-
-template<typename T> bool parsed(const string&, size_t); //!< internal, check escape sequence
 
 } // namespace meta
 LWE_END
