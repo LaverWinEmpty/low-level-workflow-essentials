@@ -95,6 +95,7 @@ template<> string Codec::from<char>(const char& in) {
         case ']':  return ("\\]");
         case '{':  return ("\\{");
         case '}':  return ("\\}");
+        case ',':  return ("\\,");
         default:   return string(1, in);
     }
 }
@@ -153,7 +154,7 @@ template<> string Codec::from<string>(const string& in) {
 template<> string Codec::to<string>(const string& in) {
     string result;
     if(in[0] != '\"') {
-        assert(false);
+        throw diag::error(diag::INVALID_DATA);
     }
     size_t pos = in.rfind('\"');
     for(size_t i = 1; i < pos; ++i) {
