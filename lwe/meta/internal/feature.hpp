@@ -44,7 +44,15 @@ enum class Keyword : uint8_t {
 //! my custom container interface
 class Container {
 public:
-    virtual ~Container() noexcept;
+    virtual ~Container() noexcept             = default;
+    virtual string serialize() const          = 0;
+    virtual void   deserialize(const string&) = 0;
+};
+
+//! my custom pair interface
+class Pair {
+public:
+    ~Pair() noexcept                          = default;
     virtual string serialize() const          = 0;
     virtual void   deserialize(const string&) = 0;
 };
@@ -69,6 +77,9 @@ template<> bool                     isSTL<Keyword>(const Keyword&); //!< check c
 
 template<typename T> constexpr bool isOBJ();
 template<typename T> constexpr bool isOBJ(const T&);
+
+template<typename T> constexpr bool isPAIR();
+template<typename T> constexpr bool isPAIR(const T&);
 
 //! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();

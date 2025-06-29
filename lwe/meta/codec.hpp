@@ -4,7 +4,8 @@
 #include "internal/feature.hpp"
 #include "object.hpp"
 #include "../base/base.h"
-#include "../mem/ptr.hpp"
+#include "../stl/pair.hpp"
+// #include "../mem/ptr.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -17,12 +18,16 @@ public:
     template<typename T> static T      to(const string&); //!< to T (from string)
 
 public:
-    template<typename T> static string     encode(const Container&);          //!< container encoder
-    template<typename Derived> static void decode(Container*, const string&); //!< container decoder
+    template<typename T> static string encode(const Container&);          //!< container encoder
+    template<typename T> static void   decode(Container*, const string&); //!< container decoder
 
 public:
     static string encode(const Object&);          //!< Object encoder
     static void   decode(Object*, const string&); //!< Object decoder
+
+public:
+    template<typename T, typename U> static string encode(const Pair&);          //!< pair encode
+    template<typename T, typename U> static void   encode(Pair*, const string&); //!< pair encode
 
 private:
     static void encode(string*, const void*, const Keyword&);      //!< run-time serialize
@@ -38,8 +43,8 @@ private:
  **************************************************************************************************/
 // serialize
 template<typename T> string Codec::from(const T& in) {
-    // objcet or container
-    if constexpr(isSTL<T>() || isOBJ<T>()) {
+    // serializable types
+    if constexpr(isSTL<T>() || isOBJ<T>() || isPAIR<T>()) {
         return in.serialize();
     }
     else {
@@ -78,7 +83,7 @@ template<typename T> T Codec::to(const string& in) {
         std::stringstream ss{ in.substr(0, pos) };
 
         T result;
-        if constexpr (std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
+        if constexpr(std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
             int temp;
             ss >> temp;
             result = T(temp);
@@ -376,6 +381,23 @@ void Object::deserialize(Object* out, const std::string& in) {
 }
 
 /**************************************************************************************************
+ * pair
+ **************************************************************************************************/
+// serialize
+template<typename K, typename V> string Codec::encode(const Pair& in) {
+    const stl::Pair<K, V>& pair = reinterpret_cast<const stl::Pair<K, V>&>(in);
+
+    string out;
+    out += "{ ";
+    out += from<K>(pair.first());
+    out += ", ";
+    out += from<V>(pair.second());
+    out += " }";
+
+    return out;
+}
+
+/**************************************************************************************************
  * run-time serialization
  **************************************************************************************************/
 // serialize
@@ -529,6 +551,15 @@ template<typename T> bool Codec::parsed(const string& in, size_t idx) {
 
 } // namespace meta
 
-LWE_END
+// pari serialize definition
+namespace stl {
+template<typename Key, typename Value> string Pair<Key, Value>::serialize() const {
+    return meta::Codec::encode<Key, Value>(*this);
+}
+template<typename Key, typename Value> void Pair<Key, Value>::deserialize(const string& in) {
+    // meta::Codec::decode<Key, Value>(this, in);
+}
+} // namespace stl
 
+LWE_END
 #endif

@@ -1,3 +1,4 @@
+#include <type_traits>
 LWE_BEGIN
 namespace meta {
 
@@ -67,8 +68,6 @@ template<typename T> Registered registenum() {
     return Registered::REGISTERED;
 }
 
-Container::~Container() { }
-
 template<typename T> constexpr bool isSTL() {
     if constexpr(std::is_same_v<Container, T>) {
         return true;
@@ -96,6 +95,14 @@ template<typename T> constexpr bool isOBJ() {
 
 template<typename T> constexpr bool isOBJ(const T&) {
     return isOBJ<T>();
+}
+
+template<typename T> constexpr bool isPAIR() {
+    return std::is_same_v<Pair, T> || std::is_base_of_v<Pair, T>;
+}
+
+template<typename T> constexpr bool isPAIR(const T&) {
+    return isPAIR<T>();
 }
 
 } // namespace meta
