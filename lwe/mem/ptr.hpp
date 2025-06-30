@@ -31,8 +31,7 @@ public:
 };
 
 template<typename T> class Ptr {
-    //! custom destructor
-    using Deleter = void (*)(void*);
+    using Deleter = void (*)(T*); //!< custom destructor
 
     //! constrcutor SFINAE for incomplete type
     template<typename U, typename... Args> using Enable = std::enable_if_t<std::is_constructible_v<U, Args...>>;
@@ -68,7 +67,7 @@ public:
 public:
     //! @param [in] T* exnernal pointer
     //! @param [in] Deleter destructor lambda: default delete in, ignore nullptr
-    Ptr(T*, Deleter = [](void* in) { delete in; });
+    Ptr(T*, Deleter = [](T* in) { delete in; });
 
 public:
     //! @brief copy const
