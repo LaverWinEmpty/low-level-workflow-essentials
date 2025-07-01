@@ -16,30 +16,31 @@
 
 #ifndef ASSERT
 #    ifdef NDEBUG
-#        define ASSERT(x)                                                                                              \
-            do {                                                                                                       \
-            } while(false)
+#        define ASSERT(x) \
+            do { }        \
+            while(false)
 #    else
-#        define ASSERT(x)                                                                                              \
-            do {                                                                                                       \
-                if(!(x)) {                                                                                             \
-                    ERROR_PRINT(ERROR_STRING(x));                                                                      \
-                    std::terminate();                                                                                  \
-                }                                                                                                      \
-            } while(false)
+#        define ASSERT(x)                         \
+            do {                                  \
+                if(!(x)) {                        \
+                    ERROR_PRINT(ERROR_STRING(x)); \
+                    std::terminate();             \
+                }                                 \
+            }                                     \
+            while(false)
 #    endif
 #endif
 
-//#ifdef _MSC_VER
-//#    define UNINIT_BEGIN __pragma(warning(disable : 26495))
-//#    define UNINIT_END   __pragma(warning(default : 26495))
-//#elif(defined(__GNUC__) || defined(__clang__))
-//#    define UNINIT_BEGIN _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
-//#    define UNINIT_END   _Pragma("GCC diagnostic pop")
-//#else
-//#    define UNINIT_BEGIN
-//#    define UNINIT_END
-//#endif
+// #ifdef _MSC_VER
+// #    define UNINIT_BEGIN __pragma(warning(disable : 26495))
+// #    define UNINIT_END   __pragma(warning(default : 26495))
+// #elif(defined(__GNUC__) || defined(__clang__))
+// #    define UNINIT_BEGIN _Pragma("GCC diagnostic push") _Pragma("GCC diagnostic ignored \"-Wmaybe-uninitialized\"")
+// #    define UNINIT_END   _Pragma("GCC diagnostic pop")
+// #else
+// #    define UNINIT_BEGIN
+// #    define UNINIT_END
+// #endif
 
 #ifndef _T
 #    ifdef UNICODE
@@ -69,20 +70,20 @@
 
 #ifndef __cplusplus
 #    ifdef _MSC_VER
-#        define __cplusplus 199711L
+#        define __cplusplus 199'711L
 #    endif
 #endif
 
-#define WINDOWS 0x0001
-#define LINUX   0x0002
-#define UNIX    0x0003
-#define BSD     0x0004
-#define APPLE   0x0005
-#define ANDROID 0x0006
+#define WINDOWS 0x00'01
+#define LINUX   0x00'02
+#define UNIX    0x00'03
+#define BSD     0x00'04
+#define APPLE   0x00'05
+#define ANDROID 0x00'06
 
-#define MSVC  0x0100
-#define GCC   0x0200
-#define CLANG 0x0300
+#define MSVC  0x01'00
+#define GCC   0x02'00
+#define CLANG 0x03'00
 
 #ifndef OS
 #    if defined(_WIN32)
@@ -110,26 +111,26 @@
 #    endif
 #endif
 
-#define CPP98 1998
-#define CPP03 2003
-#define CPP11 2011
-#define CPP14 2014
-#define CPP17 2017
-#define CPP20 2020
-#define CPP23 2023
+#define CPP98 1'998
+#define CPP03 2'003
+#define CPP11 2'011
+#define CPP14 2'014
+#define CPP17 2'017
+#define CPP20 2'020
+#define CPP23 2'023
 
 #ifndef CPP_VERSION
-#    if __cplusplus >= 202302L
+#    if __cplusplus >= 202'302L
 #        define CPP_VERSION CPP23
-#    elif __cplusplus >= 202002L
+#    elif __cplusplus >= 202'002L
 #        define CPP_VERSION CPP20
-#    elif __cplusplus >= 201703L
+#    elif __cplusplus >= 201'703L
 #        define CPP_VERSION CPP17
-#    elif __cplusplus >= 201402L
+#    elif __cplusplus >= 201'402L
 #        define CPP_VERSION CPP14
-#    elif __cplusplus >= 201103L
+#    elif __cplusplus >= 201'103L
 #        define CPP_VERSION CPP11
-#    elif __cplusplus >= 199711L
+#    elif __cplusplus >= 199'711L
 #        define CPP_VERSION CPP03
 #    else
 #        define CPP_VERSION 0
@@ -236,9 +237,9 @@ public:                                                                         
         if (result != map().end()) {                                                                                   \
         	return result->second;                                                                                     \
         }                                                                                                              \
-        LWE::meta::Structure info; // {
+        LWE::meta::Structure INFO; // {
 #define REGISTER_FIELD(FIELD)                                                                                          \
-        info.push(                                                                                                     \
+        INFO.push(                                                                                                     \
                 LWE::meta::Field {                                                                                     \
                     typeof<decltype(CLASS::FIELD)>(),                                                                  \
                     #FIELD,                                                                                            \
@@ -247,8 +248,8 @@ public:                                                                         
                 }                                                                                                      \
             ) // }
 #define REGISTER_FIELD_END                                                                                             \
-        info.shrink();                                                                                                 \
-        map().insert({ NAME, info });                                                                                  \
+        INFO.shrink();                                                                                                 \
+        map().insert({ NAME, INFO });                                                                                  \
         return map()[NAME];                                                                                            \
     }
 
@@ -321,12 +322,12 @@ public:                                                                         
         if (result != map().end()) {                                                                                   \
         	return result->second;                                                                                     \
         }                                                                                                              \
-        LWE::meta::Enumeration meta; // {
+        LWE::meta::Enumeration INFO; // {
 #define REGISTER_ENUM(VALUE)                                                                                           \
-            meta.push(LWE::meta::Enumerator{ static_cast<uint64_t>(ENUM_ALIAS::VALUE), #VALUE }) // }
+            INFO.push(LWE::meta::Enumerator{ static_cast<uint64_t>(ENUM_ALIAS::VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
-        meta.shrink();                                                                                                 \
-        map().insert({ NAME, meta });                                                                                  \
+        INFO.shrink();                                                                                                 \
+        map().insert({ NAME, INFO });                                                                                  \
         return map()[NAME];                                                                                            \
     }
 
@@ -349,7 +350,7 @@ public:                                                                         
     virtual std::string serialize() const override {                                                                   \
         return lwe::meta::Codec::encode<Deque<T, SVO>>(*this);                                                         \
     }                                                                                                                  \
-    virtual void deserialize(const string& in) override {                                                              \
+    virtual void deserialize(const string_view in) override {                                                          \
         const LWE::meta::Container* ptr = const_cast<Container*>(static_cast<const Container*>(this));                 \
         LWE::meta::Codec::decode<CONTAINER<__VA_ARGS__>>(this, in);                                                    \
     }                                                                                                                  \
