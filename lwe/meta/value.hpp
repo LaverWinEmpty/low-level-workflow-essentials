@@ -15,11 +15,11 @@ public:
     static diag::Expected<Enumerator> find(uint64_t);      //! @brief get enum by value
     static diag::Expected<Enumerator> find(const char*);   //! @brief get enum by name
     static diag::Expected<Enumerator> find(const string&); //! @brief get enum by name
-    static diag::Expected<Enumerator> get(size_t);         //! @brief get enum by index
+    static diag::Expected<Enumerator> at(size_t);          //! @brief get enum by index
 
 public:
     //! @brief get enum value info (O(n))
-    diag::Expected<Enumerator> meta();
+    diag::Expected<Enumerator> info();
 
 public:
     //! @brief get enum type info

@@ -4,7 +4,7 @@ namespace meta {
 template<typename E, typename Enable> const Enum* Value<E, Enable>::info = enumof<E>();
 
 // find by value
-template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E, Enable>::find(uint64_t in) {
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(uint64_t in) {
     if(!info) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
@@ -19,7 +19,7 @@ template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E,
 }
 
 // find by name
-template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E, Enable>::find(const char* in) {
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(const char* in) {
     if(!info) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
@@ -34,12 +34,12 @@ template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E,
 }
 
 // find by name
-template<typename E, typename Enable> inline diag::Expected<Enumerator> Value<E, Enable>::find(const string& in) {
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(const string& in) {
     return find(in.c_str());
 }
 
 // get by index
-template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::get(size_t in) {
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::at(size_t in) {
     if(!info) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
@@ -50,7 +50,7 @@ template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable
     return info->enums()[in];
 }
 
-template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::meta() {
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::info() {
     return find(value);
 }
 
