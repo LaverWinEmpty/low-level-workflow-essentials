@@ -4,7 +4,9 @@ namespace meta {
 
 // clang-format off
 template<typename T> constexpr Keyword typecode() {
-    if constexpr(std::is_base_of_v<LWE::meta::Container, T>) return ContainerCode<T>::VALUE;
+    // if constexpr(std::is_base_of_v<LWE::meta::Container, T>) return ContainerCode<T>::VALUE;
+    if constexpr(isSTL<T>())                                 return ContainerCode<T>::VALUE;
+    if constexpr(isPAIR<T>())                                return Keyword::STL_PAIR;
     if constexpr(std::is_enum_v<T>)                          return Keyword::ENUM;
     if constexpr(std::is_pointer_v<T>)                       return Keyword::POINTER;
     if constexpr(std::is_reference_v<T>)                     return Keyword::REFERENCE;
@@ -20,7 +22,6 @@ template<typename T> constexpr Keyword typecode() {
     if constexpr(std::is_same_v<T, unsigned int>)            return Keyword::UNSIGNED_INT;
     if constexpr(std::is_same_v<T, signed long>)             return Keyword::SIGNED_LONG;
     if constexpr(std::is_same_v<T, unsigned long>)           return Keyword::UNSIGNED_LONG;
-    if constexpr(std::is_same_v<T, wchar_t>)                 return Keyword::WCHAR_T;
     if constexpr(std::is_same_v<T, float>)                   return Keyword::FLOAT;
     if constexpr(std::is_same_v<T, double>)                  return Keyword::DOUBLE;
     if constexpr(std::is_same_v<T, long double>)             return Keyword::LONG_DOUBLE;
@@ -83,6 +84,7 @@ template<> bool isSTL<Keyword>(const Keyword& code) {
     switch(code) {
         case Keyword::STL_DEQUE: return true;
         case Keyword::STL_SET:   return true;
+        case Keyword::STL_MAP:   return true;
     }
     return false;
 }
