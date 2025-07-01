@@ -42,17 +42,17 @@ enum class Keyword : uint8_t {
 //! my custom container interface
 class Container {
 public:
-    virtual ~Container() noexcept             = default;
-    virtual string serialize() const          = 0;
-    virtual void   deserialize(const string&) = 0;
+    virtual ~Container() noexcept                 = default;
+    virtual string serialize() const              = 0;
+    virtual void   deserialize(const string_view) = 0;
 };
 
 //! my custom pair interface
 class Pair {
 public:
-    ~Pair() noexcept                          = default;
-    virtual string serialize() const          = 0;
-    virtual void   deserialize(const string&) = 0;
+    ~Pair() noexcept                              = default;
+    virtual string serialize() const              = 0;
+    virtual void   deserialize(const string_view) = 0;
 };
 
 //! @brief get container type code structur
@@ -73,11 +73,11 @@ template<typename T> constexpr bool isSTL();                        //!< check c
 template<typename T> constexpr bool isSTL(const T&);                //!< check container implicit
 template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container runtime
 
-template<typename T> constexpr bool isOBJ();                        //!< check object explicit
-template<typename T> constexpr bool isOBJ(const T&);                //!< check object implicit
+template<typename T> constexpr bool isOBJ();         //!< check object explicit
+template<typename T> constexpr bool isOBJ(const T&); //!< check object implicit
 
-template<typename T> constexpr bool isPAIR();                        //!< check pair explicit
-template<typename T> constexpr bool isPAIR(const T&);                //!< check pair implicit
+template<typename T> constexpr bool isPAIR();         //!< check pair explicit
+template<typename T> constexpr bool isPAIR(const T&); //!< check pair implicit
 
 //! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();

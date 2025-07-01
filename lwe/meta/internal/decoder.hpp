@@ -6,8 +6,7 @@
 LWE_BEGIN
 namespace meta {
 struct Decoder {
-    Decoder(const std::string&);
-    Decoder(const char*);
+    Decoder(const string_view);
 
 public:
     class Iterator;
@@ -27,19 +26,19 @@ public:
     bool check();
 
 public:
-    string get();
+    const string_view get();
 
 public:
     void move(int);
     void trim(int);
 
 private:
-    const char* ptr;
+    const char* str;
 
 private:
     int index; //!< read size
-    int len;   //!< size to read
     int esc;   //!< escape sequence find
+    int len;   //!< size to read
 };
 
 } // namespace meta

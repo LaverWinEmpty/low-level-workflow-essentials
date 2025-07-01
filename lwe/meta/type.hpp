@@ -125,13 +125,11 @@ struct Enum {
 
 public:
     template<typename E> static const char* serialize(E);
-    static const char*                      serialize(const string&, uint64_t);
-    static const char*                      serialize(const char*, uint64_t);
+    static const char*                      serialize(const string_view, uint64_t);
 
 public:
-    template<typename E> static E deserialize(const char*);
-    template<typename E> static E deserialize(const string&);
-    static uint64_t               deserialize(const string&, const string&);
+    template<typename E> static E deserialize(const string_view);
+    static uint64_t               deserialize(const string_view, const string_view);
 };
 
 /**************************************************************************************************

@@ -39,7 +39,7 @@ public:
 
 public:
     string serialize() const;
-    void   deserialize(const string&);
+    void   deserialize(const string_view);
 
 public:
     Key   key;

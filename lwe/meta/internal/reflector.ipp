@@ -110,13 +110,13 @@ template<typename T> void Reflector<T>::shrink() {
 
 template<typename T> template<class C> const Reflector<T>& Reflector<T>::reflect() {
     // default
-    static Reflector<T> Empty;
-    return Empty;
+    static Reflector<T> empty;
+    return empty;
 }
 
 template<typename T> template<typename C> const Reflector<T>& Reflector<T>::find() {
-    static Reflector Statics = Reflector<C>();
-    return Statics;
+    static Reflector statics = reflect<C>();
+    return statics;
 }
 
 template<typename T> template<typename C> const Reflector<T>& Reflector<T>::find(const C&) {
