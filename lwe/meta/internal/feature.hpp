@@ -23,7 +23,6 @@ enum class Keyword : uint8_t {
     UNSIGNED_LONG_LONG,
     BOOL,
     CHAR,
-    // WCHAR_T, unused
     FLOAT,
     DOUBLE,
     LONG_DOUBLE,
@@ -32,7 +31,6 @@ enum class Keyword : uint8_t {
     UNION,
     POINTER,
     REFERENCE,
-    // FUNCTION, unused
     STD_STRING,
     STL_DEQUE,
     STL_SET,
@@ -73,13 +71,13 @@ constexpr const char*                  typestring(Keyword); //!< reflect type na
 
 template<typename T> constexpr bool isSTL();                        //!< check container explicit
 template<typename T> constexpr bool isSTL(const T&);                //!< check container implicit
-template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container type code
+template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container runtime
 
-template<typename T> constexpr bool isOBJ();
-template<typename T> constexpr bool isOBJ(const T&);
+template<typename T> constexpr bool isOBJ();                        //!< check object explicit
+template<typename T> constexpr bool isOBJ(const T&);                //!< check object implicit
 
-template<typename T> constexpr bool isPAIR();
-template<typename T> constexpr bool isPAIR(const T&);
+template<typename T> constexpr bool isPAIR();                        //!< check pair explicit
+template<typename T> constexpr bool isPAIR(const T&);                //!< check pair implicit
 
 //! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();

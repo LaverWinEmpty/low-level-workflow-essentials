@@ -1,10 +1,12 @@
 #ifndef LWE_META_CODEC
 #define LWE_META_CODEC
 
+#include "internal/decoder.hpp"
 #include "internal/feature.hpp"
 #include "object.hpp"
 #include "../base/base.h"
 #include "../stl/pair.hpp"
+#include <exception>
 // #include "../mem/ptr.hpp"
 
 LWE_BEGIN
@@ -27,15 +29,11 @@ public:
 
 public:
     template<typename T, typename U> static string encode(const Pair&);          //!< pair encode
-    template<typename T, typename U> static void   encode(Pair*, const string&); //!< pair encode
+    template<typename T, typename U> static void   decode(Pair*, const string&); //!< pair decode
 
 private:
     static void encode(string*, const void*, const Keyword&);      //!< run-time serialize
     static void decode(void*, const std::string&, const Keyword&); //!< run-time deserialize
-
-private:
-    //! @brief check parse end
-    template<typename T> static bool parsed(const string&, size_t);
 };
 
 /**************************************************************************************************
@@ -60,7 +58,7 @@ template<typename T> string Codec::from(const T& in) {
 // deserialize
 template<typename T> T Codec::to(const string& in) {
     // object or container
-    if constexpr(isSTL<T>() || isOBJ<T>()) {
+    if constexpr(isSTL<T>() || isOBJ<T>() || isPAIR<T>()) {
         T data;
         data.deserialize(in);
         return std::move(data);
@@ -70,19 +68,15 @@ template<typename T> T Codec::to(const string& in) {
     // 1. out of range
     // 2. format mismatch
     // 3. type mismatch ?
-
-    // string to primitive type
     else {
-        size_t pos = 0;
-        while(true) {
-            if(in[pos] == '\0' || (in[pos] == ',' && parsed<T>(in, pos))) {
-                break;
-            }
-            ++pos;
+        // string to primitive type
+        Decoder decoder(in);
+        if(!decoder.next<void>()) {
+            throw diag::error(diag::INVALID_DATA);
         }
-        std::stringstream ss{ in.substr(0, pos) };
+        std::stringstream ss{ decoder.get() };
 
-        T result;
+        T result{};
         if constexpr(std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
             int temp;
             ss >> temp;
@@ -216,54 +210,15 @@ template<typename Derived> void Codec::decode(Container* ptr, const string& in) 
     }
     Derived& out = *reinterpret_cast<Derived*>(ptr); // else
 
-    size_t begin = 2;             // "[ ", ignore 2
-    size_t end   = in.size() - 2; // " ]", ignore 2
-    size_t len   = 0;
-
-    // parsing
-    size_t i = begin;
-    for(; i < end; ++i, ++len) {
-        // string / container / object
-        if constexpr(std::is_same_v<Element, string> || isSTL<Element>() || isOBJ<Element>()) {
-            // find `,`
-            if(parsed<Element>(in, i)) {
-                Element data;
-                // len + 1: with word to pack (\" or \} or \])
-                decode(reinterpret_cast<void*>(&data), in.substr(begin, len + 1), typecode<Element>());
-                i     += 3; // pass `", `
-                begin  = i; // next position
-                len    = 0; // next length
-                out.push(std::move(data));
-            }
-        }
-
-        // character
-        else if constexpr(std::is_same_v<Element, char>) {
-            if(parsed<Element>(in, i)) {
-                Element data;
-                decode(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-                i     += 2; // pass `, `
-                begin  = i; // next position
-                len    = 0; // next length
-                out.push(std::move(data));
-            }
-        }
-
-        // primitive
-        else if(parsed<Element>(in, i)) {
-            Element data;
-            decode(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-            i     += 2; // pass <, >
-            begin  = i; // next position
-            len    = 0; // next length
-            out.push(std::move(data));
-        }
+    Decoder decoder(in);
+    decoder.move(2); // ignore `[ `
+    while(decoder.next<Element>()) {
+        // serialize
+        Element data;
+        decode(reinterpret_cast<void*>(&data), decoder.get(), typecode<Element>());
+        out.push(std::move(data));
+        decoder.move(2); // ignore `, `
     }
-
-    // insert last data
-    Element data;
-    decode(reinterpret_cast<void*>(&data), in.substr(begin, len), typecode<Element>());
-    out.push(std::move(data));
 }
 
 /**************************************************************************************************
@@ -292,8 +247,6 @@ string Codec::encode(const Object& in) {
 
 // deserialize
 void Codec::decode(Object* out, const string& in) {
-    char* ptr = const_cast<char*>(reinterpret_cast<const char*>(out));
-
     // empty
     if(in == "{}") {
         return;
@@ -304,68 +257,23 @@ void Codec::decode(Object* out, const string& in) {
         assert(false);
     }
 
-    size_t begin = 2; // "{ ", ignore 2
-    size_t len   = 0;
+    char* ptr = const_cast<char*>(reinterpret_cast<const char*>(out));
+
+    Decoder decoder(in);
+    decoder.move(2); // ignore `{ `
 
     size_t loop = prop.size();
-    for(size_t i = 0; i < loop; ++i) {
-        if(isSTL(prop[i].type.code())) {
-            len = 1; // pass '['
-            while(true) {
-                if(in[begin + len] == ']' && in[begin + len - 1] != '\\') {
-                    break;
-                }
-                ++len;
-            }
-            // len + 1: with ']'
-            decode(ptr + prop[i].offset, in.substr(begin, len + 1), prop[i].type.code());
-            begin += (len + 3); // pass `], `
-            len    = 0;
+    for(int i = 0; i < loop; ++i) {
+        decoder.next(prop[i].type); // find next
+        if(!decoder.check()) {
+            decoder.trim(-2); // last: ignore ` }`
+            // last data deserialize
+            decode(ptr + prop[i].offset, decoder.get(), prop[i].type.code());
+            break;
         }
-
-        else if(prop[i].type == Keyword::STD_STRING) {
-            len = 1; // pass '\"'
-            while(true) {
-                if(in[begin + len] == '\"' && in[begin + len - 1] != '\\') {
-                    break;
-                }
-                ++len;
-            }
-            // len + 1: with '\"'
-            decode(ptr + prop[i].offset, in.substr(begin, len + 1), prop[i].type.code());
-            begin += (len + 3); // pass `", `
-            len    = 0;
-        }
-
-        else if(prop[i].type == Keyword::CLASS) {
-            len = 1; // pass "{ "
-
-            while(true) {
-                if(in[begin + len] == '}' && in[begin + len - 1] != '\\') {
-                    break;
-                }
-                ++len;
-            }
-            // len + 1: with '}'
-            decode(ptr + prop[i].offset, in.substr(begin, len + 1), prop[i].type.code());
-            begin += (len + 3); // pass `}, `
-            len    = 0;
-        }
-
-        // primitive: integer or floating
-        else {
-            // find <, > or < }>
-            while(true) {
-                if((in[begin + len] == ',' && in[begin + len + 1] == ' ') ||
-                   (in[begin + len] == ' ' && in[begin + len + 1] == '}')) {
-                    break;
-                }
-                ++len;
-            }
-            decode(ptr + prop[i].offset, in.substr(begin, len), prop[i].type.code()); // ignore ',' or ' '
-            begin += (len + 2);                                                       // pass <, > or < ]>
-            len    = 0;
-        }
+        // serialize
+        decode(ptr + prop[i].offset, decoder.get(), prop[i].type.code());
+        decoder.move(2); // ignore `, `
     }
 }
 
@@ -397,6 +305,26 @@ template<typename K, typename V> string Codec::encode(const Pair& in) {
     return out;
 }
 
+// deserialize
+template<typename K, typename V> void Codec::decode(Pair* out, const string& in) {
+    Decoder decoder(in);
+
+    stl::Pair<K, V>* derived = reinterpret_cast<stl::Pair<K, V>*>(out); // casting
+
+    decoder.move(2); // ignore `{ `
+    if(!decoder.next<K>()) {
+        throw diag::error(diag::INVALID_DATA);
+    }
+    derived->first() = to<K>(decoder.get());
+    decoder.move(2); // ignore `, `
+
+    if(!decoder.next<V>()) {
+        throw diag::error(diag::INVALID_DATA);
+    }
+    decoder.trim(-2); // ignore ` }`
+    derived->second() = to<V>(decoder.get());
+}
+
 /**************************************************************************************************
  * run-time serialization
  **************************************************************************************************/
@@ -417,7 +345,7 @@ void Codec::encode(std::string* out, const void* in, const Keyword& type) {
             // TODO:
         } break;
 
-        // integer
+        // clang-format off
         case Keyword::BOOL:               out->append(from(*static_cast<const bool*>(in))); break;
         case Keyword::CHAR:               out->append(from(*static_cast<const char*>(in))); break;
         case Keyword::SIGNED_INT:         out->append(from(*static_cast<const signed int*>(in))); break;
@@ -430,6 +358,7 @@ void Codec::encode(std::string* out, const void* in, const Keyword& type) {
         case Keyword::UNSIGNED_SHORT:     out->append(from(*static_cast<const unsigned short*>(in))); break;
         case Keyword::UNSIGNED_LONG:      out->append(from(*static_cast<const unsigned long*>(in))); break;
         case Keyword::UNSIGNED_LONG_LONG: out->append(from(*static_cast<const unsigned long long*>(in))); break;
+        // clang-format on
 
         // floating
         case Keyword::FLOAT:       out->append(from<float>(*static_cast<const float*>(in))); break;
@@ -441,8 +370,9 @@ void Codec::encode(std::string* out, const void* in, const Keyword& type) {
             // out->append(static_cast<const EInterface*>(in)->stringify());
             break;
 
-        case Keyword::STL_DEQUE:  out->append(from(*static_cast<const Container*>(in))); break;
         case Keyword::STD_STRING: out->append(from(*static_cast<const string*>(in))); break;
+        case Keyword::STL_PAIR:   out->append(from(*static_cast<const Pair*>(in))); break;
+        case Keyword::STL_DEQUE:  out->append(from(*static_cast<const Container*>(in))); break;
     }
 }
 
@@ -464,7 +394,7 @@ void Codec::decode(void* out, const std::string& in, const Keyword& type) {
             // TODO:
         } break;
 
-            // clang-format off
+        // clang-format off
         case Keyword::SIGNED_INT:         *static_cast<int*>(out)                = to<signed int>(in);         break;
         case Keyword::SIGNED_CHAR:        *static_cast<char*>(out)               = to<signed char>(in);        break;
         case Keyword::SIGNED_SHORT:       *static_cast<short*>(out)              = to<signed short>(in);       break;
@@ -480,86 +410,33 @@ void Codec::decode(void* out, const std::string& in, const Keyword& type) {
         case Keyword::FLOAT:              *static_cast<float*>(out)              = to<float>(in);              break;
         case Keyword::DOUBLE:             *static_cast<double*>(out)             = to<double>(in);             break;
         case Keyword::LONG_DOUBLE:        *static_cast<long double*>(out)        = to<long double>(in);        break;
-        case Keyword::STD_STRING:         *static_cast<string*>(out)             = to<string>(in);             break;
-            // clang-format on
+        // clang-format on
 
         case Keyword::CLASS: Object::deserialize(static_cast<Object*>(out), in); break;
         case Keyword::ENUM:
             // static_cast<EInterface*>(out)->parse(in);
             break;
 
-        case Keyword::STL_DEQUE: static_cast<Container*>(out)->deserialize(in); break;
-    }
-}
-
-/**************************************************************************************************
- * parse end position check
- **************************************************************************************************/
-template<typename T> bool Codec::parsed(const string& in, size_t idx) {
-    // string -> find `\"`
-    if constexpr(std::is_same_v<T, string>) {
-        if(in[idx] != '\"') return false;
-    }
-
-    // container -> find `],`
-    else if constexpr(isSTL<T>()) {
-        if(in[idx] != ']') return false;
-    }
-
-    // object -> find `},`
-    else if constexpr(std::is_base_of_v<Object, T> || std::is_same_v<Object, T>) {
-        if(in[idx] != '}') return false;
-    }
-
-    // primitive types
-    else if constexpr(!std::is_same_v<char, T>) {
-        if(in[idx] == '\0') return true; // stirng, 0 is '0', \0 is end pos
-        if(in[idx] == ',') return true;  // primitive has not escape sequnce
-        return false;
-    }
-
-    // find `,`
-    // <char>   e.g. `'A',` [idx] == `,` -> [idx]
-    // <object> e.g. `{A},` [idx] == `}` -> [idx + 1]
-    if constexpr(std::is_same_v<char, T>) {
-        if(in[idx] != ',') {
-            return false; // not parse end
-        }
-        // check escape character
-        if(in[idx - 1] == '\\') {
-            if(in[idx - 2] == '\\') {
-                return true; // `\\`
-            }
-            return false; // `*\,`
-        }
-        return true; // not escape
-    }
-
-    else {
-        if(in[idx + 1] != ',') {
-            return false; // not parse end
-        }
-        if(in[idx - 1] == '\\') {
-            // e.g. "{ "\\}," }, { "" }"
-            // safe reason 1. end brace ` }` (with space)
-            // safe reason 2. impossible `\\}` (valid: `\\\}` or `\}`)
-            return false;
-        }
-        return true;
+        case Keyword::STD_STRING: *static_cast<string*>(out) = to<string>(in); break;
+        case Keyword::STL_PAIR:   static_cast<Pair*>(out)->deserialize(in); break;
+        case Keyword::STL_DEQUE:  static_cast<Container*>(out)->deserialize(in); break;
     }
 }
 
 } // namespace meta
 
-// pari serialize definition
+/**************************************************************************************************
+ * STL definition
+ **************************************************************************************************/
+// pair serialize definition
 namespace stl {
 template<typename Key, typename Value> string Pair<Key, Value>::serialize() const {
     return meta::Codec::encode<Key, Value>(*this);
 }
 template<typename Key, typename Value> void Pair<Key, Value>::deserialize(const string& in) {
-    // meta::Codec::decode<Key, Value>(this, in);
+    meta::Codec::decode<Key, Value>(this, in);
 }
-} // namespace stl
 
+} // namespace stl
 LWE_END
 #endif
