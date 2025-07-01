@@ -1,33 +1,31 @@
 LWE_BEGIN
 namespace meta {
 
-Decoder::Decoder(const string& in): Decoder(in.c_str()) { }
-
-Decoder::Decoder(const char* in): ptr(in), index(0), len(0), esc(0) { }
+Decoder::Decoder(string_view in): str(in.data()), index(0), len(0), esc(0) { }
 
 template<typename T> bool Decoder::next() {
-    if(ptr[index] == '\0') {
+    if(str[index] == '\0') {
         return false;
     }
 
     // check
     if constexpr(std::is_same_v<string, T>) {
-        if(ptr[index] != '\"') throw diag::error(diag::INVALID_DATA);
+        if(str[index] != '\"') throw diag::error(diag::INVALID_DATA);
     }
     if constexpr(isSTL<T>()) {
-        if(ptr[index] != '[') throw diag::error(diag::INVALID_DATA);
+        if(str[index] != '[') throw diag::error(diag::INVALID_DATA);
     }
     if constexpr(isOBJ<T>() || isPAIR<T>()) {
-        if(ptr[index] != '{') throw diag::error(diag::INVALID_DATA);
+        if(str[index] != '{') throw diag::error(diag::INVALID_DATA);
     }
 
-    ptr   += index; // move (initial == ptr + 0)
+    str   += index; // move (initial == str + 0)
     index  = 0;     // init
     esc    = 0;     // init
 
     while(true) {
         ++index; // first -> pass
-        const char& curr = ptr[index];
+        const char& curr = str[index];
         if(curr == '\0') {
             break;
         }
@@ -76,10 +74,12 @@ template<typename T> bool Decoder::next() {
 bool Decoder::next(const Type& type) {
     // check object
     if(type == Keyword::CLASS) {
-        if(*type != "class") {
-            return next<Object>();
+        static const hash_t UNREGISTERED_CLASS = Type{ Keyword::CLASS }.hash();
+
+        if(type.hash() == UNREGISTERED_CLASS) {
+            throw diag::error(diag::INVALID_DATA); // unregistered type
         }
-        throw diag::error(diag::INVALID_DATA); // unregistered type
+        return next<Object>();
     }
     // check
     else if(type == Keyword::STD_STRING) {
@@ -97,18 +97,18 @@ bool Decoder::next(const Type& type) {
 }
 
 bool Decoder::check() {
-    return ptr[index] != '\0';
+    return str[index] != '\0';
 }
 
-string Decoder::get() {
-    if(!ptr || index <= 0) {
+const string_view Decoder::get() {
+    if(!str || index <= 0) {
         throw diag::error(diag::INVALID_DATA);
     }
-    return string(ptr, len);
+    return string_view{ str, size_t(len) };
 }
 
 void Decoder::move(int in) {
-    ptr += in;
+    str += in;
 }
 
 void Decoder::trim(int in) {
