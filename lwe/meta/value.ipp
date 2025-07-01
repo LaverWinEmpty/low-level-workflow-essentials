@@ -1,14 +1,14 @@
 LWE_BEGIN
 namespace meta {
 
-template<typename E, typename Enable> const Enum* Value<E, Enable>::info = enumof<E>();
+template<typename E, typename Enable> const Enum* Value<E, Enable>::cache = enumof<E>();
 
 // find by value
 template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(uint64_t in) {
-    if(!info) {
+    if(!cache) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
-    const Enumeration& data = info->enums();
+    const Enumeration& data = cache->enums();
     // find same value
     for(auto& e : data) {
         if(e.value == in) {
@@ -20,10 +20,10 @@ template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable
 
 // find by name
 template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(const char* in) {
-    if(!info) {
+    if(!cache) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
-    const Enumeration& data = info->enums();
+    const Enumeration& data = cache->enums();
     // find same value
     for(auto& e : data) {
         if(strcmp(e.name, in) == 0) {
@@ -40,14 +40,14 @@ template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable
 
 // get by index
 template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::at(size_t in) {
-    if(!info) {
+    if(!cache) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
-    const Enumeration& data = info->enums();
+    const Enumeration& data = cache->enums();
     if(in >= data.size()) {
         return diag::error(diag::Code::OUT_OF_RANGE);
     }
-    return info->enums()[in];
+    return cache->enums()[in];
 }
 
 template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::info() {
@@ -60,10 +60,10 @@ template<typename E, typename Enable> const Type& Value<E, Enable>::type() {
 
 template<typename E, typename Enable> const char* Value<E, Enable>::operator*() const noexcept {
     // not registered
-    if(!info) {
+    if(!cache) {
         return "";
     }
-    const Enumeration& data = info->enums();
+    const Enumeration& data = cache->enums();
     for(auto& itr : data) {
         if(itr.value == value) {
             return itr.name;

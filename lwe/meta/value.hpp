@@ -65,9 +65,8 @@ public:
 private:
     U value = static_cast<E>(0);
 
-    // info
 private:
-    static const Enum* info;
+    static const Enum* cache; // info
 };
 
 } // namespace meta
