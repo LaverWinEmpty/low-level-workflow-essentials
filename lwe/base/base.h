@@ -17,6 +17,7 @@ LWE_BEGIN
 using namespace core;
 
 using std::string;
+using std::string_view;
 LWE_END
 
 #endif

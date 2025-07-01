@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <type_traits>
 #include <string>
+#include <string_view>
+#include <charconv>
 #include <type_traits>
 #include <stdexcept>
 #include <cassert>
