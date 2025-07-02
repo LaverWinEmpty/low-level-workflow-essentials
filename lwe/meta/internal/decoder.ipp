@@ -112,7 +112,7 @@ template<typename T> bool Decoder::check() {
     else if constexpr(isSTL<T>()) {
         if(str[len - 1] == ']') return false; // find ], or ]\0
     }
-    else return str[len] != '\0'; // external comma
+    return str[len] != '\0'; // check end of string
 }
 
 bool Decoder::check(const Type& in) {
