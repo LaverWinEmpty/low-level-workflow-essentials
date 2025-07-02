@@ -351,12 +351,11 @@ template<typename K, typename V> void Codec::decode(Pair* out, string_view in) {
         throw diag::error(diag::INVALID_DATA);
     }
     derived->first() = to<K>(decoder.get());
-    decoder.move(2); // ignore `, `
 
+    decoder.move(2); // ignore `, `
     if(!decoder.next<V>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    decoder.trim(-2); // ignore ` }`
     derived->second() = to<V>(decoder.get());
 }
 

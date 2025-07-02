@@ -104,11 +104,13 @@ bool Decoder::next(const Type& in) {
 }
 
 template<typename T> bool Decoder::check() {
-    if constexpr(isSTL<T>()) {
-        if(str[len - 1] == ']') return false; // find ], or ]\0
+    // string is no overlap, so no need to check
+    // pair is fixed object count, so no need to check
+    if constexpr(isOBJ<T>()) {
+        if(str[len - 1] == '}') return false; // // find }, or }\0
     }
-    if constexpr(isOBJ<T>() || isPAIR<T>()) {
-        if(str[len - 1] == '}') return false; // find }, or }\0
+    else if constexpr(isSTL<T>()) {
+        if(str[len - 1] == ']') return false; // find ], or ]\0
     }
     else return str[len] != '\0'; // external comma
 }
@@ -130,8 +132,8 @@ bool Decoder::check(const Type& in) {
 }
 
 const string_view Decoder::get() {
-    if(!str || len <= 0) {
-        throw diag::error(diag::INVALID_DATA);
+    if(len == 0) {
+        return string_view{ str, size_t(2) }; // [] or {} for container and object, else error
     }
     return string_view{ str, size_t(len) };
 }
