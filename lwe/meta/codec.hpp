@@ -206,8 +206,8 @@ template<typename T> string Codec::encode(const Container& in) {
     std::string out;
 
     // CRTP begin / end
-    typename T::Iterator curr = reinterpret_cast<const T&>(in).begin();
-    typename T::Iterator last = reinterpret_cast<const T&>(in).end();
+    typename T::FwdIterR curr = reinterpret_cast<const T&>(in).begin();
+    typename T::FwdIterR last = reinterpret_cast<const T&>(in).end();
 
     // has data
     if(curr != last) {
