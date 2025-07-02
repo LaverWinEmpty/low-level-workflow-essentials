@@ -5,6 +5,7 @@
 
 LWE_BEGIN
 namespace meta {
+
 struct Decoder {
     Decoder(const string_view);
 
@@ -19,11 +20,12 @@ public:
     };
 
 public:
-    template<typename T> bool next();
-    bool                      next(const Type&);
+    template<typename T> bool next();            //!< T is data type
+    bool                      next(const Type&); //!< Type is data type
 
 public:
-    bool check();
+    template<typename T> bool check();            //!< T is outer type
+    bool                      check(const Type&); //!< Type is outer type
 
 public:
     const string_view get();
@@ -35,10 +37,10 @@ public:
 private:
     const char* str;
 
-private:
-    int index; //!< read size
-    int esc;   //!< escape sequence find
+public:
     int len;   //!< size to read
+    int esc;   //!< escape sequence find
+    int depth; //!< brace count
 };
 
 } // namespace meta

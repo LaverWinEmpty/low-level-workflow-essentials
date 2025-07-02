@@ -237,12 +237,24 @@ template<typename Derived> void Codec::decode(Container* ptr, string_view in) {
 
     Decoder decoder(in);
     decoder.move(2); // ignore `[ `
-    while(decoder.next<Element>()) {
+    while(true) {
+        decoder.next<Element>();
+        std::cout << decoder.get() << "\n";
+
         // serialize
         Element data;
         decode(reinterpret_cast<void*>(&data), decoder.get(), typecode<Element>());
         out.push(std::move(data));
-        decoder.move(2); // ignore `, `
+
+        // move 2 reason
+        // ing -> `, `
+        // end -> ` ]`
+        decoder.move(2);
+
+        // check end
+        if(!decoder.check<Container>()) {
+            break;
+        }
     }
 }
 
@@ -279,7 +291,7 @@ void Codec::decode(Object* out, string_view in) {
 
     const Structure& prop = out->meta()->fields();
     if(prop.size() == 0) {
-        assert(false);
+        throw diag::error(diag::INVALID_DATA);
     }
 
     char* ptr = const_cast<char*>(reinterpret_cast<const char*>(out));
@@ -287,19 +299,17 @@ void Codec::decode(Object* out, string_view in) {
     Decoder decoder(in);
     decoder.move(2); // ignore `{ `
 
-    size_t loop = prop.size();
+    size_t loop = prop.size() - 1;
     for(int i = 0; i < loop; ++i) {
         decoder.next(prop[i].type); // find next
-        if(!decoder.check()) {
-            decoder.trim(-2); // last: ignore ` }`
-            // last data deserialize
-            decode(ptr + prop[i].offset, decoder.get(), prop[i].type.code());
-            break;
-        }
-        // serialize
         decode(ptr + prop[i].offset, decoder.get(), prop[i].type.code());
         decoder.move(2); // ignore `, `
     }
+
+    // last
+    decoder.next(prop[loop].type); // find next
+    decoder.trim(-2);              // ignore ` }`
+    decode(ptr + prop[loop].offset, decoder.get(), prop[loop].type.code());
 }
 
 // definition
