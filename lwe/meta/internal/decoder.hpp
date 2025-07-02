@@ -10,9 +10,6 @@ struct Decoder {
     Decoder(const string_view);
 
 public:
-    class Iterator;
-
-public:
     // proxy
     struct String {
         const char* begin;
