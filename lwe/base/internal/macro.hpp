@@ -344,8 +344,14 @@ public:                                                                         
  * @brief default container serializer and deserializer override
  */
 #define CONTAINER_BODY(ELEMENT, CONTAINER, ...)                                                                        \
+    friend LWE::meta::Container;                                                                                       \
 public:                                                                                                                \
-	friend LWE::meta::Container;                                                                                       \
+    template<Mod MOD> using Iterator = Iterator<MOD, CONTAINER<__VA_ARGS__>>;                                          \
+    template<Mod, typename> friend class LWE::stl::Iterator;                                                           \
+    using iterator               = Iterator<FWD>;                                                                      \
+    using const_iterator         = Iterator<FWD | VIEW>;                                                               \
+    using reverse_iterator       = Iterator<BWD>;                                                                      \
+    using const_reverse_iterator = Iterator<BWD | VIEW>;                                                               \
     using CONTAINER##Element = ELEMENT;                                                                                \
     virtual std::string serialize() const override {                                                                   \
         return LWE::meta::Codec::encode<CONTAINER<__VA_ARGS__>>(*this);                                                \

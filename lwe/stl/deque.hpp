@@ -60,6 +60,7 @@
  **************************************************************************************************/
 
 #include "config.hpp"
+#include "internal/iterator.hpp"
 #include "../base/base.h"
 #include "../meta/meta.h"
 #include "../mem/Block.hpp"
@@ -68,21 +69,13 @@ LWE_BEGIN
 namespace stl {
 
 template<typename T, size_t SVO = 0> class Deque: public meta::Container {
-    CONTAINER_BODY(T, Deque, T, SVO); // <T, SVO>
+    CONTAINER_BODY(T, Deque, T, SVO);
 
 private:
     template<typename, size_t> friend class Deque;
 
 private:
     static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : align(SVO));
-
-public:
-    class FwdIterW; //!< forward iterator writable == iterator
-    class FwdIterR; //!< forward iterator readonly == const iterator
-    class BwdIterW; //!< backward iterator writable == reverse iterator
-    class BwdIterR; //!< backward iterator readonly == const reverse iterator
-    friend class FwdIterW;
-    friend class BwdIterW;
 
 public:
     Deque();
@@ -130,32 +123,34 @@ public:
     bool   empty() const noexcept;    //!< check empty
 
 public:
-    T* data() const noexcept; //!< container address
-    T& at(index_t) const;
+    T*       data() noexcept;       //!< container address
+    T&       at(index_t);           //!< at
+    const T* data() const noexcept; //!< container address const
+    const T& at(index_t) const;     //!< at const
 
 public:
-    FwdIterR begin() const noexcept;  //!< iterator begin
-    FwdIterR end() const noexcept;    //!< iterator end
-    BwdIterR rbegin() const noexcept; //!< reverse iterator begin
-    BwdIterR rend() const noexcept;   //!< reverse iterator end
+    Iterator<FWD | VIEW> begin() const noexcept;  //!< iterator begin
+    Iterator<FWD | VIEW> end() const noexcept;    //!< iterator end
+    Iterator<BWD | VIEW> rbegin() const noexcept; //!< reverse iterator begin
+    Iterator<BWD | VIEW> rend() const noexcept;   //!< reverse iterator end
 
 public:
-    FwdIterR front() const noexcept;  //!< iterator for head to tail
-    BwdIterR rear() const noexcept;   //!< iterator for tail to head
-    BwdIterR top() const noexcept;    //!< iterator for tail to head
-    FwdIterR bottom() const noexcept; //!< iterator for head to tail
+    Iterator<FWD | VIEW> front() const noexcept;  //!< iterator for head to tail
+    Iterator<BWD | VIEW> rear() const noexcept;   //!< iterator for tail to head
+    Iterator<BWD | VIEW> top() const noexcept;    //!< iterator for tail to head
+    Iterator<FWD | VIEW> bottom() const noexcept; //!< iterator for head to tail
 
 public:
-    FwdIterW begin() noexcept;  //!< iterator begin
-    FwdIterW end() noexcept;    //!< iterator end
-    BwdIterW rbegin() noexcept; //!< reverse iterator begin
-    BwdIterW rend() noexcept;   //!< reverse iterator end
+    Iterator<FWD> begin() noexcept;  //!< iterator begin
+    Iterator<FWD> end() noexcept;    //!< iterator end
+    Iterator<BWD> rbegin() noexcept; //!< reverse iterator begin
+    Iterator<BWD> rend() noexcept;   //!< reverse iterator end
 
 public:
-    FwdIterW front() noexcept;  //!< iterator for head to tail
-    BwdIterW rear() noexcept;   //!< iterator for tail to head
-    BwdIterW top() noexcept;    //!< iterator for tail to head
-    FwdIterW bottom() noexcept; //!< iterator for head to tail
+    Iterator<FWD> front() noexcept;  //!< iterator for head to tail
+    Iterator<BWD> rear() noexcept;   //!< iterator for tail to head
+    Iterator<BWD> top() noexcept;    //!< iterator for tail to head
+    Iterator<FWD> bottom() noexcept; //!< iterator for head to tail
 
 public:
     template<typename U> void push_back(U&&);  //!< STL compatible
@@ -181,103 +176,6 @@ private:
     index_t counter   = 0;       //!< size: element
     index_t head      = 0;       //!< index: front / bottom
     index_t tail      = -1;      //!< index: rear / top
-};
-
-template<typename T, size_t SVO> class Deque<T, SVO>::FwdIterW {
-    friend class BwdIterW;
-public:
-    FwdIterW(const Deque*, index_t) noexcept;
-    FwdIterW(const FwdIterW&) noexcept;
-    FwdIterW(const BwdIterW&) noexcept;
-    FwdIterW& operator=(const FwdIterW&) noexcept;
-    FwdIterW& operator=(const BwdIterW&) noexcept;
-    FwdIterW& operator++() noexcept;
-    FwdIterW& operator--() noexcept;
-    FwdIterW  operator++(int) noexcept;
-    FwdIterW  operator--(int) noexcept;
-    FwdIterW  operator+(index_t) const noexcept;
-    FwdIterW  operator-(index_t) const noexcept;
-    FwdIterW& operator+=(index_t) noexcept;
-    FwdIterW& operator-=(index_t) noexcept;
-    bool     operator==(const FwdIterW&) const noexcept;
-    bool     operator!=(const FwdIterW&) const noexcept;
-    bool     operator==(const BwdIterW&) const noexcept;
-    bool     operator!=(const BwdIterW&) const noexcept;
-    bool     operator<(const FwdIterW&) const noexcept;
-    bool     operator>(const FwdIterW&) const noexcept;
-    bool     operator<=(const FwdIterW&) const noexcept;
-    bool     operator>=(const FwdIterW&) const noexcept;
-    bool     operator<(const BwdIterW&) const noexcept;
-    bool     operator>(const BwdIterW&) const noexcept;
-    bool     operator<=(const BwdIterW&) const noexcept;
-    bool     operator>=(const BwdIterW&) const noexcept;
-    const T& operator*() const noexcept;
-    const T* operator->() const noexcept;
-    T&       operator*() noexcept;
-    T*       operator->() noexcept;
-private:
-    const Deque* outer;
-    index_t      index;
-};
-
-template<typename T, size_t SVO> class Deque<T, SVO>::BwdIterW {
-    friend class FwdIterW;
-public:
-    BwdIterW(const Deque*, index_t) noexcept;
-    BwdIterW(const BwdIterW&) noexcept;
-    BwdIterW(const FwdIterW&) noexcept;
-    BwdIterW& operator=(const BwdIterW&) noexcept;
-    BwdIterW& operator=(const FwdIterW&) noexcept;
-    BwdIterW& operator++() noexcept;
-    BwdIterW& operator--() noexcept;
-    BwdIterW  operator++(int) noexcept;
-    BwdIterW  operator--(int) noexcept;
-    bool      operator==(const BwdIterW&) const noexcept;
-    bool      operator!=(const BwdIterW&) const noexcept;
-    bool      operator==(const FwdIterW&) const noexcept;
-    bool      operator!=(const FwdIterW&) const noexcept;
-    bool      operator<(const BwdIterW&) const noexcept;
-    bool      operator>(const BwdIterW&) const noexcept;
-    bool      operator<=(const BwdIterW&) const noexcept;
-    bool      operator>=(const BwdIterW&) const noexcept;
-    bool      operator<(const FwdIterW&) const noexcept;
-    bool      operator>(const FwdIterW&) const noexcept;
-    bool      operator<=(const FwdIterW&) const noexcept;
-    bool      operator>=(const FwdIterW&) const noexcept;
-    BwdIterW  operator+(index_t) const noexcept;
-    BwdIterW  operator-(index_t) const noexcept;
-    BwdIterW& operator+=(index_t) noexcept;
-    BwdIterW& operator-=(index_t) noexcept;
-    const T& operator*() const noexcept;
-    const T* operator->() const noexcept;
-    T&       operator*() noexcept;
-    T*       operator->() noexcept;
-private:
-    FwdIterW iterator;
-};
-
-template<typename T, size_t SVO> class Deque<T, SVO>::FwdIterR: public FwdIterW {
-    using FwdIterW::FwdIterW;
-
-public:
-    FwdIterR(const FwdIterW& in): // writable -> readonly
-        FwdIterW(in) { }
-    FwdIterR(const BwdIterR& in): // backward -> forward
-        FwdIterW(in) { }
-    const T& operator*() { return FwdIterW::operator*(); }   //!< non-const hide
-    const T* operator->() { return FwdIterW::operator->(); } //!< non-const hide
-};
-
-template<typename T, size_t SVO> class Deque<T, SVO>::BwdIterR: public BwdIterW {
-    using BwdIterW ::BwdIterW;
-
-public:
-    BwdIterR(const BwdIterW& in): // writable -> readonly
-        BwdIterW(in) { }
-    BwdIterR(const FwdIterR& in): // forward -> backward
-        BwdIterW(in) { }
-    const T& operator*() { return BwdIterW::operator*(); }   //!< non-const hide
-    const T* operator->() { return BwdIterW::operator->(); } //!< non-const hide
 };
 
 REGISTER_CONTAINER(Deque, STL_DEQUE);

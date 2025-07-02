@@ -7,6 +7,7 @@
 #include "object.hpp"
 #include "../base/base.h"
 #include "../stl/pair.hpp"
+#include "../stl/internal/iterator.hpp"
 #include <type_traits>
 
 // #include "../mem/ptr.hpp"
@@ -206,8 +207,8 @@ template<typename T> string Codec::encode(const Container& in) {
     std::string out;
 
     // CRTP begin / end
-    typename T::FwdIterR curr = reinterpret_cast<const T&>(in).begin();
-    typename T::FwdIterR last = reinterpret_cast<const T&>(in).end();
+    stl::Iterator<stl::FWD | stl::VIEW, T> curr = reinterpret_cast<const T&>(in).begin();
+    stl::Iterator<stl::FWD | stl::VIEW, T> last = reinterpret_cast<const T&>(in).end();
 
     // has data
     if(curr != last) {
