@@ -118,7 +118,7 @@ public:
 
 public:
     bool owned() const; //!< get ownership
-    void own();         //!< set owner
+    bool own();         //!< set owner
     bool valid() const; //!< check null and dangling
 
 private:

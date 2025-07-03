@@ -115,7 +115,7 @@ template<typename U, typename> Ptr<T>::Ptr(const U& in): deleter(nullptr) {
 template<typename T>
 template<typename U, typename> Ptr<T>::Ptr(U&& in): deleter(nullptr) {
     if(!initialize(false)) {
-        throw diag::error(diag::Code::BAD_ALLOC); // iit failed
+        throw diag::error(diag::Code::BAD_ALLOC); // init failed
     }
     new(reinterpret_cast<Internal*>(block)->ptr) T(std::move(in)); // move
 }
@@ -285,10 +285,12 @@ template<typename T> bool Ptr<T>::owned() const {
     return false;
 }
 
-template<typename T> void Ptr<T>::own() {
-    if(block) {
+template<typename T> bool Ptr<T>::own() {
+    if(valid()) {
         block->owner = this;
+        return true;
     }
+    return false;
 }
 
 template<typename T> bool Ptr<T>::valid() const {
