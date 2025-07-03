@@ -6,12 +6,24 @@
 #define LWE_BEGIN namespace LWE {
 #define LWE_END   }
 
+//! string macro
+//! STRING(ARG) -> "ARG"
 #ifndef STRING
 #    define STRING(x) #x
 #endif
 
+//! macro string
+//! #define ARG "string"
+//! MACRO(ARG) -> "string"
 #ifndef MACRO
 #    define MACRO(x) STRING(x)
+#endif
+
+//! macro param
+//! #define FUNCION(VALUE) VALUE
+//! MACRO(TUPLE(1, 2)) -> 1, 2
+#ifndef TUPLE
+#    define TUPLE(...) __VA_ARGS__
 #endif
 
 #ifndef ASSERT
@@ -362,6 +374,19 @@ public:                                                                         
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 
+#define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, PARAM, CONTAINER, ...)                           \
+    template<TUPLE TEMPLATE>                                                                    \
+    class Iterator<LWE::stl::MOD | LWE::stl::VIEW, CONTAINER<__VA_ARGS__>>                      \
+        : public LWE::stl::Iterator<MOD, CONTAINER<__VA_ARGS__>> {                              \
+        using CONTAINER = CONTAINER<__VA_ARGS__>;                                               \
+        using Mutable   = Iterator<MOD, CONTAINER>;                                             \
+        using Iterator<MOD, CONTAINER>::Iterator;                                               \
+    public:                                                                                     \
+        Iterator(const CONTAINER* in, PARAM arg): Mutable(const_cast<CONTAINER*>(in), arg) { }  \
+        Iterator(const Iterator<MOD | VIEW, CONTAINER>& in): Iterator<MOD, CONTAINER>(in) { }   \
+        const T& operator*() { return Mutable::operator*(); }                                   \
+        const T* operator->() { return Mutable::operator->(); }                                 \
+    }
 // clang-format on
 
 // header guard end

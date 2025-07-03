@@ -82,27 +82,8 @@ private:
     Reverse iterator;
 };
 
-template<typename T, size_t SVO> class Iterator<FWD | VIEW, Deque<T, SVO>>: public Iterator<FWD, Deque<T, SVO>> {
-    using Deque   = Deque<T, SVO>;
-    using Mutable = Iterator<FWD, Deque>;
-    using Iterator<FWD, Deque>::Iterator; // constructor
-public:
-    Iterator(const Deque* in, index_t index): Mutable(const_cast<Deque*>(in), index) { }
-    Iterator(const Iterator<BWD | VIEW, Deque>& in): Iterator<FWD, Deque>(in) { }
-    const T& operator*() { return Mutable::operator*(); }   //!< non-const hide
-    const T* operator->() { return Mutable::operator->(); } //!< non-const hide
-};
-
-template<typename T, size_t SVO> class Iterator<BWD | VIEW, Deque<T, SVO>>: public Iterator<BWD, Deque<T, SVO>> {
-    using Deque   = Deque<T, SVO>;
-    using Mutable = Iterator<BWD, Deque>;
-    using Iterator<BWD, Deque>::Iterator; // constructor
-public:
-    Iterator(const Deque* in, index_t index): Mutable(const_cast<Deque*>(in), index) { }
-    Iterator(const Iterator<FWD | VIEW, Deque>& in): Iterator<BWD, Deque>(in) { }
-    const T& operator*() { return Mutable::operator*(); }   //!< non-const hide
-    const T* operator->() { return Mutable::operator->(); } //!< non-const hide
-};
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, size_t, Deque, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, size_t, Deque, T, SVO);
 
 /**************************************************************************************************
  * Deque
