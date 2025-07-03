@@ -140,7 +140,7 @@ template<typename T> Ptr<T>::Ptr(Ptr&& in) noexcept:
     pointer(in.pointer) {
     // move
     in.block = nullptr;
-    if(block->owner == &in) {
+    if(block && block->owner == &in) {
         block->owner = this;
     }
 }
@@ -188,22 +188,26 @@ template<typename T> auto Ptr<T>::operator=(Ptr&& in) noexcept -> Ptr& {
 
 // getter: ptr
 template<typename T> T* Ptr<T>::operator->() {
-    return get();
+    if(valid()) return get();
+    throw diag::error(diag::INVALID_DATA);
 }
 
 // const getter: ptr
 template<typename T> const T* Ptr<T>::operator->() const {
-    return get();
+    if(valid()) return get();
+    throw diag::error(diag::INVALID_DATA);
 }
 
 // getter: ref
 template<typename T> T& Ptr<T>::operator*() {
-    return *get();
+    if(valid()) return *get();
+    throw diag::error(diag::INVALID_DATA);
 }
 
 // const getter: ref
 template<typename T> const T& Ptr<T>::operator*() const {
-    return *get();
+    if(valid()) return *get();
+    throw diag::error(diag::INVALID_DATA);
 }
 
 template<typename T> bool Ptr<T>::operator==(void* in) const {
