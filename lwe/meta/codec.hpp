@@ -240,7 +240,6 @@ template<typename Derived> void Codec::decode(Container* ptr, string_view in) {
     decoder.move(2); // ignore `[ `
     while(true) {
         decoder.next<Element>();
-        std::cout << decoder.get() << "\n";
 
         // serialize
         Element data;
