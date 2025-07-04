@@ -21,9 +21,9 @@
 
 //! macro param
 //! #define FUNCION(VALUE) VALUE
-//! MACRO(TUPLE(1, 2)) -> 1, 2
+//! MACRO(WRAP(1, 2)) -> 1, 2
 #ifndef TUPLE
-#    define TUPLE(...) __VA_ARGS__
+#    define WRAP(...) __VA_ARGS__
 #endif
 
 #ifndef ASSERT
@@ -381,7 +381,7 @@ public:                                                                         
     friend class Reverse
 
 #define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, CONTAINER, ...)                         \
-    template<TUPLE TEMPLATE>                                                           \
+    template<WRAP TEMPLATE>                                                            \
     class Iterator<MOD | LWE::stl::VIEW, CONTAINER<__VA_ARGS__>>                       \
         : public LWE::stl::Iterator<MOD, CONTAINER<__VA_ARGS__>> {                     \
         using CONTAINER = CONTAINER<__VA_ARGS__>;                                      \
