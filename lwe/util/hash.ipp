@@ -24,7 +24,7 @@ Hash::Hash(const string& in): Hash(in.c_str(), in.size()) { }
 
 Hash::Hash(const char* in): Hash(in, std::strlen(in)) { }
 
-template<typename T> Hash::Hash(const T& in): val(hashof<T>()) { }
+template<typename T> Hash::Hash(const T& in): val(hashof(in)) { }
 
 bool Hash::operator==(const Hash& in) const {
     return val == in.val;

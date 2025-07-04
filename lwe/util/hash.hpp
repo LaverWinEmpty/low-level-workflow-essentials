@@ -3,9 +3,7 @@
 
 #include "../base/base.h"
 #include "../mem/block.hpp"
-
-#include "iostream"
-
+#include "../stl/pair.hpp"
 
 LWE_BEGIN
 namespace util {
@@ -45,6 +43,11 @@ private:
 //! @brief type hash for specialization
 template<typename T> hash_t hashof(const T& in) {
     return Hash(&in, sizeof(in));
+}
+
+//! @brief pair hash override
+template<typename K, typename V> size_t hashof(const stl::Pair<K, V>& in) {
+    return hashof<K>(in.key);
 }
 
 // float
