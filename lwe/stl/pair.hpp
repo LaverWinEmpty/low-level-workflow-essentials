@@ -43,7 +43,7 @@ public:
     const Value* operator->() const;
 
 public:
-    operator hash_t() const; // to hash
+    operator Key() const; // to hash
 
 public:
     Key&         first();

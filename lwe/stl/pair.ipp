@@ -81,8 +81,8 @@ template<typename Key, typename Value> const Value* Pair<Key, Value>::operator->
     return &value;
 }
 
-template<typename Key, typename Value> Pair<Key, Value>::operator hash_t() const {
-    return LWE::util::hashof<Key>(key);
+template<typename Key, typename Value> Pair<Key, Value>::operator Key() const {
+    return key;
 }
 
 template<typename Key, typename Value> Key& Pair<Key, Value>::first() {
