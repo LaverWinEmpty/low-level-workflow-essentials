@@ -6,13 +6,11 @@ namespace stl {
  **************************************************************************************************/
 
 template<typename T, size_t SVO> class Iterator<FWD, Deque<T, SVO>> {
-    using Deque   = Deque<T, SVO>;
-    using Reverse = Iterator<BWD, Deque>;
-    friend class Iterator<BWD, Deque>;
+    ITERATOR_BODY(FWD, Deque, T, SVO);
 public:
     Iterator(Deque*, index_t) noexcept;
     Iterator(const Iterator&) noexcept;
-    Iterator(const Iterator<BWD, Deque>&) noexcept;
+    Iterator(const Reverse&) noexcept;
     Iterator& operator=(const Iterator&) noexcept;
     Iterator& operator=(const Iterator<BWD, Deque>&) noexcept;
     Iterator& operator++() noexcept;
@@ -45,9 +43,7 @@ private:
 };
 
 template<typename T, size_t SVO> class Iterator<BWD, Deque<T, SVO>> {
-    using Deque   = Deque<T, SVO>;
-    using Reverse = Iterator<FWD, Deque>;
-    friend class Iterator<FWD, Deque>;
+    ITERATOR_BODY(BWD, Deque, T, SVO);
 public:
     Iterator(Deque*, index_t) noexcept;
     Iterator(const Iterator&) noexcept;
@@ -82,8 +78,8 @@ private:
     Reverse iterator;
 };
 
-REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, size_t, Deque, T, SVO);
-REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, size_t, Deque, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, Deque, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, Deque, T, SVO);
 
 /**************************************************************************************************
  * Deque
@@ -378,67 +374,67 @@ template<typename T, size_t SVO> const T& Deque<T, SVO>::at(index_t in) const {
     return const_cast<Deque*>(this)->at(in);
 }
 
-template<typename T, size_t SVO> auto Deque<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::begin() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ this, 0 };
 }
 
-template<typename T, size_t SVO> auto Deque<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::end() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ this, counter }; // overflow safe: bitwise
 }
 
-template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ this, counter - 1 }; // overflow safe: bitwise
 }
 
-template<typename T, size_t SVO> auto Deque<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::rend() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ this, -1 };
 }
 
-template<typename T, size_t SVO> auto Deque<T, SVO>::front() const noexcept -> Iterator<FWD | VIEW> {
-    return Iterator<FWD | VIEW>{ begin() };
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::rear() const noexcept -> Iterator<BWD | VIEW> {
-    return Iterator<BWD | VIEW>{ rbegin() };
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::top() const noexcept -> Iterator<BWD | VIEW> {
-    return Iterator<BWD | VIEW>{ rbegin() };
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::bottom() const noexcept -> Iterator<FWD | VIEW> {
-    return Iterator<FWD | VIEW>{ begin() };
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::begin() noexcept -> Iterator<FWD> {
-    return const_cast<Deque*>(this)->begin();
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::end() noexcept -> Iterator<FWD> {
-    return const_cast<Deque*>(this)->end();
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
-    return const_cast<Deque*>(this)->rbegin();
-}
-
-template<typename T, size_t SVO> auto Deque<T, SVO>::rend() noexcept -> Iterator<BWD> {
-    return const_cast<Deque*>(this)->rend();
-}
-
 template<typename T, size_t SVO> auto Deque<T, SVO>::front() noexcept -> Iterator<FWD> {
-    return const_cast<Deque*>(this)->front();
+    return Iterator<FWD | VIEW>{ begin() };
 }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::rear() noexcept -> Iterator<BWD> {
-    return const_cast<Deque*>(this)->rear();
+    return Iterator<BWD | VIEW>{ rbegin() };
 }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::top() noexcept -> Iterator<BWD> {
-    return const_cast<Deque*>(this)->top();
+    return Iterator<BWD | VIEW>{ rbegin() };
 }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::bottom() noexcept -> Iterator<FWD> {
+    return Iterator<FWD | VIEW>{ begin() };
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->begin();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->end();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->rbegin();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->rend();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::front() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->front();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::rear() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->rear();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::top() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->top();
+}
+
+template<typename T, size_t SVO> auto Deque<T, SVO>::bottom() const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Deque*>(this)->bottom();
 }
 
@@ -536,7 +532,7 @@ template<typename T, size_t SVO>
 Iterator<FWD, Deque<T, SVO>>::Iterator(const Iterator& in) noexcept: outer(in.outer), index(in.index) { }
 
 template<typename T, size_t SVO>
-Iterator<FWD, Deque<T, SVO>>::Iterator(const Reverse& in) noexcept: Iterator<FWD>(in) { }
+Iterator<FWD, Deque<T, SVO>>::Iterator(const Reverse& in) noexcept: Iterator(in.iterator) { }
 
 template<typename T, size_t SVO>
 auto Iterator<FWD, Deque<T, SVO>>::operator=(const Iterator& in) noexcept -> Iterator& {
