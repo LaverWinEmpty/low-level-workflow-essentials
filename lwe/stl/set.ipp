@@ -183,7 +183,7 @@ template<typename T> bool Set<T>::resize() {
     return true;
 }
 
-template<typename T> size_t Set<T>::indexing() const noexcept {
+template<typename T> size_t Set<T>::indexing(hash_t in) const noexcept {
     static constexpr size_t FIBONACCI_PRIME = []() {
         if constexpr(sizeof(size_t) == 8) {
             return 11'400'714'819'323'198'485ull;
