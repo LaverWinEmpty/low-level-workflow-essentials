@@ -8,8 +8,6 @@ LWE_BEGIN
 namespace stl {
 template<typename T> class Set: public meta::Container {
     CONTAINER_BODY(T, Set, T);
-
-    static constexpr size_t INITIALIZE  = 8;     // TODO: use DEF_SVO (and rename)
     static constexpr float  LOAD_FACTOR = 0.75f; // TODO: move to config
 
     struct Chain {
@@ -58,10 +56,28 @@ private:
 private:
     bool resize();
 
+private:
+    size_t indexing(hash_t in) {
+        static constexpr size_t FIBONACCI_PRIME = []() {
+            if constexpr (sizeof(size_t) == 8) {
+                return 11'400'714'819'323'198'485ull;
+            }
+            else return 2'654'435'769u;
+        }();
+        return (in * FIBONACCI_PRIME) >> ((sizeof(size_t) << 3) - log);
+    }
+
 public:
+    size_t        size() const noexcept;
+    size_t        capacity() const noexcept;
+    Bucket*       bucket(size_t);       // get bucket
+    const Bucket* bucket(size_t) const; // get bucket
+
+private:
     size_t counter   = 0; //!< counter
     size_t capacitor = 0; //!< container capacitor
     size_t factor    = 0; //!< load factor
+    size_t log       = 3; //!< log2(capacitor)
 
 private:
     Bucket* buckets = nullptr;

@@ -135,8 +135,9 @@ template<typename T> bool Set<T>::resize() {
         if(size < capacitor) {
             return false; // overflow
         }
+        ++log; // log2(capacity)
     }
-    else size = INITIALIZE; // init
+    else size = (size_t(1) << log); // init
 
     // realloc
     Bucket* old = buckets; // backup
@@ -153,6 +154,7 @@ template<typename T> bool Set<T>::resize() {
         buckets[i].size     = 0;
         buckets[i].capacity = 0;
     }
+    counter = 0; // reset
 
     // has data
     if(old) {
@@ -181,6 +183,25 @@ template<typename T> bool Set<T>::resize() {
     return true;
 }
 
+template<typename T> size_t Set<T>::size() const noexcept {
+    return counter;
+}
+
+template<typename T> size_t Set<T>::capacity() const noexcept {
+    return capacitor;
+}
+
+template<typename T> auto Set<T>::bucket(size_t in) -> Bucket* {
+    if(in >= capacitor) {
+        throw diag::error(diag::OUT_OF_RANGE);
+    }
+    return buckets + in;
+}
+
+template<typename T> auto Set<T>::bucket(size_t in) const -> const Bucket* {
+    return const_cast<Set*>(this)->bucket(in);
+}
+
 template<typename T> bool Set<T>::push(T&& in) {
     return insert(std::move(in));
 }
@@ -190,8 +211,8 @@ template<typename T> bool Set<T>::push(const T& in) {
 }
 
 template<typename T> bool Set<T>::pop(const T& in) {
-    hash_t  hashed = util::hashof<T>(in);      // get hash
-    index_t index  = hashed & (capacitor - 1); // get index
+    hash_t hashed = util::hashof<T>(in); // get hash
+    size_t index  = indexing(hashed);    // get index
 
     Bucket& bucket = buckets[index];
 
@@ -245,8 +266,8 @@ template<typename T> bool Set<T>::exist(hash_t in) {
 }
 
 template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
-    hash_t  hashed = util::hashof<T>(in);      // get hash
-    index_t index  = hashed & (capacitor - 1); // get index
+    hash_t hashed = util::hashof<T>(in); // get hash
+    size_t index  = indexing(hashed);    // get index
 
     Bucket& bucket = buckets[index];
 
@@ -268,9 +289,9 @@ template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
 }
 
 template<typename T> auto Set<T>::find(hash_t in) noexcept -> Iterator<FWD> {
-    size_t index = in & (capacitor - 1);
+    size_t index = indexing(in); // to index
     if(buckets[index].used == true) {
-        return Iterator(this, index); // first data
+        return Iterator<FWD>(this, index); // first data
     }
     return end(); // not exist
 }
@@ -290,7 +311,7 @@ template<typename T> auto Set<T>::at(size_t index) noexcept -> Iterator<FWD> {
         }
         // check bucket pos
         if(pass == index) {
-            return Iterator(this, i);
+            return Iterator<FWD>(this, i);
         }
         pass += 1; // bucket pass
 
@@ -309,7 +330,7 @@ template<typename T> auto Set<T>::at(size_t index) noexcept -> Iterator<FWD> {
         // [1][0] == 2
         size_t size = buckets[i].size;
         if(index < (pass + size)) {
-            return Iterator(this, i, index - pass);
+            return Iterator<FWD>(this, i, uint8_t(index - pass));
         }
         pass += size; // chain pass
     } // end for
@@ -347,7 +368,7 @@ template<typename U> bool Set<T>::insert(U&& in) {
 
 template<typename T>
 template<typename U> bool Set<T>::insert(U&& in, hash_t hashed) {
-    size_t index = hashed & (capacitor - 1); // hash % size
+    size_t index = indexing(hashed); // to index
 
     Bucket& bucket = buckets[index];
 
