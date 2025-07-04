@@ -66,8 +66,7 @@ public:
 public:
     size_t        size() const noexcept;
     size_t        capacity() const noexcept;
-    Bucket*       bucket(size_t);       // get bucket
-    const Bucket* bucket(size_t) const; // get bucket
+    const Bucket* bucket(size_t) const noexcept; // get bucket
 
 private:
     size_t counter   = 0; //!< counter

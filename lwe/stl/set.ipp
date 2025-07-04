@@ -201,15 +201,11 @@ template<typename T> size_t Set<T>::capacity() const noexcept {
     return capacitor;
 }
 
-template<typename T> auto Set<T>::bucket(size_t in) -> Bucket* {
+template<typename T> auto Set<T>::bucket(size_t in) const noexcept -> const Bucket* {
     if(in >= capacitor) {
-        throw diag::error(diag::OUT_OF_RANGE);
+        return nullptr;
     }
     return buckets + in;
-}
-
-template<typename T> auto Set<T>::bucket(size_t in) const -> const Bucket* {
-    return const_cast<Set*>(this)->bucket(in);
 }
 
 template<typename T> bool Set<T>::push(T&& in) {

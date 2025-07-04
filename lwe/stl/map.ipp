@@ -126,5 +126,10 @@ template<typename Key, typename Value> bool Map<Key, Value>::exist(const Key& in
     return find(in) != end();
 }
 
+template<typename Key, typename Value>
+auto Map<Key, Value>::bucket(size_t in) const noexcept -> const typename Set::Bucket* {
+    return set.bucket(in);
+}
+
 } // namespace stl
 LWE_END

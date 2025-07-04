@@ -60,8 +60,7 @@ public:
     bool   exist(const Key&) const noexcept;
 
 public:
-    typename Set::Bucket*       bucket(size_t in) { return set.bucket(in); }
-    const typename Set::Bucket* bucket(size_t in) const { return set.bucket(in); }
+    const typename Set::Bucket* bucket(size_t in) const noexcept;
 
 public:
     Set set;
