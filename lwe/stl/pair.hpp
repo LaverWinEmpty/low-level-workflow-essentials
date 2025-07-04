@@ -29,6 +29,20 @@ public:
     bool operator<=(const Pair&) const;
 
 public:
+    bool operator==(const Key&) const;
+    bool operator!=(const Key&) const;
+    bool operator>(const Key&) const;
+    bool operator<(const Key&) const;
+    bool operator>=(const Key&) const;
+    bool operator<=(const Key&) const;
+
+public:
+    Value&       operator*();
+    Value*       operator->();
+    const Value& operator*() const;
+    const Value* operator->() const;
+
+public:
     operator hash_t() const; // to hash
 
 public:

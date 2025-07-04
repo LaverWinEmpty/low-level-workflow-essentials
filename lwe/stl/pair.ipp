@@ -41,6 +41,46 @@ template<typename Key, typename Value> bool Pair<Key, Value>::operator>=(const P
     return key >= in.key;
 }
 
+template<typename Key, typename Value> bool Pair<Key, Value>::operator==(const Key& in) const {
+    return key == in;
+}
+
+template<typename Key, typename Value> bool Pair<Key, Value>::operator!=(const Key& in) const {
+    return key != in;
+}
+
+template<typename Key, typename Value> bool Pair<Key, Value>::operator<(const Key& in) const {
+    return key < in;
+}
+
+template<typename Key, typename Value> bool Pair<Key, Value>::operator>(const Key& in) const {
+    return key > in;
+}
+
+template<typename Key, typename Value> bool Pair<Key, Value>::operator<=(const Key& in) const {
+    return key <= in;
+}
+
+template<typename Key, typename Value> bool Pair<Key, Value>::operator>=(const Key& in) const {
+    return key >= in;
+}
+
+template<typename Key, typename Value> Value& Pair<Key, Value>::operator*() { 
+    return value;
+}
+
+template<typename Key, typename Value> Value* Pair<Key, Value>::operator->() {
+    return &value;
+}
+
+template<typename Key, typename Value> const Value& Pair<Key, Value>::operator*() const {
+    return value;
+}
+
+template<typename Key, typename Value> const Value* Pair<Key, Value>::operator->() const {
+    return &value;
+}
+
 template<typename Key, typename Value> Pair<Key, Value>::operator hash_t() const {
     return LWE::util::hashof<Key>(key);
 }
