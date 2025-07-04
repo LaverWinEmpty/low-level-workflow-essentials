@@ -183,6 +183,16 @@ template<typename T> bool Set<T>::resize() {
     return true;
 }
 
+template<typename T> size_t Set<T>::indexing() const noexcept {
+    static constexpr size_t FIBONACCI_PRIME = []() {
+        if constexpr(sizeof(size_t) == 8) {
+            return 11'400'714'819'323'198'485ull;
+        }
+        else return 2'654'435'769u;
+    }();
+    return (in * FIBONACCI_PRIME) >> ((sizeof(size_t) << 3) - log);
+}
+
 template<typename T> size_t Set<T>::size() const noexcept {
     return counter;
 }
@@ -223,6 +233,7 @@ template<typename T> bool Set<T>::pop(const T& in) {
             bucket.size -= 1;                         // reduce
             Chain& last  = bucket.chain[bucket.size]; // get last
             bucket.data  = std::move(last.data);      // move
+            bucket.hash  = last.hash;                 // copy hash
             last.data.~T();                           // delete
         }
         // delete
@@ -255,6 +266,13 @@ template<typename T> bool Set<T>::pop(const T& in) {
         }
     }
     return false; // not found
+}
+
+template<typename T> bool Set<T>::pop(const Iterator<FWD>& in) {
+    if(in == end()) {
+        return false;
+    }
+    return pop(*in); // delete
 }
 
 template<typename T> bool Set<T>::exist(const T& in) {

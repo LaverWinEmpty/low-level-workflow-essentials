@@ -8,7 +8,9 @@ LWE_BEGIN
 namespace stl {
 template<typename T> class Set: public meta::Container {
     CONTAINER_BODY(T, Set, T);
-    static constexpr float  LOAD_FACTOR = 0.75f; // TODO: move to config
+    static constexpr float LOAD_FACTOR = 0.75f; // TODO: move to config
+
+    template<typename, typename> friend class Map;
 
     struct Chain {
         T      data; // data
@@ -32,6 +34,7 @@ public:
     bool push(T&&);
     bool push(const T&);
     bool pop(const T&);
+    bool pop(const Iterator<FWD>&);
     bool exist(const T&);
     bool exist(hash_t);
 
@@ -56,16 +59,8 @@ private:
 private:
     bool resize();
 
-private:
-    size_t indexing(hash_t in) {
-        static constexpr size_t FIBONACCI_PRIME = []() {
-            if constexpr (sizeof(size_t) == 8) {
-                return 11'400'714'819'323'198'485ull;
-            }
-            else return 2'654'435'769u;
-        }();
-        return (in * FIBONACCI_PRIME) >> ((sizeof(size_t) << 3) - log);
-    }
+public:
+    size_t indexing(hash_t) const noexcept;
 
 public:
     size_t        size() const noexcept;
