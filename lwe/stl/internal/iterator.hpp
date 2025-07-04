@@ -15,6 +15,9 @@ enum Mod {
 constexpr Mod operator|(Mod lhs, Mod rhs) {
     return static_cast<Mod>(int(lhs) | int(rhs));
 }
+constexpr Mod operator^(Mod lhs, Mod rhs) {
+    return static_cast<Mod>(int(lhs) ^ int(rhs));
+}
 
 template<Mod, class T> class Iterator;
 

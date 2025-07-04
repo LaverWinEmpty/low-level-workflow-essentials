@@ -374,19 +374,25 @@ public:                                                                         
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 
-#define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, PARAM, CONTAINER, ...)                           \
-    template<TUPLE TEMPLATE>                                                                    \
-    class Iterator<LWE::stl::MOD | LWE::stl::VIEW, CONTAINER<__VA_ARGS__>>                      \
-        : public LWE::stl::Iterator<MOD, CONTAINER<__VA_ARGS__>> {                              \
-        using CONTAINER = CONTAINER<__VA_ARGS__>;                                               \
-        using Mutable   = Iterator<MOD, CONTAINER>;                                             \
-        using Iterator<MOD, CONTAINER>::Iterator;                                               \
-    public:                                                                                     \
-        Iterator(const CONTAINER* in, PARAM arg): Mutable(const_cast<CONTAINER*>(in), arg) { }  \
-        Iterator(const Iterator<MOD | VIEW, CONTAINER>& in): Iterator<MOD, CONTAINER>(in) { }   \
-        const T& operator*() { return Mutable::operator*(); }                                   \
-        const T* operator->() { return Mutable::operator->(); }                                 \
+#define ITERATOR_BODY(MOD, CONTAINER, ...)                                                     \
+    using CONTAINER = CONTAINER<__VA_ARGS__>;                                                  \
+    using Reverse   = Iterator<MOD ^ LWE::stl::Mod(LWE::stl::FWD | LWE::stl::BWD), CONTAINER>; \
+    using Const     = Iterator<MOD | VIEW, CONTAINER>;                                         \
+    friend class Reverse
+
+#define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, CONTAINER, ...)                         \
+    template<TUPLE TEMPLATE>                                                           \
+    class Iterator<MOD | LWE::stl::VIEW, CONTAINER<__VA_ARGS__>>                       \
+        : public LWE::stl::Iterator<MOD, CONTAINER<__VA_ARGS__>> {                     \
+        using CONTAINER = CONTAINER<__VA_ARGS__>;                                      \
+        using Mutable   = Iterator<MOD, CONTAINER>;                                    \
+        using Iterator<MOD, CONTAINER>::Iterator;                                      \
+    public:                                                                            \
+        Iterator(const Iterator<MOD, CONTAINER>& in): Iterator<MOD, CONTAINER>(in) { } \
+        const T& operator*() { return Mutable::operator*(); }                          \
+        const T* operator->() { return Mutable::operator->(); }                        \
     }
+
 // clang-format on
 
 // header guard end
