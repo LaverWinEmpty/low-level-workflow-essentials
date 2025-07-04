@@ -72,7 +72,7 @@ template<typename T, size_t SVO = 0> class Deque: public meta::Container {
     CONTAINER_BODY(T, Deque, T, SVO);
 
 private:
-    template<typename, size_t> friend class Deque;
+    template<typename, size_t> friend class Deque; //!< for Deuqe<T, OTHER_SVO_SIZE>
 
 private:
     static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : align(SVO));
