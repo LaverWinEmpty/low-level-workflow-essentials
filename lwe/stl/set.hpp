@@ -35,6 +35,7 @@ public:
     bool push(const T&);
     bool pop(const T&);
     bool pop(const Iterator<FWD>&);
+    bool pop(hash_t);
     bool exist(const T&);
     bool exist(hash_t);
 

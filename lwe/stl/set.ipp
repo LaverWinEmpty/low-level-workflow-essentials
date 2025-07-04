@@ -221,8 +221,8 @@ template<typename T> bool Set<T>::push(const T& in) {
 }
 
 template<typename T> bool Set<T>::pop(const T& in) {
-    hash_t hashed = util::hashof<T>(in); // get hash
-    size_t index  = indexing(hashed);    // get index
+    hash_t hashed = util::hashof(in); // get hash
+    size_t index  = indexing(hashed); // get index
 
     Bucket& bucket = buckets[index];
 
@@ -275,6 +275,14 @@ template<typename T> bool Set<T>::pop(const Iterator<FWD>& in) {
     return pop(*in); // delete
 }
 
+template<typename T> bool Set<T>::pop(hash_t in) {
+    Iterator<FWD> it = find(in); // find by hash
+    if(it == end()) {
+        return false;
+    }
+    return pop(*it); // delete
+}
+
 template<typename T> bool Set<T>::exist(const T& in) {
     return find(in) != end();
 }
@@ -284,8 +292,8 @@ template<typename T> bool Set<T>::exist(hash_t in) {
 }
 
 template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
-    hash_t hashed = util::hashof<T>(in); // get hash
-    size_t index  = indexing(hashed);    // get index
+    hash_t hashed = util::hashof(in); // get hash
+    size_t index  = indexing(hashed); // get index
 
     Bucket& bucket = buckets[index];
 
@@ -380,7 +388,7 @@ template<typename U> bool Set<T>::insert(U&& in) {
         }
         factor = size_t(float(capacitor) * LOAD_FACTOR);
     }
-    hash_t hash = util::hashof<T>(in); // const T&
+    hash_t hash = util::hashof(in); // const T&
     return insert(std::forward<U>(in), hash);
 }
 
