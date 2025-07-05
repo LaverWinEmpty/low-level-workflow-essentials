@@ -1,6 +1,39 @@
 #ifndef LWE_STL_SET
 #define LWE_STL_SET
 
+/**************************************************************************************************
+ * HASH SET that open addressing + chaining bybrid
+ *
+ * hashing
+ * - integer types    -> used as-is
+ * - floating types   -> cast byte-wise to integer
+ * - long double type -> if 8 byte as double; else as string
+ * - other types      -> FNV-1a
+ * - indexing         -> Fibonacci hashing (replaces modulo)
+ *
+ * memory rayout
+ *   [0]->+-------+
+ *        | data  |   +------+------+
+ *        | chain --->| data | data | ... < collision chain (array)
+ *   [1]->+-------+   +------+------+
+ *        | data  |
+ *        | chain ---> nullptr < no collision
+ *        +-------+
+ *        |  ...  |
+ * [2^k]->+-------+
+ *        | data  |
+ *        | chain ---> ...
+ * [end]->+-------+
+ *            ^
+ *            bucket is array, capacity is power of 2
+ *
+ * state
+ *  bucket.used == false -> empty
+ *  bucket.used == true  -> exist
+ *  bucket.size == 0     -> no chain
+ *  bucket.size >= 0     -> chaining
+ **************************************************************************************************/
+
 #include "../meta/meta.h"
 #include "../util/hash.hpp"
 
@@ -14,7 +47,7 @@ template<typename T> class Set: public meta::Container {
 
     struct Chain {
         T      data; // data
-        hash_t hash; // store
+        hash_t hash; // calculated hash
     };
 
     struct Bucket: Chain {
@@ -69,10 +102,10 @@ public:
     const Bucket* bucket(size_t) const noexcept; // get bucket
 
 private:
-    size_t counter   = 0; //!< counter
-    size_t capacitor = 0; //!< container capacitor
+    size_t counter   = 0; //!< element counter
+    size_t capacitor = 0; //!< bucket counter
     size_t factor    = 0; //!< load factor
-    size_t log       = 3; //!< log2(capacitor)
+    size_t log       = 3; //!< log2(capacitor): default (1 << 3) == 8
 
 private:
     Bucket* buckets = nullptr;
