@@ -2,7 +2,7 @@
 #define LWE_STL_SET
 
 /**************************************************************************************************
- * HASH SET that open addressing + chaining bybrid
+ * HASH SET with enhanced chaining (inline first element + array-based chains)
  *
  * hashing
  * - integer types    -> used as-is
