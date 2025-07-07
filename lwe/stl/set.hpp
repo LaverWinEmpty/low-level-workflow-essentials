@@ -35,14 +35,13 @@
  **************************************************************************************************/
 
 #include "../meta/meta.h"
+#include "../config/config.h"
 #include "../util/hash.hpp"
 
 LWE_BEGIN
 namespace stl {
 template<typename T> class Set: public meta::Container {
     CONTAINER_BODY(T, Set, T);
-    static constexpr float LOAD_FACTOR = 0.75f; // TODO: move to config
-
     template<typename, typename> friend class Map;
 
     struct Chain {
@@ -54,13 +53,28 @@ template<typename T> class Set: public meta::Container {
         using Chain::data;
         using Chain::hash;
 
-        Chain*  chain;    // used when hash collide
-        uint8_t size;     // chain size (max 255)
-        uint8_t capacity; // chain capaicty (max 255)
-        bool    used;     // false == empty
+        Chain*   chain;    // used when hash collide
+        uint16_t size;     // chain size (max 65535)
+        uint16_t capacity; // chain capaicty (max 65535)
+        bool     used;     // false == empty
     };
 
 public:
+    using Grower = uint16_t (*)(uint16_t);
+
+public:
+    //! @brief constructor
+    //! @param [in] factor: load factor
+    //! @param [in] grower: chain array grow strategy
+    Set(float factor = config::LOADFACTOR, Grower grower = [](uint16_t in) { return uint16_t(in + 1); });
+
+public:
+    //! @brief constructor, load factor is default
+    //! @param [in] grower: chain array grow strategy
+    Set(Grower grower);
+    
+public:
+    //! @brief free
     ~Set();
 
 public:
@@ -109,6 +123,10 @@ private:
 
 private:
     Bucket* buckets = nullptr;
+    Grower  grower;
+
+public:
+    const float LOAD_FACTOR;
 };
 
 REGISTER_CONTAINER(Set, STL_SET);

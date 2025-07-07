@@ -68,18 +68,12 @@ auto Pool::Block::find(void* in) noexcept -> Block* {
     return nullptr;
 }
 
-Pool::Pool(size_t chunk, size_t alignment) noexcept:
-    ALIGN(alignment <= sizeof(void*) ? sizeof(void*) : align(alignment)), // power of 2, min: size of pointer
-    CHUNK(align(chunk + sizeof(void*), ALIGN)),                           // block = chunk + ptr (block address storage)
-    COUNT((MAX_COUNT / chunk) < 8 ? 8 : (MAX_COUNT / chunk)),             // if count has 8, set fixed count 8
-    META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                  // pool metadata
-    counter{ 0 } { }
-
 Pool::Pool(size_t chunk, size_t alignment, size_t count) noexcept:
-    ALIGN(alignment <= sizeof(void*) ? sizeof(void*) : align(alignment)), // power of 2, min: size of pointer
-    CHUNK(align(chunk + sizeof(void*), ALIGN)),                           // block = chunk + ptr (block address storage)
-    COUNT(count),                                                         // block count
-    META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                  // pool metadata
+    ALIGN{ alignment <= sizeof(void*) ? sizeof(void*) : align(alignment) }, // align min: ptr size (64-bits: 8)
+    CHUNK{ align(chunk + sizeof(void*), ALIGN) },                           // with ptr for outer block address
+    META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                    // padding for first chunk alignment
+    COUNT{ count ? count : ((config::MEMORYPAGE - META) / CHUNK) },         // adjust for mem page size
+    SRC{ chunk },                                                           // chunk original size backup
     counter{ 0 } { }
 
 Pool::~Pool() noexcept {
@@ -94,6 +88,17 @@ auto Pool::count() const noexcept -> Counter {
 }
 
 template<typename T, typename... Args> T* Pool::allocate(Args&&... args) noexcept {
+    if(COUNT <= 1) {
+        void* ptr = core::memalloc(SRC, ALIGN);
+        if(!ptr) {
+            return nullptr;
+        }
+        if constexpr(!std::is_void_v<T>) {
+            new(ptr) T(std::forward<Args>(args)...);
+        }
+        return static_cast<T*>(ptr);
+    }
+
     T* ret = nullptr;
 
     if(usable.head == nullptr) {
@@ -116,6 +121,15 @@ template<typename T, typename... Args> T* Pool::allocate(Args&&... args) noexcep
 }
 
 template<typename T> bool Pool::deallocate(T* in) noexcept {
+    if(COUNT <= 1) {
+        if(!in) return false;
+        if constexpr(!std::is_void_v<T>) {
+            in.~T();
+        }
+        core::memfree(in);
+        return true;
+    }
+
     // call destructor
     if constexpr(!std::is_void_v<T>) {
         in->~T();
@@ -147,6 +161,8 @@ template<typename T> bool Pool::deallocate(T* in) noexcept {
 }
 
 bool Pool::generate() noexcept {
+    if(COUNT <= 1) return true;
+
     Block* block;
     if(freeable.head) {
         block = freeable.dequeue(); // move
@@ -170,6 +186,8 @@ bool Pool::generate() noexcept {
 }
 
 size_t Pool::generate(size_t in) noexcept {
+    if(COUNT <= 1) return 0;
+
     for(size_t i = 0; i < in; ++i) {
         if(!generate()) {
             return i;
@@ -179,6 +197,8 @@ size_t Pool::generate(size_t in) noexcept {
 }
 
 size_t Pool::release() noexcept {
+    if(COUNT <= 1) return 0;
+
     size_t i = 0;
     while(freeable.head != nullptr) {
         Block* ptr = freeable.dequeue();

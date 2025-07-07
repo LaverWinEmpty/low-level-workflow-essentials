@@ -7,7 +7,7 @@ template<typename T> class Iterator<FWD, Set<T>> {
 
 public:
     Iterator(Set* self, size_t index): self(self), index(index), chain(0), chaining(false) { }
-    Iterator(Set* self, size_t index, uint8_t chain): self(self), index(index), chain(chain), chaining(true) { }
+    Iterator(Set* self, size_t index, uint16_t chain): self(self), index(index), chain(chain), chaining(true) { }
 
 public:
     Iterator& operator++() {
@@ -104,11 +104,15 @@ public:
     bool operator!=(const Iterator& in) const { return !operator==(in); }
 
 private:
-    Set*    self;
-    size_t  index;
-    uint8_t chain;
-    bool    chaining; // false == index, true == chain
+    Set*     self;
+    size_t   index;
+    uint16_t chain;
+    bool     chaining; // false == index, true == chain
 };
+
+template<typename T> Set<T>::Set(float factor, Grower grower): LOAD_FACTOR(factor), grower(grower) { }
+
+template<typename T> Set<T>::Set(Grower grower): Set(config::LOADFACTOR, grower) { }
 
 template<typename T> Set<T>::~Set() {
     for(size_t i = 0; i < capacitor; ++i) {
@@ -118,7 +122,7 @@ template<typename T> Set<T>::~Set() {
         }
         // has chain
         if(buckets[i].chain) {
-            for(uint8_t j = 0; j < buckets[i].size; ++j) {
+            for(uint16_t j = 0; j < buckets[i].size; ++j) {
                 // MSVC C6001 FALSE POSITIVE
                 buckets[i].chain[j].data.~T(); // chain dtor
             }
@@ -167,7 +171,7 @@ template<typename T> bool Set<T>::resize() {
             }
             // chained datas
             if(old[i].chain) {
-                for(uint8_t j = 0; j < old[i].size; ++j) {
+                for(uint16_t j = 0; j < old[i].size; ++j) {
                     Chain& chain = old[i].chain[j];
                     insert(std::move(chain.data), chain.hash); // move
                     chain.data.~T();                           // delete
@@ -242,8 +246,8 @@ template<typename T> bool Set<T>::pop(const T& in) {
     }
 
     // else find chain
-    uint8_t size = bucket.size;
-    for(uint8_t i = 0; i < size; ++i) {
+    uint16_t size = bucket.size;
+    for(uint16_t i = 0; i < size; ++i) {
         Chain& chain = bucket.chain[i];
         // same logic
         if(chain.hash == hashed && chain.data == in) {
@@ -300,7 +304,7 @@ template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
             return Iterator(this, index);
         }
         // return chain
-        for(uint8_t i = 0; i < bucket.size; ++i) {
+        for(uint16_t i = 0; i < bucket.size; ++i) {
             Chain& chain = bucket.chain[i];
             if(chain.hash == hashed && chain.data == in) {
                 return Iterator(this, index, i);
@@ -352,7 +356,7 @@ template<typename T> auto Set<T>::at(size_t index) noexcept -> Iterator<FWD> {
         // [1][0] == 2
         size_t size = buckets[i].size;
         if(index < (pass + size)) {
-            return Iterator<FWD>(this, i, uint8_t(index - pass));
+            return Iterator<FWD>(this, i, uint16_t(index - pass));
         }
         pass += size; // chain pass
     } // end for
@@ -399,7 +403,7 @@ template<typename U> bool Set<T>::insert(U&& in, hash_t hashed) {
         if(bucket.data == in) {
             return false;
         }
-        for(uint8_t i = 0; i < bucket.size; ++i) {
+        for(uint16_t i = 0; i < bucket.size; ++i) {
             if(bucket.chain[i].data == in) {
                 return false;
             }
@@ -417,28 +421,27 @@ template<typename U> bool Set<T>::insert(U&& in, hash_t hashed) {
     }
 
     // else true -> use chain
-    uint8_t size = bucket.size;     // get size
-    uint8_t cap  = bucket.capacity; // get capacity
+    uint16_t size = bucket.size;     // get size
+    uint16_t cap  = bucket.capacity; // get capacity
 
     // check realloc condition
     if(size >= cap) {
-        // ! CHAIN SIZE INCREASES BY 1: chains are allocated less frequently !
-        ++cap;
-        Chain* newly = static_cast<Chain*>(std::malloc((cap) * sizeof(Chain)));
+        cap          = grower(cap);
+        Chain* newly = static_cast<Chain*>(std::malloc(sizeof(Chain) * cap));
         if(!newly) {
             return false; // bad alloc
         }
 
         // remove old and move
         Chain* old = bucket.chain;
-        for(uint8_t i = 0; i < size; ++i) {
+        for(uint16_t i = 0; i < size; ++i) {
             new(&newly[i].data) T(std::move(old[i].data)); // move, maybe noexcept
             newly[i].hash = old[i].hash;                   // copy hash
             old[i].data.~T();                              // dtor
         }
-        bucket.chain     = newly; // store
-        bucket.capacity += 1;     // count
-        std::free(old);           // delete
+        bucket.chain    = newly; // store
+        bucket.capacity = cap;   // count
+        std::free(old);          // delete
     }
 
     // isnert data

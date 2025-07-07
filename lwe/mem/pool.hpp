@@ -2,6 +2,7 @@
 #define LWE_MEM_POOL
 
 #include "../base/base.h"
+#include "../config/config.h"
 #include "../async/lock.hpp"
 // #include "../stl/deque.hpp"
 
@@ -44,11 +45,6 @@
 LWE_BEGIN
 
 namespace mem {
-namespace config {
-static constexpr size_t DEF_ALIGN = sizeof(void*);
-static constexpr size_t MAX_COUNT = 4'096; // 4kb
-} // namespace config
-using namespace config;
 
 class Pool {
 protected:
@@ -78,24 +74,11 @@ public:
     } counter;
 
 public:
-    /**
-     * @brief construct a new pool object
-     *
-     * @param [in] chunk - chunk size, it is padded to the pointer size.
-     * @param [in] align - chunk align, it is adjusted to the power of 2.
-     * @param [in] count - chunk count in block. (default max / size, if chunk large size -> fixed 8)
-     */
-    Pool(size_t chunk, size_t alignment = DEF_ALIGN) noexcept;
-
-public:
-    /**
-     * @brief construct a new pool object
-     *
-     * @param [in] chunk - chunk size, it is padded to the pointer size.
-     * @param [in] align - chunk align, it is adjusted to the power of 2.
-     * @param [in] count - chunk count in block.
-     */
-    Pool(size_t chunk, size_t alignment, size_t count) noexcept;
+    //! @brief construct a new pool object
+    //! @param [in] chunk - chunk size, it is padded to the pointer size.
+    //! @param [in] align - chunk align, it is adjusted to the power of 2, min -> sizeof(void*)
+    //! @param [in] count - chunk count in block, default 0 -> auto
+    Pool(size_t chunk, size_t alignment = 0, size_t count = 0) noexcept;
 
 public:
     //! @brief destroy the pool object.
@@ -128,8 +111,9 @@ public:
 protected:
     const size_t ALIGN; //!< chunk alignment
     const size_t CHUNK; //!< chunk size
-    const size_t COUNT; //!< chunk count
     const size_t META;  //!< block header size
+    const size_t COUNT; //!< chunk count
+    const size_t SRC;   //!< chunk origianl size
 
 protected:
     std::unordered_set<Block*> all; //!<  generated blocks

@@ -59,9 +59,9 @@
  * - call realloc() instead of new() (possible optimization)
  **************************************************************************************************/
 
-#include "config.hpp"
 #include "internal/iterator.hpp"
 #include "../base/base.h"
+#include "../config/config.h"
 #include "../meta/meta.h"
 #include "../mem/Block.hpp"
 
@@ -75,7 +75,7 @@ private:
     template<typename, size_t> friend class Deque; //!< for Deuqe<T, OTHER_SVO_SIZE>
 
 private:
-    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < DEF_SVO ? DEF_SVO : align(SVO));
+    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < config::SMALLVECTOR ? config::SMALLVECTOR : align(SVO));
 
 public:
     Deque();

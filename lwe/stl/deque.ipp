@@ -472,8 +472,8 @@ template<typename T, size_t SVO> index_t Deque<T, SVO>::clamp(index_t in) const 
 }
 
 template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexcept {
-    if(in < DEF_SVO) {
-        in = DEF_SVO; // set default min
+    if(in < config::SMALLVECTOR) {
+        in = config::SMALLVECTOR; // set default min
     }
     else in = align(in);
 
