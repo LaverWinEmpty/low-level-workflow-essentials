@@ -31,6 +31,10 @@ public:
                     chaining = false; // index to 0 (chain -> bucket)
                     ++index;          // next bucket
 
+                    // end
+                    if (index >= self->capacitor) {
+                        break;
+                    }
                     // break when bucket not empty
                     if(self->buckets[index].used == true) {
                         break;
@@ -54,6 +58,10 @@ public:
         do {
             // bucket -> chain
             if(chaining == false) {
+                // begin
+                if(index == 0) {
+                    break;
+                }
                 --index; // prev
 
                 // has data
@@ -115,21 +123,7 @@ template<typename T> Set<T>::Set(float factor, Grower grower): LOAD_FACTOR(facto
 template<typename T> Set<T>::Set(Grower grower): Set(config::LOADFACTOR, grower) { }
 
 template<typename T> Set<T>::~Set() {
-    for(size_t i = 0; i < capacitor; ++i) {
-        // delete bucket data
-        if(buckets[i].used == true) {
-            buckets[i].data.~T(); // bucket dtor
-        }
-        // has chain
-        if(buckets[i].chain) {
-            for(uint16_t j = 0; j < buckets[i].size; ++j) {
-                // MSVC C6001 FALSE POSITIVE
-                buckets[i].chain[j].data.~T(); // chain dtor
-            }
-            std::free(buckets[i].chain); // delete
-        }
-    }
-    std::free(buckets);
+    clear();
 }
 
 template<typename T> bool Set<T>::resize() {
@@ -220,7 +214,7 @@ template<typename T> bool Set<T>::push(const T& in) {
     return insert(in);
 }
 
-template<typename T> bool Set<T>::pop(const T& in) {
+template<typename T> bool Set<T>::pop(const T& in) noexcept {
     hash_t hashed = util::hashof(in); // get hash
     size_t index  = indexing(hashed); // get index
 
@@ -268,14 +262,14 @@ template<typename T> bool Set<T>::pop(const T& in) {
     return false; // not found
 }
 
-template<typename T> bool Set<T>::pop(const Iterator<FWD>& in) {
+template<typename T> bool Set<T>::pop(const Iterator<FWD>& in) noexcept {
     if(in == end()) {
         return false;
     }
     return pop(*in); // delete
 }
 
-template<typename T> bool Set<T>::pop(hash_t in) {
+template<typename T> bool Set<T>::pop(hash_t in) noexcept {
     Iterator<FWD> it = find(in); // find by hash
     if(it == end()) {
         return false;
@@ -283,12 +277,37 @@ template<typename T> bool Set<T>::pop(hash_t in) {
     return pop(*it); // delete
 }
 
-template<typename T> bool Set<T>::exist(const T& in) {
+template<typename T> bool Set<T>::exist(const T& in) noexcept {
     return find(in) != end();
 }
 
-template<typename T> bool Set<T>::exist(hash_t in) {
+template<typename T> bool Set<T>::exist(hash_t in) noexcept {
     return find(in) != end();
+}
+
+template<typename T> void Set<T>::clear() noexcept {
+    for(size_t i = 0; i < capacitor; ++i) {
+        // delete bucket data
+        if(buckets[i].used == true) {
+            buckets[i].data.~T(); // bucket dtor
+        }
+        // has chain
+        if(buckets[i].chain) {
+            for(uint16_t j = 0; j < buckets[i].size; ++j) {
+                // MSVC C6001 FALSE POSITIVE
+                buckets[i].chain[j].data.~T(); // chain dtor
+            }
+            std::free(buckets[i].chain); // delete
+        }
+    }
+    std::free(buckets);
+
+    // init
+    buckets   = nullptr;
+    counter   = 0;
+    capacitor = 0;
+    factor    = 0;
+    log       = 3;
 }
 
 template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {

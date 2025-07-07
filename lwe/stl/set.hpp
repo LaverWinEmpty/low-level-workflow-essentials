@@ -80,11 +80,12 @@ public:
 public:
     bool push(T&&);
     bool push(const T&);
-    bool pop(const T&);
-    bool pop(const Iterator<FWD>&);
-    bool pop(hash_t);
-    bool exist(const T&);
-    bool exist(hash_t);
+    bool pop(const T&) noexcept;
+    bool pop(const Iterator<FWD>&) noexcept;
+    bool pop(hash_t) noexcept;
+    bool exist(const T&) noexcept;
+    bool exist(hash_t) noexcept;
+    void clear() noexcept;
 
 public:
     Iterator<FWD | VIEW> find(const T&) const noexcept; //!< find by data
