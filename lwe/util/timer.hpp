@@ -2,6 +2,7 @@
 #define LWE_UTIL_TIMER
 
 #include <chrono>
+#include "../base/base.h"
 
 LWE_BEGIN
 namespace util {
