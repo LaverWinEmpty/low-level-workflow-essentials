@@ -32,7 +32,7 @@ public:
                     ++index;          // next bucket
 
                     // end
-                    if (index >= self->capacitor) {
+                    if(index >= self->capacitor) {
                         break;
                     }
                     // break when bucket not empty
@@ -123,7 +123,10 @@ template<typename T> Set<T>::Set(float factor, Grower grower): LOAD_FACTOR(facto
 template<typename T> Set<T>::Set(Grower grower): Set(config::LOADFACTOR, grower) { }
 
 template<typename T> Set<T>::~Set() {
-    clear();
+    if(buckets) {
+        clear();
+        free(buckets);
+    }
 }
 
 template<typename T> bool Set<T>::resize() {
@@ -286,6 +289,10 @@ template<typename T> bool Set<T>::exist(hash_t in) noexcept {
 }
 
 template<typename T> void Set<T>::clear() noexcept {
+    if(capacitor != 0) {
+        return;
+    }
+
     for(size_t i = 0; i < capacitor; ++i) {
         // delete bucket data
         if(buckets[i].used == true) {
@@ -300,14 +307,11 @@ template<typename T> void Set<T>::clear() noexcept {
             std::free(buckets[i].chain); // delete
         }
     }
-    std::free(buckets);
 
     // init
-    buckets   = nullptr;
-    counter   = 0;
-    capacitor = 0;
-    factor    = 0;
-    log       = 3;
+    // ignore bucket, capacity
+    counter = 0;
+    factor  = 0;
 }
 
 template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
