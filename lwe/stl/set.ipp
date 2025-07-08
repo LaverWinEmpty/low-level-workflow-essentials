@@ -288,6 +288,30 @@ template<typename T> bool Set<T>::exist(hash_t in) noexcept {
     return find(in) != end();
 }
 
+template<typename T> bool Set<T>::reserve(size_t in) noexcept {
+    in = core::align(in); // algin to power of 2
+    if(in <= capacitor) {
+        return true; // already allocated
+    }
+
+    size_t logOld = log;
+    size_t capOld = capacitor;
+
+    log = 0;
+    while(in > 1) {
+        in >>= 1;
+        ++log;
+    }
+    capacitor = 0; // for resize
+
+    if(!resize()) {
+        log       = logOld;
+        capacitor = capOld;
+        return false; // rollback
+    }
+    return true;
+}
+
 template<typename T> void Set<T>::clear() noexcept {
     if(capacitor != 0) {
         return;

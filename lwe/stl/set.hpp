@@ -72,7 +72,7 @@ public:
     //! @brief constructor, load factor is default
     //! @param [in] grower: chain array grow strategy
     Set(Grower grower);
-    
+
 public:
     //! @brief free
     ~Set();
@@ -85,6 +85,7 @@ public:
     bool pop(hash_t) noexcept;
     bool exist(const T&) noexcept;
     bool exist(hash_t) noexcept;
+    bool reserve(size_t size) noexcept;
     void clear() noexcept;
 
 public:
