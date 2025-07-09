@@ -1,11 +1,11 @@
 // iterator flag only
-#ifndef LWE_STL_ITERATOR
-#define LWE_STL_ITERATOR
+#ifndef LWE_CONTAINER_ITERATOR
+#define LWE_CONTAINER_ITERATOR
 
-#include "../../base/base.h"
+#include "../base/base.h"
 
 LWE_BEGIN
-namespace stl {
+namespace container {
 
 enum Mod {
     FWD  = 1, //!< iterator
@@ -21,6 +21,6 @@ constexpr Mod operator^(Mod lhs, Mod rhs) {
 
 template<Mod, class T> class Iterator;
 
-} // namespace stl
+} // namespace container
 LWE_END
 #endif
