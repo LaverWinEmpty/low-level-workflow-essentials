@@ -84,13 +84,27 @@ template<typename T> static const Type& Type::reflect() {
 }
 
 template<typename T> static void Type::reflect(Type* out) {
+    // const
     if constexpr(std::is_const_v<T>) {
         out->push(Keyword::CONST);
         reflect<typename std::remove_const_t<T>>(out);
     }
 
+    // container
     else if constexpr(isSTL<T>()) {
         out->push(ContainerCode<T>::VALUE);
+        // map
+        if constexpr(ContainerCode<T>::VALUE == Keyword::STL_MAP) {
+            reflect<typename T::value_type::key_type>(out);
+            reflect<typename T::value_type::value_type>(out);
+        }
+        else reflect<typename T::value_type>(out);
+    }
+
+    // pair
+    else if constexpr(isKVP<T>()) {
+        out->push(Keyword::STL_PAIR);
+        reflect<typename T::key_type>(out);
         reflect<typename T::value_type>(out);
     }
 
@@ -376,18 +390,33 @@ size_t Type::stringify(string* out, const Type& in, size_t idx) {
         out->append(typestring(in[idx])); // size 0 == unregistered type
         return idx + 1 + sizeof(len);
     }
-    // primitive
+    // primitive, container, etc
     else {
         out->append(typestring(in[idx]));
     }
-    // has template
+    // has template, container
     if(isSTL(in[idx])) {
         out->append("<");
-        stringify(out, in, idx + 1);
+        size_t next = stringify(out, in, idx + 1);
+        size_t last = next;
 
-        // TODO: map implementation
+        // map
+        if(in[idx] == Keyword::STL_MAP) {
+            out->append(", ");
+            last = stringify(out, in, next);
+        }
 
         out->append(">");
+        return last + 1;
+    }
+    // pair
+    else if(isKVP(in[idx])) {
+        out->append(1, '<');
+        size_t next = stringify(out, in, idx + 1);
+        out->append(", ");
+        size_t last = stringify(out, in, next);
+        out->append(1, '>');
+        return last + 1;
     }
 
     return idx + 1;
