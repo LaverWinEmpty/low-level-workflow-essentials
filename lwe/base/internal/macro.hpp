@@ -374,16 +374,16 @@ public:                                                                         
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 
-#define ITERATOR_BODY(MOD, CONTAINER, ...)                                                     \
-    using CONTAINER = CONTAINER<__VA_ARGS__>;                                                  \
-    using Reverse   = Iterator<MOD ^ LWE::stl::Mod(LWE::stl::FWD | LWE::stl::BWD), CONTAINER>; \
-    using Const     = Iterator<MOD | VIEW, CONTAINER>;                                         \
+#define ITERATOR_BODY(MOD, CONTAINER, ...)                       \
+    using CONTAINER = CONTAINER<__VA_ARGS__>;                    \
+    using Reverse   = Iterator<MOD ^ Mod(FWD | BWD), CONTAINER>; \
+    using Const     = Iterator<MOD | VIEW, CONTAINER>;           \
     friend class Reverse
 
 #define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, CONTAINER, ...)                         \
     template<WRAP TEMPLATE>                                                            \
-    class Iterator<MOD | LWE::stl::VIEW, CONTAINER<__VA_ARGS__>>                       \
-        : public LWE::stl::Iterator<MOD, CONTAINER<__VA_ARGS__>> {                     \
+    class Iterator<MOD | VIEW, CONTAINER<__VA_ARGS__>>                                 \
+        : public Iterator<MOD, CONTAINER<__VA_ARGS__>> {                               \
         using CONTAINER = CONTAINER<__VA_ARGS__>;                                      \
         using Mutable   = Iterator<MOD, CONTAINER>;                                    \
         using Iterator<MOD, CONTAINER>::Iterator;                                      \
