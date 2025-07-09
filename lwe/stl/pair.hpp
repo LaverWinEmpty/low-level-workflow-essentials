@@ -27,15 +27,14 @@ public:
     string serialize() const;
     void   deserialize(const string_view);
 };
- 
+
 } // namespace stl
 
-namespace util{
-
+namespace util {
 template<typename K, typename V> size_t hashof(const stl::Pair<K, V>& in) {
     return hashof(in.key);
 }
+} // namespace util
 
-}
 LWE_END
 #endif
