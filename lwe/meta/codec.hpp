@@ -7,11 +7,7 @@
 #include "internal/feature.hpp"
 #include "internal/reflector.hpp"
 #include "object.hpp"
-#include "../base/base.h"
 #include "../stl/pair.hpp"
-#include "../stl/internal/iterator.hpp"
-
-// #include "../mem/ptr.hpp"
 
 LWE_BEGIN
 namespace meta {
