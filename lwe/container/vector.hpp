@@ -1,3 +1,61 @@
+/**************************************************************************************************
+ * circulation container
+ *
+ * description
+ * use small vector
+ * random accessible
+ * has iterator and reverse iterator
+ *
+ * mix of signed and unsigned.
+ * it is safe from overflow by using bitwise operations.
+ * e.g
+ *  index: 0 -> -1
+ *  0b0 -> 0b1111...1111
+ *  0b1111...1111 & 0b1111 (capacity is 16)
+ *  index: -1 -> 15
+ **************************************************************************************************
+ * example
+ *
+ * capacitor -> power of 2
+ * [0] [1] [2] [3] [4] [5] [6] [7]
+ *  a   b   X   Y   Z   c   d   e
+ *          ^       ^   ^
+ *          begin   |   end
+ *          front   rear
+ *          top     bottom
+ *
+ * iterator
+ *   X -> Y -> Z -> X ... (cycle only within range)
+ *
+ * rear and bottom
+ * - last index getter
+ * - return reverse iterator
+ * - if to point to end(), sub 1 (auto itr = rear() - 1;)
+ * - if going to begin(), add (auto itr = rear(); ++itr;)
+ *
+ * indexing
+ *  [0] -> X (2)
+ *  [2] -> Z (4)
+ *  [3] -> c (5, out of range)
+ *  [8] -> X (2, circulation)
+ **************************************************************************************************
+ * feature
+ *
+ * - push_back:  push
+ * - pop_back:   pop
+ * - push_front: unshift
+ * - pop_front:  shift
+ *
+ * exception
+ * - push return bool -> allocation failed
+ * - pop return bool -> not exist data
+ *
+ * performance
+ * - push/pop: O(1) amortized, O(n) worst case (reallocation)
+ * - indexing overhead: relative address convert to absolute (bitmask optimized)
+ * - call realloc() instead of new() (possible optimization)
+ **************************************************************************************************/
+
 #ifndef LWE_CONTAINER_VECTOR
 #define LWE_CONTAINER_VECTOR
 
@@ -9,10 +67,17 @@ LWE_BEGIN
 namespace container {
 
 template<typename T, size_t SVO = 0> class Vector {
-protected:
+public:
     template<typename, size_t> friend class Vector; //!< for Deuqe<T, OTHER_SVO_SIZE>
     template<Mod, typename> friend class Iterator;  //!< iterator
     template<Mod MOD> using Iterator = Iterator<MOD, Vector>;
+
+public:
+    using value_type             = T;
+    using iterator               = Iterator<FWD>;
+    using reverse_iterator       = Iterator<BWD>;
+    using const_iterator         = Iterator<FWD | VIEW>;
+    using const_reverse_iterator = Iterator<BWD | VIEW>;
 
 protected:
     static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < config::SMALLVECTOR ? config::SMALLVECTOR : align(SVO));

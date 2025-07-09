@@ -1,3 +1,36 @@
+/**************************************************************************************************
+ * HASH SET with enhanced chaining (inline first element + array-based chains)
+ *
+ * hashing
+ * - integer types    -> used as-is
+ * - floating types   -> cast byte-wise to integer
+ * - long double type -> if 8 byte as double; else as string
+ * - other types      -> FNV-1a
+ * - indexing         -> Fibonacci hashing (replaces modulo)
+ *
+ * memory rayout
+ *   [0]->+-------+
+ *        | data  |   +------+------+
+ *        | chain --->| data | data | ... < collision chain (array)
+ *   [1]->+-------+   +------+------+
+ *        | data  |
+ *        | chain ---> nullptr < no collision
+ *        +-------+
+ *        |  ...  |
+ * [2^k]->+-------+
+ *        | data  |
+ *        | chain ---> ...
+ * [end]->+-------+
+ *            ^
+ *            bucket is array, capacity is power of 2
+ *
+ * state
+ *  bucket.used == false -> empty
+ *  bucket.used == true  -> exist
+ *  bucket.size == 0     -> no chain
+ *  bucket.size >= 0     -> chaining
+ **************************************************************************************************/
+
 #ifndef LWE_CONTAINER_HASHTABLE
 #define LWE_CONTAINER_HASHTABLE
 
@@ -10,10 +43,17 @@ LWE_BEGIN
 namespace container {
 
 template<typename T> class Hashtable {
-protected:
+public:
     template<typename, typename> friend class Dictionary; //!< for composition
     template<Mod, typename> friend class Iterator;        //!< iterator
     template<Mod MOD> using Iterator = Iterator<MOD, Hashtable>;
+
+public:
+    using value_type             = T;
+    using iterator               = Iterator<FWD>;
+    using reverse_iterator       = Iterator<BWD>;
+    using const_iterator         = Iterator<FWD | VIEW>;
+    using const_reverse_iterator = Iterator<BWD | VIEW>;
 
 protected:
     struct Chain {
