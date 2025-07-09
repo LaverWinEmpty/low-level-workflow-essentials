@@ -48,15 +48,15 @@ public:
 };
 
 //! my custom pair interface
-class Pair {
+class KeyValue {
 public:
-    ~Pair() noexcept                              = default;
+    ~KeyValue() noexcept                          = default;
     virtual string serialize() const              = 0;
     virtual void   deserialize(const string_view) = 0;
 };
 
 //! @brief get container type code structur
-template<typename, typename = std::void_t<>> struct ContainerCode {
+template<typename T> struct ContainerCode {
     static constexpr Keyword VALUE = Keyword::UNREGISTERED;
 };
 
@@ -76,8 +76,12 @@ template<> bool                     isSTL<Keyword>(const Keyword&); //!< check c
 template<typename T> constexpr bool isOBJ();         //!< check object explicit
 template<typename T> constexpr bool isOBJ(const T&); //!< check object implicit
 
-template<typename T> constexpr bool isPAIR();         //!< check pair explicit
-template<typename T> constexpr bool isPAIR(const T&); //!< check pair implicit
+/**
+ * Key-Value Pair check, std::pair IS NOT KVP
+ */
+template<typename T> constexpr bool isKVP();                        //!< check pair explicit
+template<typename T> constexpr bool isKVP(const T&);                //!< check pair implicit
+template<> bool                     isKVP<Keyword>(const Keyword&); //!< check container runtime
 
 //! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();

@@ -16,6 +16,10 @@ public:
     ~Record() noexcept = default;
 
 public:
+    using key_type   = K; // not first_type
+    using value_type = V; // not second_type
+
+public:
     bool operator==(const K&) const; //!< compare: Record to key type
     bool operator!=(const K&) const; //!< compare: Record to key type
     bool operator>(const K&) const;  //!< compare: Record to key type
@@ -39,7 +43,7 @@ public:
 // hash define
 namespace util {
 template<typename K, typename V> hash_t hashof(const container::Record<K, V>& in) {
-    return hashof<K>(in.key);
+    return hashof(in.key); // get key
 }
 } // namespace util
 

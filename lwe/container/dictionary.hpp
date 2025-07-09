@@ -12,12 +12,17 @@ template<typename> class Hashtable;
 
 template<typename K, typename V> class Dictionary {
 public:
-    using Entry = Record<K, V>;
-
-protected:
+    using Entry     = Record<K, V>;
     using Hashtable = Hashtable<Entry>;
     template<Mod, typename> friend class Iterator; //!< iterator
     template<Mod MOD> using Iterator = Iterator<MOD, Hashtable>;
+
+public:
+    using value_type             = Entry;
+    using iterator               = Iterator<FWD>;
+    using reverse_iterator       = Iterator<BWD>;
+    using const_iterator         = Iterator<FWD | VIEW>;
+    using const_reverse_iterator = Iterator<BWD | VIEW>;
 
 public:
     V& operator[](const K& in) {

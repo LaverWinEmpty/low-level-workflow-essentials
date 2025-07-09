@@ -1,6 +1,6 @@
 // iterator flag only
-#ifndef LWE_STL_ITERATOR
-#define LWE_STL_ITERATOR
+#ifndef LWE_CONTAINER_ITERATOR
+#define LWE_CONTAINER_ITERATOR
 
 #include "../base/base.h"
 
