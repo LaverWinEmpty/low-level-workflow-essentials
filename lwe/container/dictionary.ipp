@@ -5,27 +5,27 @@ LWE_BEGIN
 namespace container {
 
 template<typename Key, typename Value> void Dictionary<Key, Value>::push(Entry&& in) {
-    set.insert(std::move(in));
+    insert(std::move(in));
 }
 
 template<typename Key, typename Value> void Dictionary<Key, Value>::push(const Entry& in) {
-    set.insert(in);
+    insert(in);
 }
 
 template<typename Key, typename Value> void Dictionary<Key, Value>::push(const Key& key, const Value& value) {
-    set.insert(Entry(key, value));
+    insert(Entry{ key, value });
 }
 
 template<typename Key, typename Value> void Dictionary<Key, Value>::push(Key&& key, Value&& value) {
-    set.insert(Entry(std::move(key), std::move(value)));
+    insert(Entry{ std::move(key), std::move(value) });
 }
 
 template<typename Key, typename Value> void Dictionary<Key, Value>::push(const Key& key, Value&& value) {
-    set.insert(Entry(key, std::move(value)));
+    insert(Entry{ key, std::move(value) });
 }
 
 template<typename Key, typename Value> void Dictionary<Key, Value>::push(Key&& key, const Value& value) {
-    set.insert(Entry(std::move(key), value));
+    insert(Entry{ std::move(key), value });
 }
 
 template<typename Key, typename Value> bool Dictionary<Key, Value>::pop(const Key& in) {
@@ -63,7 +63,7 @@ auto Dictionary<Key, Value>::find(const Key& in) noexcept -> Iterator<FWD> {
         // has chain
         for(int i = 0; i < bucket.size; ++i) {
             typename Hashtable::Chain& chain = bucket->chain[i];
-            if(hashed == chain.hashed && in == chain.data.key) {
+            if(hashed == chain.hashed && in == chain.data.first) {
                 typename Hashtable::Iterator it = { &set, index, i }; // create iterator
                 return it;
             }
@@ -132,6 +132,29 @@ template<typename Key, typename Value> bool Dictionary<Key, Value>::exist(const 
 template<typename Key, typename Value>
 auto Dictionary<Key, Value>::bucket(size_t in) const noexcept -> const typename Hashtable::Bucket* {
     return set.bucket(in);
+}
+
+template<typename Key, typename Value>
+template<typename U>
+bool Dictionary<Key, Value>::insert(U&& in) const noexcept {
+    hash_t hashed = hashof(in.first);
+    size_t index  = indexing(hashed);
+
+    typename Set::Bucket& bucket = std.buckets[index]; // get ref
+
+    // duplicated check (pair::first only)
+    if(bucket.used == true) {
+        if(bucket.data == in.first) {
+            return false;
+        }
+        for(uint16_t i = 0; i < bucket.size; ++i) {
+            if(bucket.chain[i].data == in.first) {
+                return false;
+            }
+        }
+    }
+
+    set.insert(in, hashed, false); // no check
 }
 
 } // namespace container

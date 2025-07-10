@@ -2,17 +2,24 @@
 #define LWE_CONTAINER_DICTIONARY
 
 #include "../config/config.h"
-#include "record.hpp"
 #include "iterator.hpp"
+
+// TODO:
+// template<typename,  typename> typename T = LWE::container::Record -> std::pair
+// Remove isKVP
+// Remove KeyValue
+// Remove stl::Pair
+// using std::pair like as std::string
 
 LWE_BEGIN
 namespace container {
 
 template<typename> class Hashtable;
 
-template<typename K, typename V> class Dictionary {
+template<typename K, typename V>
+class Dictionary {
 public:
-    using Entry     = Record<K, V>;
+    using Entry     = std::pair<K, V>;
     using Hashtable = Hashtable<Entry>;
     template<Mod, typename> friend class Iterator; //!< iterator
     template<Mod MOD> using Iterator = Iterator<MOD, Hashtable>;
@@ -67,6 +74,9 @@ public:
     size_t capacity() const noexcept;
     bool   exist(hash_t) const noexcept;
     bool   exist(const K&) const noexcept;
+
+private:
+    template<typename U> void insert(U&&) const noexcept;
 
 public:
     const typename Hashtable::Bucket* bucket(size_t in) const noexcept;

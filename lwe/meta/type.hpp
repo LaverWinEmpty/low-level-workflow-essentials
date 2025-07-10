@@ -36,7 +36,7 @@ public:
     Keyword        code() const;  //!< get first type code, exclude const
 
 public:
-    //! @brief IS TO STRING NOT DEREFERENCE
+    //! @brief IS TO String NOT DEREFERENCE
     const char* operator*() const;
 
 public:
@@ -46,7 +46,7 @@ public:
     bool operator!=(Keyword) const;
 
 public:
-    explicit operator string() const;
+    explicit operator String() const;
     explicit operator Keyword() const;
 
 private:
@@ -58,7 +58,7 @@ private:
     template<typename T> static void reflect(Type*);
 
 private:
-    static size_t stringify(string*, const Type&, size_t);
+    static size_t stringify(String*, const Type&, size_t);
 
 private:
     hash_t hashed  = 0;
@@ -72,7 +72,7 @@ private:
     };
 
 private:
-    const char* str; //!< to string result cache
+    const char* str; //!< to String result cache
 };
 
 /**************************************************************************************************
@@ -114,7 +114,7 @@ struct Class {
 
 public:
     const Field& field(const char*) const;   //!< get filed
-    const Field& field(const string&) const; //!< get filed
+    const Field& field(const String&) const; //!< get filed
 };
 
 //! @brief enum metadata
@@ -125,19 +125,19 @@ struct Enum {
 
 public:
     template<typename E> static const char* serialize(E);
-    static const char*                      serialize(const string_view, uint64_t);
+    static const char*                      serialize(const StringView, uint64_t);
 
 public:
-    template<typename E> static E deserialize(const string_view);
-    static uint64_t               deserialize(const string_view, const string_view);
+    template<typename E> static E deserialize(const StringView);
+    static uint64_t               deserialize(const StringView, const StringView);
 };
 
 /**************************************************************************************************
  * util functions
  **************************************************************************************************/
-template<typename T> const char* typestring();            //!< reflect type name string explicit
-template<typename T> const char* typestring(const T&);    //!< reflect type name string implicit
-const char*                      typestring(const Type&); //!< reflect type name
+template<typename T> const char* typeString();            //!< reflect type name String explicit
+template<typename T> const char* typeString(const T&);    //!< reflect type name String implicit
+const char*                      typeString(const Type&); //!< reflect type name
 
 template<typename T> const Type& typeof();         //!< reflect typeinfo by template
 template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
@@ -145,17 +145,17 @@ template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argu
 template<typename T> Class* classof();              //!< get class field list
 template<typename T> Class* classof(const T&);      //!< get class field list
 Class*                      classof(const char*);   //!< get class field list
-Class*                      classof(const string&); //!< get class field list
+Class*                      classof(const String&); //!< get class field list
 
 template<typename T> Enum* enumof();              //!< get enum value list
 template<typename T> Enum* enumof(const T&);      //!< get enum value list
 Enum*                      enumof(const char*);   //!< get enum value list
-Enum*                      enumof(const string&); //!< get enum value list
+Enum*                      enumof(const String&); //!< get enum value list
 
 template<typename T> T* statics();              //!< get static class
 template<typename T> T* statics(const T&);      //!< get static class
 Object*                 statics(const char*);   //!< get static class
-Object*                 statics(const string&); //!< get static class
+Object*                 statics(const String&); //!< get static class
 } // namespace meta
 LWE_END
 #include "type.ipp"

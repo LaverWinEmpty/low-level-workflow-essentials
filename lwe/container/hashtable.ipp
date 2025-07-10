@@ -441,19 +441,21 @@ template<typename U> bool Hashtable<T>::insert(U&& in) {
 }
 
 template<typename T>
-template<typename U> bool Hashtable<T>::insert(U&& in, hash_t hashed) {
+template<typename U> bool Hashtable<T>::insert(U&& in, hash_t hashed, bool check) {
     size_t index = indexing(hashed); // to index
 
     Bucket& bucket = buckets[index];
 
-    // duplicated check
-    if(bucket.used == true) {
-        if(bucket.data == in) {
-            return false;
-        }
-        for(uint16_t i = 0; i < bucket.size; ++i) {
-            if(bucket.chain[i].data == in) {
+    if(check) {
+        // duplicated check
+        if(bucket.used == true) {
+            if(bucket.data == in) {
                 return false;
+            }
+            for(uint16_t i = 0; i < bucket.size; ++i) {
+                if(bucket.chain[i].data == in) {
+                    return false;
+                }
             }
         }
     }

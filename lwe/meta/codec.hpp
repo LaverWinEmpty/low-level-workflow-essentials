@@ -7,7 +7,7 @@
 #include "internal/feature.hpp"
 #include "internal/reflector.hpp"
 #include "object.hpp"
-#include "../stl/pair.hpp"
+// #include "../stl/pair.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -16,47 +16,54 @@ class Object;
 
 class Codec: Static {
 public:
-    template<typename T> static string from(const T&);        //!< (to string) from T
-    template<typename T> static T      to(const string_view); //!< to T (from string)
+    template<typename T> static String from(const T&);       //!< (to string) from T
+    template<typename T> static T      to(const StringView); //!< to T (from string)
 
 public:
-    template<typename T> static string encode(const Container&);              //!< container encoder
-    template<typename T> static void   decode(Container*, const string_view); //!< container decoder
+    template<typename T> static String encode(const Container&);             //!< container encoder
+    template<typename T> static void   decode(Container*, const StringView); //!< container decoder
 
 public:
-    static string encode(const Object&);              //!< Object encoder
-    static void   decode(Object*, const string_view); //!< Object decoder
+    static String encode(const Object&);             //!< Object encoder
+    static void   decode(Object*, const StringView); //!< Object decoder
 
 public:
-    template<typename T, typename U> static string encode(const KeyValue&);              //!< pair encode
-    template<typename T, typename U> static void   decode(KeyValue*, const string_view); //!< pair decode
+    template<typename T, typename U> static String encode(const std::pair<T, U>&);             //!< pair encode
+    template<typename T, typename U> static void   decode(std::pair<T, U>*, const StringView); //!< pair decode
 
 private:
-    static void encode(string*, const void*, Keyword);     //!< run-time serialize
-    static void decode(void*, const string_view, Keyword); //!< run-time deserialize
+    static void encode(String*, const void*, Keyword);    //!< run-time serialize
+    static void decode(void*, const StringView, Keyword); //!< run-time deserialize
 
 private:
-    template<typename T> static void from(string*, const void*);   // run-time encode helper
-    template<typename T> static void to(void*, const string_view); // run-time decode helper
+    template<typename T> static void from(String*, const void*);  // run-time encode helper
+    template<typename T> static void to(void*, const StringView); // run-time decode helper
 
 public:
-    template<typename T> static const char* map(T);                 // enum to string
-    template<typename T> static T           map(const string_view); // string to enum
+    template<typename T> static const char* map(T);                // enum to string
+    template<typename T> static T           map(const StringView); // string to enum
 
 public:
-    static const char* map(const string_view, uint64_t);          // enum to string run-time
-    static uint64_t    map(const string_view, const string_view); // string to enum run-time
+    static const char* map(const StringView, uint64_t);         // enum to string run-time
+    static uint64_t    map(const StringView, const StringView); // string to enum run-time
 };
 
 /**************************************************************************************************
  * default
  **************************************************************************************************/
 // serialize
-template<typename T> string Codec::from(const T& in) {
+template<typename T> String Codec::from(const T& in) {
     // serializable types
-    if constexpr(isSTL<T>() || isOBJ<T>() || isKVP<T>()) {
-        return in.serialize();
+    if constexpr(std::is_base_of_v<Encoder, T> || std::is_same_v<Encoder, T>) {
+        return static_cast<const Encoder&>(in).serialize();
     }
+    // template
+    else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
+        return encode(in); // pair, container, etc
+    }
+    // enum
+    else if constexpr(std::is_enum_v<T>) { }
+    // else
     else {
         std::stringstream ss;
         if constexpr(std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) ss << int(in);
@@ -68,14 +75,18 @@ template<typename T> string Codec::from(const T& in) {
 }
 
 // deserialize
-template<typename T> T Codec::to(const string_view in) {
-    // object or container
-    if constexpr(isSTL<T>() || isOBJ<T>() || isKVP<T>()) {
+template<typename T> T Codec::to(const StringView in) {
+    // serializable types
+    if constexpr(std::is_base_of_v<Encoder, T> || std::is_same_v<Encoder, T>) {
         T data;
-        data.deserialize(in);
+        static_cast<Encoder&>(data).deserialize(in);
         return std::move(data);
     }
-
+    // template
+    else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
+        T data;
+        return decode(&data, in); // container, pair, etc...
+    }
     // enum
     else if constexpr(std::is_enum_v<T>) {
         const Enumeration& info = Enumeration::find<T>();
@@ -97,7 +108,7 @@ template<typename T> T Codec::to(const string_view in) {
         if(!decoder.next<void>()) {
             throw diag::error(diag::INVALID_DATA);
         }
-        const string_view str = decoder.get();
+        const StringView str = decoder.get();
 
         T result;
         if constexpr(std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
@@ -114,7 +125,7 @@ template<typename T> T Codec::to(const string_view in) {
  * character specialization
  **************************************************************************************************/
 // serialize
-template<> string Codec::from<char>(const char& in) {
+template<> String Codec::from<char>(const char& in) {
     switch(in) {
         case '\\': return ("\\\\");
         case '\"': return ("\\\"");
@@ -125,12 +136,12 @@ template<> string Codec::from<char>(const char& in) {
         case '{':  return ("\\{");
         case '}':  return ("\\}");
         case ',':  return ("\\,");
-        default:   return string(1, in);
+        default:   return String(1, in);
     }
 }
 
 // deserialize
-template<> char Codec::to<char>(const string_view in) {
+template<> char Codec::to<char>(const StringView in) {
     if(in[0] == '\\') {
         switch(in[1]) {
             case '\\': return '\\';
@@ -151,12 +162,12 @@ template<> char Codec::to<char>(const string_view in) {
  * bool specialization
  **************************************************************************************************/
 // serialize
-template<> string Codec::from<bool>(const bool& in) {
+template<> String Codec::from<bool>(const bool& in) {
     return in ? "true" : "false";
 }
 
 // deserialize
-template<> bool Codec::to<bool>(const string_view in) {
+template<> bool Codec::to<bool>(const StringView in) {
     // TODO: exeption not "true" or "false"
     if(in[0] == 't') {
         return true;
@@ -168,8 +179,8 @@ template<> bool Codec::to<bool>(const string_view in) {
  * string specialization
  **************************************************************************************************/
 // serialize
-template<> string Codec::from<string>(const string& in) {
-    string out;
+template<> String Codec::from<String>(const String& in) {
+    String out;
     out.append("\"");
     size_t loop = in.size();
     for(size_t i = 0; i < loop; ++i) {
@@ -180,8 +191,8 @@ template<> string Codec::from<string>(const string& in) {
 }
 
 // deserialize
-template<> string Codec::to<string>(const string_view in) {
-    string result;
+template<> String Codec::to<String>(const StringView in) {
+    String result;
     if(in[0] != '\"') {
         throw diag::error(diag::INVALID_DATA);
     }
@@ -200,12 +211,11 @@ template<> string Codec::to<string>(const string_view in) {
  * container detail
  **************************************************************************************************/
 // serialize
-template<typename T> string Codec::encode(const Container& in) {
+template<typename T> String Codec::encode(const Container& in) {
     std::string out;
 
-    // CRTP begin / end
-    /*Iterator<FWD | VIEW, T>*/ auto curr = reinterpret_cast<const T&>(in).begin();
-    /*Iterator<FWD | VIEW, T>*/ auto last = reinterpret_cast<const T&>(in).end();
+    auto curr = reinterpret_cast<const T&>(in).begin();
+    auto last = reinterpret_cast<const T&>(in).end();
 
     // has data
     if(curr != last) {
@@ -226,7 +236,7 @@ template<typename T> string Codec::encode(const Container& in) {
 }
 
 // deserialize
-template<typename Derived> void Codec::decode(Container* ptr, string_view in) {
+template<typename Derived> void Codec::decode(Container* ptr, StringView in) {
     // TODO: value_type keep? rename?
     using Element = typename Derived::value_type;
     if(in == "[]") {
@@ -259,13 +269,13 @@ template<typename Derived> void Codec::decode(Container* ptr, string_view in) {
 /**************************************************************************************************
  * object deail
  **************************************************************************************************/
-string Codec::encode(const Object& in) {
+String Codec::encode(const Object& in) {
     const Structure& prop = in.meta()->fields();
     if(prop.size() == 0) {
         return "{}";
     }
 
-    string buffer;
+    String buffer;
     buffer.reserve(4'096);
 
     char*  ptr  = const_cast<char*>(reinterpret_cast<const char*>(&in));
@@ -281,7 +291,7 @@ string Codec::encode(const Object& in) {
 }
 
 // deserialize
-void Codec::decode(Object* out, string_view in) {
+void Codec::decode(Object* out, StringView in) {
     // empty
     if(in == "{}") {
         return;
@@ -311,50 +321,45 @@ void Codec::decode(Object* out, string_view in) {
 }
 
 // definition
-string Object::serialize() const {
+String Object::serialize() const {
     return Codec::encode(*this);
 }
-void Object::deserialize(const string_view in) {
+void Object::deserialize(const StringView in) {
     Codec::decode(this, in);
 }
-void Object::deserialize(Object* out, const string_view in) {
-    out->deserialize(in);
-}
+// void Object::deserialize(Object* out, const StringView in) {
+//    out->deserialize(in);
+//}
 
 /**************************************************************************************************
  * pair
  **************************************************************************************************/
 // serialize
-template<typename K, typename V> string Codec::encode(const KeyValue& in) {
-    const stl::Pair<K, V>& pair = reinterpret_cast<const stl::Pair<K, V>&>(in);
-
-    string out;
+template<typename K, typename V> String Codec::encode(const std::pair<K, V>& in) {
+    String out;
     out += "{ ";
-    out += from<K>(pair.key);
+    out += from<K>(in.first);
     out += ", ";
-    out += from<V>(pair.value);
+    out += from<V>(in.second);
     out += " }";
-
     return out;
 }
 
 // deserialize
-template<typename K, typename V> void Codec::decode(KeyValue* out, string_view in) {
+template<typename K, typename V> void Codec::decode(std::pair<K, V>* out, StringView in) {
     Decoder decoder(in);
-
-    stl::Pair<K, V>* derived = reinterpret_cast<stl::Pair<K, V>*>(out); // casting
 
     decoder.move(2); // ignore `{ `
     if(!decoder.next<K>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    derived->key = to<K>(decoder.get());
+    out->key = to<K>(decoder.get());
 
     decoder.move(2); // ignore `, `
     if(!decoder.next<V>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    derived->value = to<V>(decoder.get());
+    out->value = to<V>(decoder.get());
 }
 
 /**************************************************************************************************
@@ -372,7 +377,7 @@ template<typename T> static const char* Codec::map(T in) {
 }
 
 // serialize run-time
-const char* Codec::map(const string_view type, uint64_t in) {
+const char* Codec::map(const StringView type, uint64_t in) {
     const Enumeration& reflected = Enumeration::find(type.data());
     for(auto i : reflected) {
         if(i.value == static_cast<uint64_t>(in)) {
@@ -383,7 +388,7 @@ const char* Codec::map(const string_view type, uint64_t in) {
 }
 
 // deserialize
-template<typename T> T Codec::map(const string_view in) {
+template<typename T> T Codec::map(const StringView in) {
     const Enumeration& reflected = Enumeration::find<T>();
     for(auto i : reflected) {
         if(i.name == in) {
@@ -394,7 +399,7 @@ template<typename T> T Codec::map(const string_view in) {
 }
 
 // deserialize run-time
-uint64_t Codec::map(const string_view type, const string_view in) {
+uint64_t Codec::map(const StringView type, const StringView in) {
     const Enumeration& reflected = Enumeration::find(type.data());
     for(auto i : reflected) {
         if(i.name == in) {
@@ -408,13 +413,13 @@ uint64_t Codec::map(const string_view type, const string_view in) {
 template<typename E> const char* Enum::serialize(E in) {
     return Codec::map<E>(in);
 }
-const char* Enum::serialize(const string_view type, uint64_t value) {
+const char* Enum::serialize(const StringView type, uint64_t value) {
     return Codec::map(type, value);
 }
-template<typename E> E Enum::deserialize(const string_view value) {
+template<typename E> E Enum::deserialize(const StringView value) {
     return Codec::map<E>(value);
 }
-uint64_t Enum::deserialize(const string_view type, const string_view value) {
+uint64_t Enum::deserialize(const StringView type, const StringView value) {
     return Codec::map(type, value);
 }
 
@@ -422,30 +427,21 @@ uint64_t Enum::deserialize(const string_view type, const string_view value) {
  * run-time serialization
  **************************************************************************************************/
 // helper
-template<typename T> void Codec::to(void* out, const string_view in) {
+template<typename T> void Codec::to(void* out, const StringView in) {
     *static_cast<T*>(out) = to<T>(in);
 }
-template<typename T> void Codec::from(string* out, const void* in) {
+template<typename T> void Codec::from(String* out, const void* in) {
     out->append(from<T>(*static_cast<const T*>(in)));
 }
 
 // serialize
 void Codec::encode(std::string* out, const void* in, Keyword type) {
+    if(type == Keyword::STD_PAIR) {
+        // RUNTIME SERIALIZE NOT SUPPORTED TYPE
+        throw diag::error(diag::INVALID_DATA);
+    }
+
     switch(type) {
-        // skip
-        case Keyword::UNREGISTERED:
-        case Keyword::VOID:
-            // TODO:
-            break;
-
-        case Keyword::POINTER: {
-            // TODO:
-        } break;
-
-        case Keyword::REFERENCE: {
-            // TODO:
-        } break;
-
             // clang-format off
         case Keyword::BOOL:               from<bool>(out, in);               break;
         case Keyword::CHAR:               from<char>(out, in);               break;
@@ -469,30 +465,27 @@ void Codec::encode(std::string* out, const void* in, Keyword type) {
             // out->append(static_cast<const EInterface*>(in)->stringify());
             break;
 
-        case Keyword::STD_STRING: from<string>(out, in); break;
-        case Keyword::STL_PAIR:   from<KeyValue>(out, in); break;
-        case Keyword::STL_DEQUE:  from<Container>(out, in); break;
+        case Keyword::STD_STRING: from<String>(out, in); break;
+        case Keyword::STL_VECTOR: from<Encoder>(out, in); break;
+        case Keyword::STL_MAP:    from<Encoder>(out, in); break;
+        case Keyword::STL_SET:    from<Encoder>(out, in); break;
+
+        case Keyword::UNREGISTERED:
+        case Keyword::VOID:         break;
+        case Keyword::POINTER:      break;
+        case Keyword::REFERENCE:    break;
+        case Keyword::UNION:        break;
     }
 }
 
 // deserialize
-void Codec::decode(void* out, const string_view in, Keyword type) {
+void Codec::decode(void* out, const StringView in, Keyword type) {
+    if(type == Keyword::STD_PAIR) {
+        // RUNTIME SERIALIZE NOT SUPPORTED TYPE
+        throw diag::error(diag::INVALID_DATA);
+    }
+
     switch(type) {
-        case Keyword::UNREGISTERED:
-        case Keyword::VOID:         break;
-
-        case Keyword::POINTER: {
-            // TODO:
-        } break;
-
-        case Keyword::REFERENCE: {
-            // TODO:
-        } break;
-
-        case Keyword::UNION: {
-            // TODO:
-        } break;
-
             // clang-format off
         case Keyword::SIGNED_INT:         to<signed int>(out, in);         break;
         case Keyword::SIGNED_CHAR:        to<signed char>(out, in);        break;
@@ -511,14 +504,21 @@ void Codec::decode(void* out, const string_view in, Keyword type) {
         case Keyword::LONG_DOUBLE:        to<long double>(out, in);        break;
             // clang-format on
 
-        case Keyword::CLASS: Object::deserialize(static_cast<Object*>(out), in); break;
+        case Keyword::CLASS: static_cast<Object*>(out)->deserialize(in); break;
         case Keyword::ENUM:
             // static_cast<EInterface*>(out)->parse(in);
             break;
 
-        case Keyword::STD_STRING: *static_cast<string*>(out) = to<string>(in); break;
-        case Keyword::STL_PAIR:   static_cast<KeyValue*>(out)->deserialize(in); break;
-        case Keyword::STL_DEQUE:  static_cast<Container*>(out)->deserialize(in); break;
+        case Keyword::STD_STRING: *static_cast<String*>(out) = to<String>(in); break;
+        case Keyword::STL_VECTOR: static_cast<Encoder*>(out)->deserialize(in); break;
+        case Keyword::STL_MAP:    static_cast<Encoder*>(out)->deserialize(in); break;
+        case Keyword::STL_SET:    static_cast<Encoder*>(out)->deserialize(in); break;
+
+        case Keyword::UNREGISTERED:
+        case Keyword::VOID:         break;
+        case Keyword::POINTER:      break;
+        case Keyword::REFERENCE:    break;
+        case Keyword::UNION:        break;
     }
 }
 
@@ -527,15 +527,14 @@ void Codec::decode(void* out, const string_view in, Keyword type) {
 /**************************************************************************************************
  * STL definition
  **************************************************************************************************/
-// pair serialize definition
-namespace stl {
-template<typename Key, typename Value> string Pair<Key, Value>::serialize() const {
-    return meta::Codec::encode<Key, Value>(*this);
-}
-template<typename Key, typename Value> void Pair<Key, Value>::deserialize(const string_view in) {
-    meta::Codec::decode<Key, Value>(this, in);
-}
-
-} // namespace stl
+//// pair serialize definition
+// namespace stl {
+// template<typename Key, typename Value> String Pair<Key, Value>::serialize() const {
+//    return meta::Codec::encode<Key, Value>(*this);
+//}
+// template<typename Key, typename Value> void Pair<Key, Value>::deserialize(const StringView in) {
+//    meta::Codec::decode<Key, Value>(this, in);
+//}
+//} // namespace stl
 LWE_END
 #endif

@@ -116,7 +116,7 @@ public:
 
 protected:
     template<typename U> bool insert(U&&);
-    template<typename U> bool insert(U&&, hash_t);
+    template<typename U> bool insert(U&&, hash_t, bool = true);
 
 protected:
     bool resize(uint64_t);
