@@ -102,7 +102,7 @@
 #        define OS WINDOWS
 #    elif defined(__linux__)
 #        define OS LINUX
-#    elif defined(__unix___
+#    elif defined(__unix__)
 #        define OS UNIX
 #    elif defined(__FreeBSD__)
 #        define OS BSD

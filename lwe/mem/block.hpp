@@ -21,7 +21,7 @@ public:
 private:
     template<typename U> using IsChar = std::enable_if_t<sizeof(U) == sizeof(char)>;
 public:
-    template<typename = IsChar<T>> constexpr Block(const string&);
+    template<typename = IsChar<T>> constexpr Block(const String&);
     template<typename = IsChar<T>> constexpr Block(const char*);
 
 public:

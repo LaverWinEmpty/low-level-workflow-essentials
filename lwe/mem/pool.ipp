@@ -175,7 +175,7 @@ bool Pool::generate() noexcept {
         if(block) {
             block->initialize(this, COUNT);
             counter.generated += 1;
-            all.insert(block);
+            all.push(block);
         }
         else return false; // failed
     }
@@ -202,7 +202,7 @@ size_t Pool::release() noexcept {
     size_t i = 0;
     while(freeable.head != nullptr) {
         Block* ptr = freeable.dequeue();
-        all.erase(ptr);
+        all.pop(ptr);
         memfree(ptr);
         counter.generated -= 1;
     }
@@ -211,7 +211,8 @@ size_t Pool::release() noexcept {
 
 void Pool::Queue::enqueue(Block* in) noexcept {
     if(!in) {
-        assert(in);
+        // TODO: 
+        // assert(in);
         return;
     }
 

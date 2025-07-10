@@ -84,7 +84,12 @@ void Lock::unlock() {
     std::thread::id current_thread = std::this_thread::get_id();
 
     // error
-    assert(owner.load(std::memory_order_relaxed) == current_thread);
+    // assert(owner.load(std::memory_order_relaxed) == current_thread);
+
+    // TODO: Alert
+    if (owner.load(std::memory_order_relaxed) != current_thread) {
+        throw 0;
+    }
 
     // free, count only owner
     if(--locked == 0) {

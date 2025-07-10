@@ -124,10 +124,10 @@ template<typename T> template<typename C> const Reflector<T>& Reflector<T>::find
 }
 
 template<typename T> const Reflector<T>& Reflector<T>::find(const char* in) {
-    return find(string{ in });
+    return find(String{ in });
 }
 
-template<typename T> const Reflector<T>& Reflector<T>::find(const string& in) {
+template<typename T> const Reflector<T>& Reflector<T>::find(const String& in) {
     return map()[in];
 }
 
@@ -145,8 +145,8 @@ template<typename T> template<typename Arg> void Reflector<T>::push(Arg&& in) {
     ++count;
 }
 
-template<typename T> std::unordered_map<string, Reflector<T>>& Reflector<T>::map() {
-    static std::unordered_map<string, Reflector<T>> instance;
+template<typename T> std::unordered_map<String, Reflector<T>>& Reflector<T>::map() {
+    static std::unordered_map<String, Reflector<T>> instance;
     return instance;
 }
 

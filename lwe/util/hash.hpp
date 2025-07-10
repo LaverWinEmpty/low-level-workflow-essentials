@@ -24,7 +24,7 @@ public:
 public:
     Hash(const void*, size_t);
     Hash(const char*);
-    Hash(const string&);
+    Hash(const StringView&);
     template<typename T> Hash(const T&);
 
 public:

@@ -5,6 +5,7 @@
 #include "../config/config.h"
 #include "../async/lock.hpp"
 // #include "../stl/deque.hpp"
+#include "../container/hashtable.hpp"
 
 /*******************************************************************************
  * pool structure
@@ -116,7 +117,7 @@ protected:
     const size_t SRC;   //!< chunk origianl size
 
 protected:
-    std::unordered_set<Block*> all; //!<  generated blocks
+    container::Hashtable<Block*> all; //!<  generated blocks
 };
 
 struct Pool::Block {

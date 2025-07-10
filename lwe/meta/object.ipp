@@ -19,7 +19,6 @@ template<typename T> Registered registclass() {
 /*
  * object methods
  */
-
 template<typename T> bool Object::isof() const {
     if(this == nullptr) {
         return false;
@@ -50,10 +49,10 @@ bool Object::isof(const Class* in) const {
 }
 
 bool Object::isof(const char* in) const {
-    return isof(string{ in });
+    return isof(String{ in });
 }
 
-bool Object::isof(const string& in) const {
+bool Object::isof(const String& in) const {
     const Class* cls = classof(in);
     if(cls) {
         const Class* self = meta();
@@ -187,7 +186,9 @@ void Object::destructor(Object* in) {
 // template
 template<typename T> void Object::destructor(T* in) {
     if constexpr(!std::is_base_of_v<Object, T>) {
-        assert(false);
+        // TODO:
+        // assert(false);
+        return;
     }
     
     if(!in) {

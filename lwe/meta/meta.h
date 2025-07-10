@@ -87,12 +87,12 @@ using meta::Value;     //!< enum helper
 /**************************************************************************************************
  * external exposure (fucntion)
  **************************************************************************************************/
-using meta::typeof;      //!< get type info
-using meta::classof;     //!< get class metadata
-using meta::enumof;      //!< get enum metadata
-using meta::methodof;    //!< get method
-using meta::statics;     //!< get static object
-using meta::typestring;  //!< get typename
+using meta::typeof;     //!< get type info
+using meta::classof;    //!< get class metadata
+using meta::enumof;     //!< get enum metadata
+using meta::methodof;   //!< get method
+using meta::statics;    //!< get static object
+using meta::typestring; //!< get typename
 
 /**************************************************************************************************
  * register type enum

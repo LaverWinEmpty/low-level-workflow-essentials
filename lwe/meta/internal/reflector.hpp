@@ -21,7 +21,7 @@ public:
     template<typename C> static const Reflector<T>& find();              //!< get registred C type data
     template<typename C> static const Reflector<T>& find(const C&);      //!< get registred C type data
     static const Reflector<T>&                      find(const char*);   //!< get registred C type data by name
-    static const Reflector<T>&                      find(const string&); //!< get registred C type data by name
+    static const Reflector<T>&                      find(const String&); //!< get registred C type data by name
 
 public:
     Reflector() = default;
@@ -52,7 +52,7 @@ private:
     size_t count     = 0;
 
 private:
-    inline static std::unordered_map<string, Reflector<T>>& map();
+    inline static std::unordered_map<String, Reflector<T>>& map();
 };
 
 using Enumeration = Reflector<Enumerator>;

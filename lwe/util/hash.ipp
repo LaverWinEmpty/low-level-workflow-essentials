@@ -1,4 +1,3 @@
-#include "../container/record.hpp"
 #include "../mem/block.hpp"
 
 LWE_BEGIN
@@ -23,7 +22,7 @@ Hash::Hash(const void* in, size_t n): val(FNV1A64_BASIS) {
     }
 }
 
-Hash::Hash(const string& in): Hash(in.c_str(), in.size()) { }
+Hash::Hash(const StringView& in): Hash(in.data(), in.size()) { }
 
 Hash::Hash(const char* in): Hash(in, std::strlen(in)) { }
 

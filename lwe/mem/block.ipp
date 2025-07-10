@@ -49,7 +49,7 @@ template<size_t N, typename T> constexpr Block<N, T>::Block(const std::initializ
 }
 
 template<size_t N, typename T>
-template<typename> constexpr Block<N, T>::Block(const string& in):
+template<typename> constexpr Block<N, T>::Block(const String& in):
     Block(reinterpret_cast<const T*>(in.c_str()), in.size() + 1) {
     stack[N - 1] = 0; // copy with null, safe for size exceeded
 }

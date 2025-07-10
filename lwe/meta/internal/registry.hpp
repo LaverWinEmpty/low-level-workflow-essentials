@@ -16,14 +16,14 @@ template<typename T> class Registry {
     Registry() = default;
 
 public:
-    using Table = std::unordered_map<string, T*>;
+    using Table = std::unordered_map<String, T*>;
 
 public:
     ~Registry();
-    template<typename U> static void add(const string&); //!< @tparam U base of T
+    template<typename U> static void add(const String&); //!< @tparam U base of T
     template<typename U> static void add(const char*);   //!< @tparam U base of T
     static T*                        find(const char*);
-    static T*                        find(const string&);
+    static T*                        find(const String&);
 
 private:
     Table table;

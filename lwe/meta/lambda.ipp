@@ -10,18 +10,18 @@ Registry<Method>::~Registry() {
 }
 
 void Registry<Method>::add(const char* cls, const char* name, Method* in) {
-    add(string{ cls }, string{ name }, in);
+    add(String{ cls }, String{ name }, in);
 }
 
-void Registry<Method>::add(const char* cls, const string& name, Method* in) {
-    add(string{ cls }, name, in);
+void Registry<Method>::add(const char* cls, const String& name, Method* in) {
+    add(String{ cls }, name, in);
 }
 
-void Registry<Method>::add(const string& cls, const char* name, Method* in) {
-    add(cls, string{ name }, in);
+void Registry<Method>::add(const String& cls, const char* name, Method* in) {
+    add(cls, String{ name }, in);
 }
 
-void Registry<Method>::add(const string& cls, const string& name, Method* lambda) {
+void Registry<Method>::add(const String& cls, const String& name, Method* lambda) {
     auto& table = instance()[cls];
     if(table.find(name) != table.end()) {
         delete lambda; // duplicate
@@ -31,18 +31,18 @@ void Registry<Method>::add(const string& cls, const string& name, Method* lambda
 }
 
 Method* Registry<Method>::find(const char* cls, const char* name) {
-    return find(string{ cls }, string{ name });
+    return find(String{ cls }, String{ name });
 }
 
-Method* Registry<Method>::find(const char* cls, const string& name) {
-    return find(string{ cls }, name);
+Method* Registry<Method>::find(const char* cls, const String& name) {
+    return find(String{ cls }, name);
 }
 
-Method* Registry<Method>::find(const string& cls, const char* name) {
-    return find(cls, string{ name });
+Method* Registry<Method>::find(const String& cls, const char* name) {
+    return find(cls, String{ name });
 }
 
-Method* Registry<Method>::find(const string& cls, const std::string& name) {
+Method* Registry<Method>::find(const String& cls, const String& name) {
     auto& table  = instance()[cls];
     auto  result = table.find(name);
     if(result != table.end()) {
@@ -67,10 +67,10 @@ Method* Method::lambdaize(Ret (Cls::*name)(Args...) const) {
 }
 
 template<typename T> Method* methodof(const char* name) {
-    return methodof<T>(string{ name });
+    return methodof<T>(String{ name });
 }
 
-template<typename T> Method* methodof(const string& name) {
+template<typename T> Method* methodof(const String& name) {
     // default, other class -> template specialization
     return nullptr;
 }
@@ -79,15 +79,15 @@ Method* methodof(const char* cls, const char* name) {
     return Registry<Method>::find(cls, name);
 }
 
-Method* methodof(const string& cls, const char* name) {
+Method* methodof(const String& cls, const char* name) {
     return Registry<Method>::find(cls, name);
 }
 
-Method* methodof(const char* cls, const string& name) {
+Method* methodof(const char* cls, const String& name) {
     return Registry<Method>::find(cls, name);
 }
 
-Method* methodof(const string& cls, const string& name) {
+Method* methodof(const String& cls, const String& name) {
     return Registry<Method>::find(cls, name);
 }
 
