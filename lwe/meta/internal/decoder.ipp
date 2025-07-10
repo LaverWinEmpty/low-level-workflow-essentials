@@ -19,7 +19,7 @@ template<typename T> bool Decoder::next() {
     if constexpr(isSTL<T>()) {
         if(str[len] != '[') throw diag::error(diag::INVALID_DATA);
     }
-    if constexpr(isOBJ<T>() || isPAIR<T>()) {
+    if constexpr(isOBJ<T>() || isKVP<T>()) {
         if(str[len] != '{') throw diag::error(diag::INVALID_DATA);
     }
 
@@ -47,7 +47,7 @@ template<typename T> bool Decoder::next() {
                     ++depth; // check
                 }
                 else if(curr == ']' && !(esc & 1)) {
-                    if (depth == 0) {
+                    if(depth == 0) {
                         ++len; // pass `]`
                         break; // escape sequence
                     }
@@ -55,12 +55,12 @@ template<typename T> bool Decoder::next() {
                 }
             }
             // object or depth check {}
-            else if constexpr(isOBJ<T>() || isPAIR<T>()) {
+            else if constexpr(isOBJ<T>() || isKVP<T>()) {
                 if(curr == '{' && !(esc & 1)) {
                     ++depth; // check
                 }
                 else if(curr == '}' && !(esc & 1)) {
-                    if (depth == 0) {
+                    if(depth == 0) {
                         ++len; // pass `}`
                         break; // escape sequence
                     }
@@ -98,7 +98,7 @@ bool Decoder::next(const Type& in) {
     }
     // check pair
     else if(in == Keyword::STL_PAIR) {
-        return next<Pair>();
+        return next<KeyValue>();
     }
     return next<void>();
 }
@@ -145,7 +145,6 @@ void Decoder::move(int begin) {
 void Decoder::trim(int end) {
     len += end;
 }
-
 
 } // namespace meta
 LWE_END

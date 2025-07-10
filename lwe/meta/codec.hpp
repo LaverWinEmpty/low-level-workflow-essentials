@@ -1,16 +1,13 @@
 #ifndef LWE_META_CODEC
 #define LWE_META_CODEC
 
+#include "iostream"
+
 #include "internal/decoder.hpp"
 #include "internal/feature.hpp"
 #include "internal/reflector.hpp"
 #include "object.hpp"
-#include "../base/base.h"
 #include "../stl/pair.hpp"
-#include "../stl/internal/iterator.hpp"
-#include <type_traits>
-
-// #include "../mem/ptr.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -31,8 +28,8 @@ public:
     static void   decode(Object*, const string_view); //!< Object decoder
 
 public:
-    template<typename T, typename U> static string encode(const Pair&);              //!< pair encode
-    template<typename T, typename U> static void   decode(Pair*, const string_view); //!< pair decode
+    template<typename T, typename U> static string encode(const KeyValue&);              //!< pair encode
+    template<typename T, typename U> static void   decode(KeyValue*, const string_view); //!< pair decode
 
 private:
     static void encode(string*, const void*, Keyword);     //!< run-time serialize
@@ -57,7 +54,7 @@ public:
 // serialize
 template<typename T> string Codec::from(const T& in) {
     // serializable types
-    if constexpr(isSTL<T>() || isOBJ<T>() || isPAIR<T>()) {
+    if constexpr(isSTL<T>() || isOBJ<T>() || isKVP<T>()) {
         return in.serialize();
     }
     else {
@@ -73,7 +70,7 @@ template<typename T> string Codec::from(const T& in) {
 // deserialize
 template<typename T> T Codec::to(const string_view in) {
     // object or container
-    if constexpr(isSTL<T>() || isOBJ<T>() || isPAIR<T>()) {
+    if constexpr(isSTL<T>() || isOBJ<T>() || isKVP<T>()) {
         T data;
         data.deserialize(in);
         return std::move(data);
@@ -207,8 +204,8 @@ template<typename T> string Codec::encode(const Container& in) {
     std::string out;
 
     // CRTP begin / end
-    stl::Iterator<stl::FWD | stl::VIEW, T> curr = reinterpret_cast<const T&>(in).begin();
-    stl::Iterator<stl::FWD | stl::VIEW, T> last = reinterpret_cast<const T&>(in).end();
+    /*Iterator<FWD | VIEW, T>*/ auto curr = reinterpret_cast<const T&>(in).begin();
+    /*Iterator<FWD | VIEW, T>*/ auto last = reinterpret_cast<const T&>(in).end();
 
     // has data
     if(curr != last) {
@@ -230,6 +227,7 @@ template<typename T> string Codec::encode(const Container& in) {
 
 // deserialize
 template<typename Derived> void Codec::decode(Container* ptr, string_view in) {
+    // TODO: value_type keep? rename?
     using Element = typename Derived::value_type;
     if(in == "[]") {
         return; // empty
@@ -241,7 +239,7 @@ template<typename Derived> void Codec::decode(Container* ptr, string_view in) {
     while(true) {
         decoder.next<Element>();
 
-        // serialize
+        // deserialize
         Element data;
         decode(reinterpret_cast<void*>(&data), decoder.get(), typecode<Element>());
         out.push(std::move(data));
@@ -327,21 +325,21 @@ void Object::deserialize(Object* out, const string_view in) {
  * pair
  **************************************************************************************************/
 // serialize
-template<typename K, typename V> string Codec::encode(const Pair& in) {
+template<typename K, typename V> string Codec::encode(const KeyValue& in) {
     const stl::Pair<K, V>& pair = reinterpret_cast<const stl::Pair<K, V>&>(in);
 
     string out;
     out += "{ ";
-    out += from<K>(pair.first());
+    out += from<K>(pair.key);
     out += ", ";
-    out += from<V>(pair.second());
+    out += from<V>(pair.value);
     out += " }";
 
     return out;
 }
 
 // deserialize
-template<typename K, typename V> void Codec::decode(Pair* out, string_view in) {
+template<typename K, typename V> void Codec::decode(KeyValue* out, string_view in) {
     Decoder decoder(in);
 
     stl::Pair<K, V>* derived = reinterpret_cast<stl::Pair<K, V>*>(out); // casting
@@ -350,13 +348,13 @@ template<typename K, typename V> void Codec::decode(Pair* out, string_view in) {
     if(!decoder.next<K>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    derived->first() = to<K>(decoder.get());
+    derived->key = to<K>(decoder.get());
 
     decoder.move(2); // ignore `, `
     if(!decoder.next<V>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    derived->second() = to<V>(decoder.get());
+    derived->value = to<V>(decoder.get());
 }
 
 /**************************************************************************************************
@@ -472,7 +470,7 @@ void Codec::encode(std::string* out, const void* in, Keyword type) {
             break;
 
         case Keyword::STD_STRING: from<string>(out, in); break;
-        case Keyword::STL_PAIR:   from<Pair>(out, in); break;
+        case Keyword::STL_PAIR:   from<KeyValue>(out, in); break;
         case Keyword::STL_DEQUE:  from<Container>(out, in); break;
     }
 }
@@ -519,7 +517,7 @@ void Codec::decode(void* out, const string_view in, Keyword type) {
             break;
 
         case Keyword::STD_STRING: *static_cast<string*>(out) = to<string>(in); break;
-        case Keyword::STL_PAIR:   static_cast<Pair*>(out)->deserialize(in); break;
+        case Keyword::STL_PAIR:   static_cast<KeyValue*>(out)->deserialize(in); break;
         case Keyword::STL_DEQUE:  static_cast<Container*>(out)->deserialize(in); break;
     }
 }

@@ -343,13 +343,25 @@ public:                                                                         
         return map()[NAME];                                                                                            \
     }
 
-/**
- * @brief container enum value register
- */
-#define REGISTER_CONTAINER(CONTAINER, ENUM)                                                                            \
-    template<typename T> struct LWE::meta::ContainerCode<T, std::void_t<typename T::CONTAINER##Element>> {             \
-        using ENUM_ALIAS = LWE::meta::Keyword;                                                                         \
-        static constexpr meta::Keyword VALUE = ENUM_ALIAS::ENUM;                                                       \
+//! NOTE: need push()
+#define DECLARE_CONTAINER(TEMPLATE, CLASS, BASE, ...)                   \
+    template<WRAP TEMPLATE> class CLASS: public BASE<__VA_ARGS__>,      \
+                                       public LWE::meta::Container {    \
+        using Base = BASE<__VA_ARGS__>;                                 \
+    public:                                                             \
+        virtual std::string serialize() const override {                \
+            return LWE::meta::Codec::encode<CLASS<__VA_ARGS__>>(*this); \
+        }                                                               \
+        virtual void deserialize(const std::string_view in) override {  \
+            lwe::meta::Codec::decode<CLASS<__VA_ARGS__>>(this, in);     \
+        }                                                               \
+    }
+
+//! register container code
+#define REGISTER_CONTAINER(TEMPLATE, CLASS, CODE, ...)                            \
+    template<WRAP TEMPLATE> struct LWE::meta::ContainerCode<CLASS<__VA_ARGS__>> { \
+        using ENUM_ALIAS                     = LWE::meta::Keyword;                \
+        static constexpr meta::Keyword VALUE = ENUM_ALIAS::CODE;                  \
     }
 
 /**
@@ -374,16 +386,16 @@ public:                                                                         
     }                                                                                                                  \
     using value_type = CONTAINER##Element
 
-#define ITERATOR_BODY(MOD, CONTAINER, ...)                                                     \
-    using CONTAINER = CONTAINER<__VA_ARGS__>;                                                  \
-    using Reverse   = Iterator<MOD ^ LWE::stl::Mod(LWE::stl::FWD | LWE::stl::BWD), CONTAINER>; \
-    using Const     = Iterator<MOD | VIEW, CONTAINER>;                                         \
+#define ITERATOR_BODY(MOD, CONTAINER, ...)                       \
+    using CONTAINER = CONTAINER<__VA_ARGS__>;                    \
+    using Reverse   = Iterator<MOD ^ Mod(FWD | BWD), CONTAINER>; \
+    using Const     = Iterator<MOD | VIEW, CONTAINER>;           \
     friend class Reverse
 
 #define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, CONTAINER, ...)                         \
     template<WRAP TEMPLATE>                                                            \
-    class Iterator<MOD | LWE::stl::VIEW, CONTAINER<__VA_ARGS__>>                       \
-        : public LWE::stl::Iterator<MOD, CONTAINER<__VA_ARGS__>> {                     \
+    class Iterator<MOD | VIEW, CONTAINER<__VA_ARGS__>>                                 \
+        : public Iterator<MOD, CONTAINER<__VA_ARGS__>> {                               \
         using CONTAINER = CONTAINER<__VA_ARGS__>;                                      \
         using Mutable   = Iterator<MOD, CONTAINER>;                                    \
         using Iterator<MOD, CONTAINER>::Iterator;                                      \

@@ -1,66 +1,40 @@
 #ifndef LWE_STL_PAIR
 #define LWE_STL_PAIR
 
-#include "../base/base.h"
-#include "../meta/internal/feature.hpp"
+#include "../meta/meta.h"
+#include "../util/hash.hpp"
+#include "../container/record.hpp"
 
 LWE_BEGIN
-
 namespace stl {
 
-template<typename Key, typename Value> struct Pair: meta::Pair {
-    using KeyType   = Key;
-    using ValueType = Value;
+template<typename Key, typename Value> struct Pair: container::Record<Key, Value>,
+                                                    meta::KeyValue {
+public:
+    using key_type   = Key;   // not first_type
+    using value_type = Value; // not second_type
 
 public:
-    Pair() = default;
-    Pair(const Key&, const Value&);
-    Pair(const Key&, Value&&);
-    Pair(Key&&, const Value&);
-    Pair(Key&&, Value&&);
-    ~Pair() noexcept = default;
+    using container::Record<Key, Value>::Record;
 
 public:
-    bool operator==(const Pair&) const;
-    bool operator!=(const Pair&) const;
-    bool operator>(const Pair&) const;
-    bool operator<(const Pair&) const;
-    bool operator>=(const Pair&) const;
-    bool operator<=(const Pair&) const;
-
-public:
-    bool operator==(const Key&) const;
-    bool operator!=(const Key&) const;
-    bool operator>(const Key&) const;
-    bool operator<(const Key&) const;
-    bool operator>=(const Key&) const;
-    bool operator<=(const Key&) const;
-
-public:
-    Value&       operator*();
-    Value*       operator->();
-    const Value& operator*() const;
-    const Value* operator->() const;
-
-public:
-    operator Key() const; // to hash
-
-public:
-    Key&         first();
-    Value&       second();
-    const Key&   first() const;
-    const Value& second() const;
+    Key&         first() { return this->key; }
+    Value&       second() { return this->value; }
+    const Key&   first() const { return this->key; }
+    const Value& second() const { return this->value; }
 
 public:
     string serialize() const;
     void   deserialize(const string_view);
-
-public:
-    Key   key;
-    Value value;
 };
 
 } // namespace stl
+
+namespace util {
+template<typename K, typename V> size_t hashof(const stl::Pair<K, V>& in) {
+    return hashof(in.key);
+}
+} // namespace util
+
 LWE_END
-#include "pair.ipp"
 #endif

@@ -1,13 +1,17 @@
 LWE_BEGIN
-namespace stl {
+namespace container {
+/**************************************************************************************************
+ * Iterator
+ **************************************************************************************************/
+REGISTER_CONST_ITERATOR((typename T), FWD, Hashtable, T);
 
-template<typename T> class Iterator<FWD, Set<T>> {
-    ITERATOR_BODY(FWD, Set, T);
-    using Bucket = typename Set::Bucket;
+template<typename T> class Iterator<FWD, Hashtable<T>> {
+    ITERATOR_BODY(FWD, Hashtable, T);
+    using Bucket = typename Hashtable::Bucket;
 
 public:
-    Iterator(Set* self, size_t index): self(self), index(index), chain(0), chaining(false) { }
-    Iterator(Set* self, size_t index, uint16_t chain): self(self), index(index), chain(chain), chaining(true) { }
+    Iterator(Hashtable* self, size_t index): self(self), index(index), chain(0), chaining(false) { }
+    Iterator(Hashtable* self, size_t index, uint16_t chain): self(self), index(index), chain(chain), chaining(true) { }
 
 public:
     Iterator& operator++() {
@@ -112,33 +116,32 @@ public:
     bool operator!=(const Iterator& in) const { return !operator==(in); }
 
 private:
-    Set*     self;
-    size_t   index;
-    uint16_t chain;
-    bool     chaining; // false == index, true == chain
+    Hashtable* self;
+    size_t     index;
+    uint16_t   chain;
+    bool       chaining; // false == index, true == chain
 };
 
-template<typename T> Set<T>::Set(float factor, Grower grower): LOAD_FACTOR(factor), grower(grower) { }
+/**************************************************************************************************
+ * Hashtable
+ **************************************************************************************************/
 
-template<typename T> Set<T>::Set(Grower grower): Set(config::LOADFACTOR, grower) { }
+template<typename T> Hashtable<T>::Hashtable(float factor, Grower grower): LOAD_FACTOR(factor), grower(grower) { }
 
-template<typename T> Set<T>::~Set() {
+template<typename T> Hashtable<T>::Hashtable(Grower grower): Hashtable(config::LOADFACTOR, grower) { }
+
+template<typename T> Hashtable<T>::~Hashtable() {
     if(buckets) {
         clear();
         free(buckets);
     }
 }
 
-template<typename T> bool Set<T>::resize() {
-    size_t size = 0;
-    if(capacitor) {
-        size = capacitor << 1; // x2
-        if(size < capacitor) {
-            return false; // overflow
-        }
-        ++log; // log2(capacity)
+template<typename T> bool Hashtable<T>::resize(uint64_t caplog) {
+    size_t size = (size_t(1) << caplog);
+    if(size <= capacitor) {
+        return false; // shrink not allow
     }
-    else size = (size_t(1) << log); // init
 
     // realloc
     Bucket* old = buckets; // backup
@@ -181,10 +184,11 @@ template<typename T> bool Set<T>::resize() {
     }
 
     capacitor = size;
+    log       = caplog;
     return true;
 }
 
-template<typename T> size_t Set<T>::indexing(hash_t in) const noexcept {
+template<typename T> size_t Hashtable<T>::indexing(hash_t in) const noexcept {
     static constexpr size_t FIBONACCI_PRIME = []() {
         if constexpr(sizeof(size_t) == 8) {
             return 11'400'714'819'323'198'485ull;
@@ -194,30 +198,30 @@ template<typename T> size_t Set<T>::indexing(hash_t in) const noexcept {
     return (in * FIBONACCI_PRIME) >> ((sizeof(size_t) << 3) - log);
 }
 
-template<typename T> size_t Set<T>::size() const noexcept {
+template<typename T> size_t Hashtable<T>::size() const noexcept {
     return counter;
 }
 
-template<typename T> size_t Set<T>::capacity() const noexcept {
+template<typename T> size_t Hashtable<T>::capacity() const noexcept {
     return capacitor;
 }
 
-template<typename T> auto Set<T>::bucket(size_t in) const noexcept -> const Bucket* {
+template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* {
     if(in >= capacitor) {
         return nullptr;
     }
     return buckets + in;
 }
 
-template<typename T> bool Set<T>::push(T&& in) {
+template<typename T> bool Hashtable<T>::push(T&& in) {
     return insert(std::move(in));
 }
 
-template<typename T> bool Set<T>::push(const T& in) {
+template<typename T> bool Hashtable<T>::push(const T& in) {
     return insert(in);
 }
 
-template<typename T> bool Set<T>::pop(const T& in) noexcept {
+template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
     hash_t hashed = util::hashof(in); // get hash
     size_t index  = indexing(hashed); // get index
 
@@ -265,14 +269,14 @@ template<typename T> bool Set<T>::pop(const T& in) noexcept {
     return false; // not found
 }
 
-template<typename T> bool Set<T>::pop(const Iterator<FWD>& in) noexcept {
+template<typename T> bool Hashtable<T>::pop(const Iterator<FWD>& in) noexcept {
     if(in == end()) {
         return false;
     }
     return pop(*in); // delete
 }
 
-template<typename T> bool Set<T>::pop(hash_t in) noexcept {
+template<typename T> bool Hashtable<T>::pop(hash_t in) noexcept {
     Iterator<FWD> it = find(in); // find by hash
     if(it == end()) {
         return false;
@@ -280,15 +284,36 @@ template<typename T> bool Set<T>::pop(hash_t in) noexcept {
     return pop(*it); // delete
 }
 
-template<typename T> bool Set<T>::exist(const T& in) noexcept {
+template<typename T> bool Hashtable<T>::exist(const T& in) noexcept {
     return find(in) != end();
 }
 
-template<typename T> bool Set<T>::exist(hash_t in) noexcept {
+template<typename T> bool Hashtable<T>::exist(hash_t in) noexcept {
     return find(in) != end();
 }
 
-template<typename T> void Set<T>::clear() noexcept {
+template<typename T> bool Hashtable<T>::reserve(size_t in) noexcept {
+    // algin to power of 2
+    in = core::align(in);
+    if(in <= capacitor) {
+        return true; // already allocated
+    }
+
+    // calculate log2
+    size_t inlog = 0;
+    while(in > 1) {
+        in >>= 1;
+        ++inlog;
+    }
+
+    // resize
+    if(!resize(inlog)) {
+        return false; // rollback
+    }
+    return true;
+}
+
+template<typename T> void Hashtable<T>::clear() noexcept {
     if(capacitor != 0) {
         return;
     }
@@ -314,7 +339,7 @@ template<typename T> void Set<T>::clear() noexcept {
     factor  = 0;
 }
 
-template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
+template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<FWD> {
     hash_t hashed = util::hashof(in); // get hash
     size_t index  = indexing(hashed); // get index
 
@@ -337,7 +362,7 @@ template<typename T> auto Set<T>::find(const T& in) noexcept -> Iterator<FWD> {
     return end(); // not found
 }
 
-template<typename T> auto Set<T>::find(hash_t in) noexcept -> Iterator<FWD> {
+template<typename T> auto Hashtable<T>::find(hash_t in) noexcept -> Iterator<FWD> {
     size_t index = indexing(in); // to index
     if(buckets[index].used == true) {
         return Iterator<FWD>(this, index); // first data
@@ -345,7 +370,7 @@ template<typename T> auto Set<T>::find(hash_t in) noexcept -> Iterator<FWD> {
     return end(); // not exist
 }
 
-template<typename T> auto Set<T>::at(size_t index) noexcept -> Iterator<FWD> {
+template<typename T> auto Hashtable<T>::at(size_t index) noexcept -> Iterator<FWD> {
     size_t pass = 0;
     // out of range
     if(index >= counter) {
@@ -388,7 +413,7 @@ template<typename T> auto Set<T>::at(size_t index) noexcept -> Iterator<FWD> {
     return end();
 }
 
-template<typename T> auto Set<T>::begin() noexcept -> Iterator<FWD> {
+template<typename T> auto Hashtable<T>::begin() noexcept -> Iterator<FWD> {
     size_t index = 0;
     for(; index < capacitor; ++index) {
         if(buckets[index].used == true) {
@@ -398,15 +423,15 @@ template<typename T> auto Set<T>::begin() noexcept -> Iterator<FWD> {
     return Iterator<FWD>(this, index);
 }
 
-template<typename T> auto Set<T>::end() noexcept -> Iterator<FWD> {
+template<typename T> auto Hashtable<T>::end() noexcept -> Iterator<FWD> {
     return Iterator<FWD>(this, capacitor);
 }
 
 template<typename T>
-template<typename U> bool Set<T>::insert(U&& in) {
+template<typename U> bool Hashtable<T>::insert(U&& in) {
     // size check
     if(counter >= factor) {
-        if(!resize()) {
+        if(!resize(log + 1)) {
             return false; // bad alloc
         }
         factor = size_t(float(capacitor) * LOAD_FACTOR);
@@ -416,7 +441,7 @@ template<typename U> bool Set<T>::insert(U&& in) {
 }
 
 template<typename T>
-template<typename U> bool Set<T>::insert(U&& in, hash_t hashed) {
+template<typename U> bool Hashtable<T>::insert(U&& in, hash_t hashed) {
     size_t index = indexing(hashed); // to index
 
     Bucket& bucket = buckets[index];
@@ -476,27 +501,25 @@ template<typename U> bool Set<T>::insert(U&& in, hash_t hashed) {
     return true;
 }
 
-template<typename T> auto Set<T>::find(const T& in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Set*>(this)->find(in);
+template<typename T> auto Hashtable<T>::find(const T& in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Hashtable*>(this)->find(in);
 }
 
-template<typename T> auto Set<T>::find(hash_t in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Set*>(this)->find(in);
+template<typename T> auto Hashtable<T>::find(hash_t in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Hashtable*>(this)->find(in);
 }
 
-template<typename T> auto Set<T>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Set*>(this)->at(in);
+template<typename T> auto Hashtable<T>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Hashtable*>(this)->at(in);
 }
 
-template<typename T> auto Set<T>::begin() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Set*>(this)->begin();
+template<typename T> auto Hashtable<T>::begin() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Hashtable*>(this)->begin();
 }
 
-template<typename T> auto Set<T>::end() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Set*>(this)->end();
+template<typename T> auto Hashtable<T>::end() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Hashtable*>(this)->end();
 }
 
-REGISTER_CONST_ITERATOR((typename T), FWD, Set, T);
-
-} // namespace stl
+} // namespace container
 LWE_END
