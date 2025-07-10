@@ -1,0 +1,29 @@
+How to add type
+
+1. Add value in enum `Keyword `
+2. Add in typecode() -> if constexpr(...) return ENUM
+3. Add in typestring() -> case Keyword::... return "...";
+
+-------------------------------------------------------------------------------
+
+Case: Container
+
+0. Declare base: container inhertance, and add void push(U&&); (if not exist push)
+1. `DECLARE_CONTAINER((template), Name, Base, template...)`
+2. `REIGSTER_CONTAINER((template), Name, enum, template...)`
+
+e.g.
+    template<typename T> struct VectorWrapper : std::vector<T> {
+        void push(T&& in) {
+            this->push_back(std::move(in));
+        }
+    };
+    DECLARE_CONTAINER((typename T), VectorAdapter, VectorWrapper, T);
+    REGISTER_CONTAINER((typename T), VectorAdapter, STL_DEQUE, T);
+
+
+-------------------------------------------------------------------------------
+(WIP)
+
+about Type
+Type::

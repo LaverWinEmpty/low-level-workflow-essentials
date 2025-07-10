@@ -10,8 +10,8 @@
 -   [x] Memory pool for `Object`
 -   [x] Smart pointer
 -   [ ] Smart pointer inherited pointer for `Object` and serialization
--   [ ] Support default constructor in macro (e.g., `Constructor(const MyInitializer&)`)
--   [ ] Hash table containers (`Set`, `Map`)
+-   [x] Support default constructor in macro (e.g., `Constructor(const MyInitializer&)`) -> No need
+-   [x] Hash table containers (`Set`, `Map`)
 -   [ ] O(1) removal array (`Collection`, swap-and-delete, for iteration/traversal)
 -   [ ] Sort strategy (Merge + Block Merge hybrid)
 
@@ -21,20 +21,7 @@
 
 -   [x] Custom exception class for logging
 -   [x] Thread pool using message queue
--   [ ] Timer (for timestamps)
--   [ ] File system abstraction layer
--   [ ] Logging system interface
+-   [x] Timer (for timestamps)
+-   [x] File system abstraction layer -> No need
+-   [x] Logging system interface
 -   [ ] External log viewer / visualization tool
-
----
-
-## ✅ Render
-
--   [ ] DirectX 11
-
----
-
-## ✅ Network
-
--   [ ] TCP/UDP socket
--   [ ] High-performance I/O (Enhanced `Select` Model (O(1) performance), or Windows IOCP)
