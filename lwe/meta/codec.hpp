@@ -85,7 +85,8 @@ template<typename T> T Codec::to(const StringView in) {
     // template
     else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
         T data;
-        return decode(&data, in); // container, pair, etc...
+        decode(&data, in); // container, pair, etc...
+        return data;
     }
     // enum
     else if constexpr(std::is_enum_v<T>) {
@@ -212,17 +213,19 @@ template<> String Codec::to<String>(const StringView in) {
  **************************************************************************************************/
 // serialize
 template<typename T> String Codec::encode(const Container& in) {
-    std::string out;
+    using Element = typename T::value_type;
 
     auto curr = reinterpret_cast<const T&>(in).begin();
     auto last = reinterpret_cast<const T&>(in).end();
+
+    std::string out;
 
     // has data
     if(curr != last) {
         out.append("[ ");
         // for each
         while(true) {
-            encode(&out, &*curr, typecode<typename T::value_type>());
+            out.append(from<Element>(*curr)); // auto
             ++curr;
             if(curr != last) {
                 out.append(", ");
@@ -236,13 +239,13 @@ template<typename T> String Codec::encode(const Container& in) {
 }
 
 // deserialize
-template<typename Derived> void Codec::decode(Container* ptr, StringView in) {
+template<typename T> void Codec::decode(Container* ptr, StringView in) {
     // TODO: value_type keep? rename?
-    using Element = typename Derived::value_type;
+    using Element = typename T::value_type;
     if(in == "[]") {
         return; // empty
     }
-    Derived& out = *reinterpret_cast<Derived*>(ptr); // else
+    T& out = *reinterpret_cast<T*>(ptr); // else
 
     Decoder decoder(in);
     decoder.move(2); // ignore `[ `
@@ -251,7 +254,7 @@ template<typename Derived> void Codec::decode(Container* ptr, StringView in) {
 
         // deserialize
         Element data;
-        decode(reinterpret_cast<void*>(&data), decoder.get(), typecode<Element>());
+        data = to<Element>(decoder.get()); // auto
         out.push(std::move(data));
 
         // move 2 reason
@@ -353,13 +356,13 @@ template<typename K, typename V> void Codec::decode(std::pair<K, V>* out, String
     if(!decoder.next<K>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    out->key = to<K>(decoder.get());
+    out->first = to<K>(decoder.get());
 
     decoder.move(2); // ignore `, `
     if(!decoder.next<V>()) {
         throw diag::error(diag::INVALID_DATA);
     }
-    out->value = to<V>(decoder.get());
+    out->second = to<V>(decoder.get());
 }
 
 /**************************************************************************************************
