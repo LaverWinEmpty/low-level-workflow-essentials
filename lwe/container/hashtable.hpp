@@ -49,7 +49,7 @@ public:
 public:
     CONTAINER_BODY(Hashtable, T, T);
 
-protected:
+private:
     struct Chain {
         T      data; // data
         hash_t hash; // calculated hash
@@ -84,52 +84,61 @@ public:
     ~Hashtable();
 
 public:
-    bool push(T&&);
-    bool push(const T&);
-    bool pop(const T&) noexcept;
-    bool pop(const Iterator<FWD>&) noexcept;
-    bool pop(hash_t) noexcept;
-    bool exist(const T&) noexcept;
-    bool exist(hash_t) noexcept;
-    bool reserve(size_t size) noexcept;
-    void clear() noexcept;
+    bool push(T&&);                //!< push
+    bool push(const T&);           //!< push
+    bool pop(const T&) noexcept;   //!< pop
+    bool exist(const T&) noexcept; //!< check data
 
 public:
-    Iterator<FWD | VIEW> find(const T&) const noexcept; //!< find by data
-    Iterator<FWD | VIEW> find(hash_t) const noexcept;   //!< find by hash
-    Iterator<FWD | VIEW> at(size_t) const noexcept;     //!< find by order
-    Iterator<FWD | VIEW> begin() const noexcept;        //!< get begin
-    Iterator<FWD | VIEW> end() const noexcept;          //!< get end
+    template<typename U> bool insert(U&&);                          //!< insert
+    bool                      erase(const Iterator<FWD>&) noexcept; //!< iterator erase
 
 public:
-    Iterator<FWD> find(const T&) noexcept; //!< non-const
-    Iterator<FWD> find(hash_t) noexcept;   //!< non-const
-    Iterator<FWD> at(size_t) noexcept;     //!< non-const
-    Iterator<FWD> begin() noexcept;        //!< non-const
-    Iterator<FWD> end() noexcept;          //!< non-const
-
-protected:
-    template<typename U> bool emplace(U&&);
-    template<typename U> bool emplace(U&&, hash_t, bool = true);
-
-protected:
-    bool resize(uint64_t);
+    size_t indexof(hash_t) const noexcept; //!< hash to index
+    size_t size() const noexcept;          //!< total element count
+    size_t capacity() const noexcept;      //!< get bucket count
 
 public:
-    size_t indexing(hash_t) const noexcept;
+    bool reserve(size_t) noexcept; //!< reserve to power of 2
+    void clear() noexcept;         //!< clear, but no shrink
 
 public:
-    size_t        size() const noexcept;
-    size_t        capacity() const noexcept;
-    const Bucket* bucket(size_t) const noexcept; // get bucket
+    const Bucket* bucket(size_t) const noexcept;         // get bucket (array[index])
+    const Bucket* slot(hash_t) const noexcept;           // get slot   (bucket[hash])
+    const Chain*  slot(hash_t, const T&) const noexcept; //!< get, null == not found
 
-protected:
+public:
+    Iterator<FWD> find(const T&) noexcept; //!< find by data
+    Iterator<FWD> at(size_t) noexcept;     //!< find by order
+    Iterator<FWD> begin() noexcept;        //!< get begin
+    Iterator<FWD> end() noexcept;          //!< get end
+
+public:
+    Iterator<FWD | VIEW> find(const T&) const noexcept; //!< find by data const
+    Iterator<FWD | VIEW> at(size_t) const noexcept;     //!< find by order const
+    Iterator<FWD | VIEW> begin() const noexcept;        //!< get begin const
+    Iterator<FWD | VIEW> end() const noexcept;          //!< get end const
+
+private:
+    template<typename U> bool emplace(U&&, hash_t);    //!< push detail
+    void                      remove(Bucket*, Chain*); //!< pop detail
+
+private:
+    bool   rehash(uint64_t);       //!< bucket resize
+    bool   expand(Bucket*);        //!< chain resize
+
+private:
+    Bucket* bucket(size_t) noexcept;         //!< non-const is private
+    Bucket* slot(hash_t) noexcept;           //!< non-const is private
+    Chain*  slot(hash_t, const T&) noexcept; //!< non-const is private
+
+private:
     size_t counter   = 0; //!< element counter
     size_t capacitor = 0; //!< bucket counter
     size_t factor    = 0; //!< load factor
     size_t log       = 3; //!< log2(capacitor): default (1 << 3) == 8
 
-protected:
+private:
     Bucket* buckets = nullptr;
     Grower  grower;
 

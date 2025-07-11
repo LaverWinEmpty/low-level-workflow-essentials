@@ -476,12 +476,12 @@ template<typename T> Class* classof(const T&) {
     return classof<T>();
 }
 
-Class* classof(const char* in) {
-    return classof(String{ in });
-}
-
 Class* classof(const String& in) {
     return Registry<Class>::find(in);
+}
+
+Class* classof(const char* in) {
+    return classof(String{ in });
 }
 
 template<typename T> Enum* enumof() {
@@ -492,12 +492,12 @@ template<typename T> Enum* enumof(const T&) {
     return enumof<T>();
 }
 
-Enum* enumof(const char* in) {
-    return enumof(String{ in });
-}
-
 Enum* enumof(const String& in) {
     return Registry<Enum>::find(in);
+}
+
+Enum* enumof(const char* in) {
+    return enumof(String{ in });
 }
 
 template<typename T> T* statics() {
@@ -515,12 +515,12 @@ template<typename T> T* statics(const T&) {
     return statics<T>();
 }
 
-Object* statics(const char* in) {
-    return statics(String{ in });
-}
-
 Object* statics(const String& in) {
     return Registry<Object>::find(in);
+}
+
+Object* statics(const char* in) {
+    return statics(String{ in });
 }
 
 } // namespace meta

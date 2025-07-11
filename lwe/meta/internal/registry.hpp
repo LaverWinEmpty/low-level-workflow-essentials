@@ -2,6 +2,7 @@
 #define LWE_META_REGISTRY
 
 #include "../../base/base.h"
+#include "../../container/dictionary.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -16,14 +17,14 @@ template<typename T> class Registry {
     Registry() = default;
 
 public:
-    using Table = std::unordered_map<String, T*>;
+    using Table = container::Dictionary<String, T*>;
 
 public:
     ~Registry();
-    template<typename U> static void add(const String&); //!< @tparam U base of T
-    template<typename U> static void add(const char*);   //!< @tparam U base of T
-    static T*                        find(const char*);
-    static T*                        find(const String&);
+    template<typename U> static void add(const String&);  //!< @tparam U base of T
+    template<typename U> static void add(const char*);    //!< @tparam U base of T
+    static T*                        find(const String&); //!< find, compare string, no string_view
+    static T*                        find(const char*);   //!< find, compare string, no string_view
 
 private:
     Table table;

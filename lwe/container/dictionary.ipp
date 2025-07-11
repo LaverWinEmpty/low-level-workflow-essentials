@@ -4,76 +4,100 @@
 LWE_BEGIN
 namespace container {
 
-template<typename K, typename V> void Dictionary<K, V>::push(Entry&& in) {
-    emplace(std::move(in));
+template<typename K, typename V> V& Dictionary<K, V>::operator[](const K& in) {
+    hash_t hashed = util::hashof(in);
+    
+    // insert and return
+    // empty data for call constructor
+    if(!push(Entry{ in, V{} })) {
+        throw diag::error(diag::BAD_ALLOC);
+    }
+    return slot(hashed, in)->data.second;
 }
 
-template<typename K, typename V> void Dictionary<K, V>::push(const Entry& in) {
-    emplace(in);
+template<typename K, typename V> const V& Dictionary<K, V>::operator[](const K& in) const {
+    return const_cast<Dictionary*>(this)->operator[](in);
 }
 
-template<typename K, typename V> void Dictionary<K, V>::push(const K& K, const V& V) {
-    emplace(Entry{ K, V });
+template<typename K, typename V> bool Dictionary<K, V>::push(Entry&& in) {
+    return insert(std::move(in));
 }
 
-template<typename K, typename V> void Dictionary<K, V>::push(K&& K, V&& V) {
-    emplace(Entry{ std::move(K), std::move(V) });
+template<typename K, typename V> bool Dictionary<K, V>::push(const Entry& in) {
+    return insert(in);
 }
 
-template<typename K, typename V> void Dictionary<K, V>::push(const K& K, V&& V) {
-    emplace(Entry{ K, std::move(V) });
+template<typename K, typename V> bool Dictionary<K, V>::push(const K& K, const V& V) {
+    return insert(Entry{ K, V });
 }
 
-template<typename K, typename V> void Dictionary<K, V>::push(K&& K, const V& V) {
-    emplace(Entry{ std::move(K), V });
+template<typename K, typename V> bool Dictionary<K, V>::push(K&& K, V&& V) {
+    return insert(Entry{ std::move(K), std::move(V) });
+}
+
+template<typename K, typename V> bool Dictionary<K, V>::push(const K& K, V&& V) {
+    return insert(Entry{ K, std::move(V) });
+}
+
+template<typename K, typename V> bool Dictionary<K, V>::push(K&& K, const V& V) {
+    return insert(Entry{ std::move(K), V });
 }
 
 template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
-    auto it = find(in);
-    if(it != set.end()) {
-        set.pop(it);
-        return true;
+    hash_t  hashed = util::hashof(in);
+    Bucket* bucket = slot(hashed);
+    Chain*  pos    = slot(hashed, in);
+
+    // not found
+    if(pos == nullptr) {
+        return false;
+    }
+    set.remove(bucket, pos);
+    return true;
+}
+
+template<typename K, typename V> bool Dictionary<K, V>::erase(const Iterator<FWD>& in) {
+    if (in != end()) {
+        return set.pop(*in);
     }
     return false;
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::pop(const Iterator<FWD>& in) {
-    return set.pop(in);
+template<typename K, typename V>
+template<typename T> bool Dictionary<K, V>::insert(T&& in) {
+    return emplace(std::forward<T>(in));
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::pop(hash_t in) {
-    return set.pop(in);
+template<typename K, typename V>
+template<typename T, typename U> bool Dictionary<K, V>::insert(T&& k, U&& v) {
+    return emplace(Entry{ std::forward<T>(k), std::forward<U>(v) });
 }
+
 
 template<typename K, typename V>
 auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
     // avoiding unnecessary copy logic
-    hash_t hashed = util::hashof(in);
-    size_t index  = set.indexing(hashed);
-
-    typename Hashtable::Bucket* bucket = set.buckets[index];
+    hash_t  hashed = util::hashof(in);
+    size_t  index  = set.indexof(hashed);
+    Bucket& bucket = set.buckets[index];
 
     // found
     if(bucket.used) {
         // first data only
-        if(bucket->size == 0) {
-            typename Hashtable::Iterator it = { &set, index }; // create iterator
+        if(bucket.size == 0) {
+            Iterator<FWD> it = { &set, index }; // create iterator
             return it;
         }
         // has chain
-        for(int i = 0; i < bucket.size; ++i) {
-            typename Hashtable::Chain& chain = bucket->chain[i];
-            if(hashed == chain.hashed && in == chain.data.first) {
-                typename Hashtable::Iterator it = { &set, index, i }; // create iterator
+        for(uint16_t i = 0; i < bucket.size; ++i) {
+            Chain& chain = bucket.chain[i];
+            if(hashed == chain.hash && in == chain.data.first) {
+                Iterator<FWD> it = { &set, index, i }; // create iterator
                 return it;
             }
         }
     }
     return set.end(); // not found
-}
-
-template<typename K, typename V> auto Dictionary<K, V>::find(hash_t in) noexcept -> Iterator<FWD> {
-    return set.find(in);
 }
 
 template<typename K, typename V> auto Dictionary<K, V>::at(size_t in) noexcept -> Iterator<FWD> {
@@ -90,11 +114,6 @@ template<typename K, typename V> auto Dictionary<K, V>::end() noexcept -> Iterat
 
 template<typename K, typename V>
 auto Dictionary<K, V>::find(const K& in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Dictionary*>(this)->find(in);
-}
-
-template<typename K, typename V>
-auto Dictionary<K, V>::find(hash_t in) const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->find(in);
 }
 
@@ -118,45 +137,70 @@ template<typename K, typename V> size_t Dictionary<K, V>::size() const noexcept 
 }
 
 template<typename K, typename V> size_t Dictionary<K, V>::capacity() const noexcept {
-    return set.capaictor;
-}
-
-template<typename K, typename V> bool Dictionary<K, V>::exist(hash_t in) const noexcept {
-    return set.exist(in);
+    return set.capacitor;
 }
 
 template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const noexcept {
-    return find(in) != end();
+    return slot(util::hashof(in), in) != nullptr;
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::bucket(size_t in) const noexcept -> const typename Hashtable::Bucket* {
+auto Dictionary<K, V>::bucket(size_t in) const noexcept -> const Bucket* {
     return set.bucket(in);
 }
 
-template<typename K, typename V> template<typename U>
-bool Dictionary<K, V>::emplace(U&& in) noexcept {
-    hash_t hashed = util::hashof(in.first);
-    size_t index  = set.indexing(hashed);
+template<typename K, typename V>
+auto Dictionary<K, V>::slot(hash_t in) const noexcept -> const Bucket* {
+    return set.slot(in);
+}
 
-    if(set.counter >= set.capacitor) { 
-        set.resize(set.log + 1);
+template<typename K, typename V>
+auto Dictionary<K, V>::slot(hash_t in, const K& data) const noexcept -> const Chain* {
+    return const_cast<Dictionary*>(this)->slot(in, data);
+}
+
+template<typename K, typename V>
+auto Dictionary<K, V>::bucket(size_t in) noexcept -> Bucket* {
+    return set.bucket(in);
+}
+
+template<typename K, typename V>
+auto Dictionary<K, V>::slot(hash_t in) noexcept -> Bucket* {
+    return set.slot(in);
+}
+
+template<typename K, typename V>
+auto Dictionary<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
+    Bucket* bucket = set.buckets + (set.indexof(in));
+
+    if(bucket->hash == in && bucket->data.first == data) {
+        return bucket;
     }
-    const Hashtable::Bucket& bucket = set.buckets[index]; // get ref
+    for(uint16_t i = 0; i < bucket->size; ++i) {
+        Chain* chain = bucket->chain + i;
+        if(chain->hash == in && chain->data.first == data) {
+            return chain;
+        }
+    }
+    return nullptr;
+}
 
-    // duplicated check (pair::first only)
-    if(bucket.used == true) {
-        if(bucket.data.first == in.first) {
+template<typename K, typename V>
+template<typename T> bool Dictionary<K, V>::emplace(T&& in) {
+    hash_t hashed = util::hashof(in.first); // first only
+
+    // check collide
+    if(slot(hashed, in.first) != nullptr) {
+        return false;
+    }
+
+    // check size
+    if(set.factor >= set.LOAD_FACTOR) {
+        if(set.rehash(set.log + 1)) {
             return false;
         }
-        for(uint16_t i = 0; i < bucket.size; ++i) {
-            if(bucket.chain[i].data.first == in.first) {
-                return false;
-            }
-        }
     }
-
-    return set.emplace(in, hashed, false); // no check
+    return set.emplace(in, hashed);
 }
 
 } // namespace container

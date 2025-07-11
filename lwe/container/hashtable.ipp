@@ -133,62 +133,60 @@ template<typename T> Hashtable<T>::Hashtable(Grower grower): Hashtable(config::L
 template<typename T> Hashtable<T>::~Hashtable() {
     if(buckets) {
         clear();
-        free(buckets);
+        std::free(buckets);
     }
 }
 
-template<typename T> bool Hashtable<T>::resize(uint64_t caplog) {
-    size_t size = (size_t(1) << caplog);
-    if(size <= capacitor) {
-        return false; // shrink not allow
-    }
+template<typename T> bool Hashtable<T>::push(T&& in) {
+    return insert(std::move(in));
+}
 
-    // realloc
-    Bucket* old = buckets; // backup
-    buckets     = static_cast<Bucket*>(std::malloc(sizeof(Bucket) * size));
-    if(!buckets) {
-        buckets = old; // rollback
-        return false;  // bad alloc
-    }
+template<typename T> bool Hashtable<T>::push(const T& in) {
+    return insert(in);
+}
 
-    // initialize
-    for(size_t i = 0; i < size; ++i) {
-        buckets[i].used     = false;
-        buckets[i].chain    = nullptr;
-        buckets[i].size     = 0;
-        buckets[i].capacity = 0;
+template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
+    hash_t  hashed = util::hashof(in);          // get hash
+    Bucket* bucket = buckets + indexof(hashed); // get bucket
+    Chain*  pos    = slot(hashed, in);          // get delete pos
+    if(pos == nullptr) {
+        return false; // not found
     }
-    counter = 0; // reset
-
-    // has data
-    if(old) {
-        // move
-        for(size_t i = 0; i < capacitor; ++i) {
-            // main data
-            if(old[i].used == true) {
-                emplace(std::move(old[i].data), old[i].hash); // move
-                old[i].data.~T();                             // delete
-            }
-            // chained datas
-            if(old[i].chain) {
-                for(uint16_t j = 0; j < old[i].size; ++j) {
-                    Chain& chain = old[i].chain[j];
-                    emplace(std::move(chain.data), chain.hash); // move
-                    chain.data.~T();                            // delete
-                }
-                // MSVC C6001 FALSE POSITIVE
-                std::free(old[i].chain); // delete
-            }
-        }
-        std::free(old); // delete
-    }
-
-    capacitor = size;
-    log       = caplog;
+    remove(bucket, pos);
     return true;
 }
 
-template<typename T> size_t Hashtable<T>::indexing(hash_t in) const noexcept {
+template<typename T> bool Hashtable<T>::exist(const T& in) noexcept {
+    return slot(in, util::hashof(in)) != nullptr;
+}
+
+template<typename T>
+template<typename U> bool Hashtable<T>::insert(U&& in) {
+    hash_t hashed = util::hashof(in);
+    // check
+    if(slot(hashed, in) != nullptr) {
+        return false;
+    }
+    if(factor >= LOAD_FACTOR) {
+        // capacitor << 1
+        if(!rehash(log + 1)) {
+            return false;
+        }
+    }
+    return emplace(std::forward<U>(in), hashed);
+}
+
+template<typename T> bool Hashtable<T>::erase(const Iterator<FWD>& in) noexcept {
+    Bucket* bucket = buckets[in.index]; // get bucket
+    if(in.self != this || in.chain >= bucket->capacity) {
+        return false; // exception
+    }
+    Chain* chain = in.chaining ? (bucket + in.chain) : bucket; // get data
+    remove(bucket, chain);
+    return true;
+}
+
+template<typename T> size_t Hashtable<T>::indexof(hash_t in) const noexcept {
     static constexpr size_t FIBONACCI_PRIME = []() {
         if constexpr(sizeof(size_t) == 8) {
             return 11'400'714'819'323'198'485ull;
@@ -206,92 +204,6 @@ template<typename T> size_t Hashtable<T>::capacity() const noexcept {
     return capacitor;
 }
 
-template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* {
-    if(in >= capacitor) {
-        return nullptr;
-    }
-    return buckets + in;
-}
-
-template<typename T> bool Hashtable<T>::push(T&& in) {
-    return emplace(std::move(in));
-}
-
-template<typename T> bool Hashtable<T>::push(const T& in) {
-    return emplace(in);
-}
-
-template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
-    hash_t hashed = util::hashof(in); // get hash
-    size_t index  = indexing(hashed); // get index
-
-    Bucket& bucket = buckets[index];
-
-    // check first data: perform hash comparison first
-    if(bucket.hash == hashed && bucket.data == in) {
-        // has chain, swap and deled
-        if(bucket.size != 0) {
-            bucket.size -= 1;                         // reduce
-            Chain& last  = bucket.chain[bucket.size]; // get last
-            bucket.data  = std::move(last.data);      // move
-            bucket.hash  = last.hash;                 // copy hash
-            last.data.~T();                           // delete
-        }
-        // delete
-        else {
-            bucket.used = false; // mark
-            bucket.data.~T();    // delete
-        }
-        --counter;   // count
-        return true; // succeeded
-    }
-
-    // else find chain
-    uint16_t size = bucket.size;
-    for(uint16_t i = 0; i < size; ++i) {
-        Chain& chain = bucket.chain[i];
-        // same logic
-        if(chain.hash == hashed && chain.data == in) {
-            --bucket.size; // count
-            --counter;     // total count
-
-            // swap and delete
-            if(bucket.size != 0) {
-                Chain& last = bucket.chain[size - 1]; // get last
-                chain.data  = std::move(last.data);   // move
-                chain.hash  = last.hash;              // copy hash
-                last.data.~T();                       // delete
-            }
-            else chain.data.~T(); // delete
-            return true;          // succeeded
-        }
-    }
-    return false; // not found
-}
-
-template<typename T> bool Hashtable<T>::pop(const Iterator<FWD>& in) noexcept {
-    if(in == end()) {
-        return false;
-    }
-    return pop(*in); // delete
-}
-
-template<typename T> bool Hashtable<T>::pop(hash_t in) noexcept {
-    Iterator<FWD> it = find(in); // find by hash
-    if(it == end()) {
-        return false;
-    }
-    return pop(*it); // delete
-}
-
-template<typename T> bool Hashtable<T>::exist(const T& in) noexcept {
-    return find(in) != end();
-}
-
-template<typename T> bool Hashtable<T>::exist(hash_t in) noexcept {
-    return find(in) != end();
-}
-
 template<typename T> bool Hashtable<T>::reserve(size_t in) noexcept {
     // algin to power of 2
     in = core::align(in);
@@ -306,8 +218,8 @@ template<typename T> bool Hashtable<T>::reserve(size_t in) noexcept {
         ++inlog;
     }
 
-    // resize
-    if(!resize(inlog)) {
+    // rehash
+    if(!rehash(inlog)) {
         return false; // rollback
     }
     return true;
@@ -341,33 +253,23 @@ template<typename T> void Hashtable<T>::clear() noexcept {
 
 template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<FWD> {
     hash_t hashed = util::hashof(in); // get hash
-    size_t index  = indexing(hashed); // get index
-
-    Bucket& bucket = buckets[index];
+    size_t index  = indexof(hashed);
 
     // check has data
-    if(bucket.used == true) {
+    if(bucket->used == true) {
         // not chain, or first data
-        if(bucket.hash == hashed && bucket.data == in) {
+        if(bucket->hash == hashed && bucket->data == in) {
             return Iterator(this, index);
         }
         // return chain
-        for(uint16_t i = 0; i < bucket.size; ++i) {
-            Chain& chain = bucket.chain[i];
-            if(chain.hash == hashed && chain.data == in) {
+        for(uint16_t i = 0; i < bucket->size; ++i) {
+            Chain* chain = bucket.chain + i;
+            if(chain->hash == hashed && chain->data == in) {
                 return Iterator(this, index, i);
             }
         }
     }
     return end(); // not found
-}
-
-template<typename T> auto Hashtable<T>::find(hash_t in) noexcept -> Iterator<FWD> {
-    size_t index = indexing(in); // to index
-    if(buckets[index].used == true) {
-        return Iterator<FWD>(this, index); // first data
-    }
-    return end(); // not exist
 }
 
 template<typename T> auto Hashtable<T>::at(size_t index) noexcept -> Iterator<FWD> {
@@ -427,87 +329,7 @@ template<typename T> auto Hashtable<T>::end() noexcept -> Iterator<FWD> {
     return Iterator<FWD>(this, capacitor);
 }
 
-template<typename T>
-template<typename U> bool Hashtable<T>::emplace(U&& in) {
-    // size check
-    if(counter >= factor) {
-        if(!resize(log + 1)) {
-            return false; // bad alloc
-        }
-        factor = size_t(float(capacitor) * LOAD_FACTOR);
-    }
-    hash_t hash = util::hashof(in); // const T&
-    return emplace(std::forward<U>(in), hash);
-}
-
-template<typename T>
-template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed, bool check) {
-    size_t index = indexing(hashed); // to index
-
-    Bucket& bucket = buckets[index];
-
-    if(check) {
-        // duplicated check
-        if(bucket.used == true) {
-            if(bucket.data == in) {
-                return false;
-            }
-            for(uint16_t i = 0; i < bucket.size; ++i) {
-                if(bucket.chain[i].data == in) {
-                    return false;
-                }
-            }
-        }
-    }
-
-    // false -> empty
-    if(bucket.used == false) {
-        // emplace
-        new(&bucket.data) T(std::forward<U>(in)); // copy or move, can throw
-        bucket.used = true;                       // check
-        bucket.hash = hashed;                     // store
-        ++counter;                                // count
-        return true;
-    }
-
-    // else true -> use chain
-    uint16_t size = bucket.size;     // get size
-    uint16_t cap  = bucket.capacity; // get capacity
-
-    // check realloc condition
-    if(size >= cap) {
-        cap          = grower(cap);
-        Chain* newly = static_cast<Chain*>(std::malloc(sizeof(Chain) * cap));
-        if(!newly) {
-            return false; // bad alloc
-        }
-
-        // remove old and move
-        Chain* old = bucket.chain;
-        for(uint16_t i = 0; i < size; ++i) {
-            new(&newly[i].data) T(std::move(old[i].data)); // move, maybe noexcept
-            newly[i].hash = old[i].hash;                   // copy hash
-            old[i].data.~T();                              // dtor
-        }
-        bucket.chain    = newly; // store
-        bucket.capacity = cap;   // count
-        std::free(old);          // delete
-    }
-
-    // isnert data
-    new(&bucket.chain[size].data) T(std::forward<U>(in)); // copy or move, can throw
-    bucket.chain[size].hash = hashed;                     // emplace hash
-
-    ++bucket.size; // size
-    ++counter;     // total size
-    return true;
-}
-
 template<typename T> auto Hashtable<T>::find(const T& in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Hashtable*>(this)->find(in);
-}
-
-template<typename T> auto Hashtable<T>::find(hash_t in) const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Hashtable*>(this)->find(in);
 }
 
@@ -521,6 +343,176 @@ template<typename T> auto Hashtable<T>::begin() const noexcept -> Iterator<FWD |
 
 template<typename T> auto Hashtable<T>::end() const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Hashtable*>(this)->end();
+}
+
+template<typename T>
+template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed) {
+    Bucket* bucket = buckets + (indexof(hashed));
+    Chain*  pos    = nullptr;
+    if(!bucket) throw diag::error(diag::INVALID_DATA);
+
+    // false -> empty
+    if(bucket->used == false) pos = bucket; // first
+    else {
+        if(bucket->size >= bucket->capacity && !expand(bucket)) {
+            return false; // no space
+        }
+        pos = bucket->chain + bucket->size - 1; // get last
+    }
+
+    // copy or move, can throw
+    new(&pos->data) T(std::forward<U>(in));
+
+    pos->hash = hashed; // store
+    if(bucket == pos) {
+        bucket->used = true; // first
+    }
+    else bucket->size += 1; // chain
+    ++counter;
+    return true;
+}
+
+
+template<typename T> void Hashtable<T>::remove(Bucket* bucket, Chain* del) {
+    // delete first data
+    if(bucket == del) {
+        // has chain, swap and delete
+        if(bucket->size != 0) {
+            bucket->size -= 1;                            // reduce
+            Chain* last   = bucket->chain + bucket->size; // get last
+            del->data     = std::move(last->data);        // move (override)
+            del->hash     = last->hash;                   // copy hash
+            last->data.~T();                              // delete
+        }
+        // delete
+        else {
+            bucket->used = false; // mark
+            bucket->data.~T();    // delete
+        }
+    }
+
+    // else delete chain
+    else {
+        --bucket->size; // count
+        // swap and delete
+        if(bucket->size != 0) {
+            Chain* last = bucket->chain + bucket->size; // get last
+            del->data   = std::move(last->data);        // move (override)
+            del->hash   = last->hash;                   // copy hash
+            last->data.~T();                            // delete
+        }
+        else del->data.~T(); // delete
+    }
+    --counter; // total count
+}
+
+template<typename T> bool Hashtable<T>::rehash(uint64_t caplog) {
+    size_t size = (size_t(1) << caplog);
+    if(size <= capacitor) {
+        return false; // shrink not allow
+    }
+
+    // realloc
+    Bucket* old = buckets; // backup
+    buckets     = static_cast<Bucket*>(std::malloc(sizeof(Bucket) * size));
+    if(!buckets) {
+        buckets = old; // rollback
+        return false;  // bad alloc
+    }
+
+    // initialize
+    for(size_t i = 0; i < size; ++i) {
+        buckets[i].used     = false;
+        buckets[i].chain    = nullptr;
+        buckets[i].size     = 0;
+        buckets[i].capacity = 0;
+    }
+    counter = 0; // reset
+
+    // has data
+    if(old) {
+        // move
+        for(size_t i = 0; i < capacitor; ++i) {
+            // main data
+            if(old[i].used == true) {
+                emplace(std::move(old[i].data), old[i].hash); // move
+                old[i].data.~T();                             // delete
+            }
+            // chained datas
+            if(old[i].chain) {
+                for(uint16_t j = 0; j < old[i].size; ++j) {
+                    Chain& chain = old[i].chain[j];
+                    emplace(std::move(chain.data), chain.hash); // move
+                    chain.data.~T();                            // delete
+                }
+                // MSVC C6001 FALSE POSITIVE
+                std::free(old[i].chain); // delete
+            }
+        }
+        std::free(old); // delete
+    }
+
+    capacitor = size;
+    log       = caplog;
+    return true;
+}
+
+template<typename T> bool Hashtable<T>::expand(Bucket* in) {
+    uint16_t cap   = grower(in->capacity);
+    Chain*   newly = static_cast<Chain*>(std::malloc(sizeof(Chain) * cap));
+    if(!newly) {
+        return false; // bad alloc
+    }
+
+    // remove old and move
+    Chain* old = in->chain;
+    for(uint16_t i = 0; i < in->size; ++i) {
+        new(&newly[i].data) T(std::move(old[i].data)); // move, maybe noexcept
+        newly[i].hash = old[i].hash;                   // copy hash
+        old[i].data.~T();                              // dtor
+    }
+    in->chain    = newly; // store
+    in->capacity = cap;   // count
+    std::free(old);       // delete
+    return true;
+}
+
+template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* { 
+    return const_cast<Hashtable*>(this)->bucket(in);
+}
+
+template<typename T> auto Hashtable<T>::slot(hash_t in) const noexcept -> const Bucket* { 
+    return const_cast<Hashtable*>(this)->slot(in);
+}
+
+template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) const noexcept -> const Chain* {
+    return const_cast<Hashtable*>(this)->slot(in, data);
+}
+
+template<typename T> auto Hashtable<T>::bucket(size_t in) noexcept -> Bucket* {
+    if(in >= capacitor) {
+        return nullptr; // exception
+    }
+    return buckets + in;
+}
+
+template<typename T> auto Hashtable<T>::slot(hash_t in) noexcept -> Bucket* {
+    return bucket + indexof(in);
+}
+
+template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) noexcept -> Chain* {
+    Bucket* bucket = buckets + (indexof(in));
+
+    if(bucket->hash == in && bucket->data == data) {
+        return bucket;
+    }
+    for(uint16_t i = 0; i < bucket->size; ++i) {
+        Chain* chain = bucket->chain + i;
+        if(chain->hash == in && chain->data == data) {
+            return chain;
+        }
+    }
+    return nullptr;
 }
 
 } // namespace container

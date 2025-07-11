@@ -4,8 +4,8 @@
 #include "../base/base.h"
 
 LWE_BEGIN
-namespace stl { 
-    template<typename, typename> struct Pair;
+namespace stl {
+template<typename, typename> struct Pair;
 }
 
 namespace container {
@@ -50,11 +50,11 @@ template<typename T> hash_t hashof(const T& in) {
     return Hash(&in, sizeof(in));
 }
 
-//! @brief pair hash overload
-template<typename K, typename V> size_t hashof(const container::Record<K, V>&);
+// //! @brief pair hash overload
+// template<typename K, typename V> size_t hashof(const container::Record<K, V>&);
 
-//! @brief pair hash overload
-template<typename K, typename V> size_t hashof(const stl::Pair<K, V>&);
+// //! @brief pair hash overload
+// template<typename K, typename V> size_t hashof(const stl::Pair<K, V>&);
 
 // float
 template<> hash_t hashof<float>(const float& in) {

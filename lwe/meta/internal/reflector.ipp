@@ -123,8 +123,12 @@ template<typename T> template<typename C> const Reflector<T>& Reflector<T>::find
     return find<C>();
 }
 
-template<typename T> const Reflector<T>& Reflector<T>::find(const StringView in) {
+template<typename T> const Reflector<T>& Reflector<T>::find(const String& in) {
     return map()[in];
+}
+
+template<typename T> const Reflector<T>& Reflector<T>::find(const char* in) {
+    return find(String{ in });
 }
 
 template<typename T> template<typename Arg> void Reflector<T>::push(Arg&& in) {

@@ -64,7 +64,7 @@ public:
     ~Registry();
 
 public:
-    using Table = std::unordered_map<String, std::unordered_map<String, Method*>>;
+    using Table = container::Dictionary<String, container::Dictionary<String, Method*>>;
 
 public:
     static void add(const char* cls, const char* name, Method* in);

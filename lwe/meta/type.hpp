@@ -142,20 +142,20 @@ const char*                      typeString(const Type&); //!< reflect type name
 template<typename T> const Type& typeof();         //!< reflect typeinfo by template
 template<typename T> const Type& typeof(const T&); //!< reflect typeinfo by argument
 
-template<typename T> Class* classof();              //!< get class field list
-template<typename T> Class* classof(const T&);      //!< get class field list
-Class*                      classof(const char*);   //!< get class field list
-Class*                      classof(const String&); //!< get class field list
+template<typename T> Class* classof();                 //!< get class field list
+template<typename T> Class* classof(const T&);         //!< get class field list
+Class*                      classof(const String&);    //!< get class field list
+Class*                      classof(const char*);    //!< get class field list
 
-template<typename T> Enum* enumof();              //!< get enum value list
-template<typename T> Enum* enumof(const T&);      //!< get enum value list
-Enum*                      enumof(const char*);   //!< get enum value list
-Enum*                      enumof(const String&); //!< get enum value list
+template<typename T> Enum* enumof();                 //!< get enum value list
+template<typename T> Enum* enumof(const T&);         //!< get enum value list
+Enum*                      enumof(const String&);    //!< get enum value list
+Enum*                      enumof(const char*);      //!< get enum value list
 
 template<typename T> T* statics();              //!< get static class
 template<typename T> T* statics(const T&);      //!< get static class
-Object*                 statics(const char*);   //!< get static class
 Object*                 statics(const String&); //!< get static class
+Object*                 statics(const char*);   //!< get static class
 } // namespace meta
 LWE_END
 #include "type.ipp"
