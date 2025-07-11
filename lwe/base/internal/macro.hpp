@@ -360,31 +360,20 @@ public:                                                                         
 //! register container code
 #define REGISTER_CONTAINER(TEMPLATE, CLASS, CODE, ...)                            \
     template<WRAP TEMPLATE> struct LWE::meta::ContainerCode<CLASS<__VA_ARGS__>> { \
-        using ENUM_ALIAS                     = LWE::meta::Keyword;                \
-        static constexpr meta::Keyword VALUE = ENUM_ALIAS::CODE;                  \
+        static constexpr meta::Keyword KEYWORD = static_cast<LWE::meta::Keyword>(CODE);   \
     }
 
 /**
  * @brief default container serializer and deserializer override
  */
-#define CONTAINER_BODY(ELEMENT, CONTAINER, ...)                                                                        \
-    friend LWE::meta::Container;                                                                                       \
-public:                                                                                                                \
+#define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
     template<Mod MOD> using Iterator = Iterator<MOD, CONTAINER<__VA_ARGS__>>;                                          \
-    template<Mod, typename> friend class LWE::stl::Iterator;                                                           \
+    template<Mod, typename> friend class LWE::container::Iterator;                                                     \
     using iterator               = Iterator<FWD>;                                                                      \
     using const_iterator         = Iterator<FWD | VIEW>;                                                               \
     using reverse_iterator       = Iterator<BWD>;                                                                      \
     using const_reverse_iterator = Iterator<BWD | VIEW>;                                                               \
-    using CONTAINER##Element = ELEMENT;                                                                                \
-    virtual std::string serialize() const override {                                                                   \
-        return LWE::meta::Codec::encode<CONTAINER<__VA_ARGS__>>(*this);                                                \
-    }                                                                                                                  \
-    virtual void deserialize(const string_view in) override {                                                          \
-        const LWE::meta::Container* ptr = const_cast<Container*>(static_cast<const Container*>(this));                 \
-        LWE::meta::Codec::decode<CONTAINER<__VA_ARGS__>>(this, in);                                                    \
-    }                                                                                                                  \
-    using value_type = CONTAINER##Element
+    using value_type             = ELEMENT
 
 #define ITERATOR_BODY(MOD, CONTAINER, ...)                       \
     using CONTAINER = CONTAINER<__VA_ARGS__>;                    \
