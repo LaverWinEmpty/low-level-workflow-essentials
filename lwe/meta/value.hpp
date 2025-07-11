@@ -12,10 +12,9 @@ template<typename E, typename = std::enable_if_t<std::is_enum_v<E>>> struct Valu
     using U = std::make_unsigned_t<std::underlying_type_t<E>>;
 
 public:
-    static diag::Expected<Enumerator> find(uint64_t);      //! @brief get enum by value
-    static diag::Expected<Enumerator> find(const char*);   //! @brief get enum by name
-    static diag::Expected<Enumerator> find(const string&); //! @brief get enum by name
-    static diag::Expected<Enumerator> at(size_t);          //! @brief get enum by index
+    static diag::Expected<Enumerator> find(uint64_t);         //! @brief get enum by value
+    static diag::Expected<Enumerator> find(const StringView); //! @brief get enum by name
+    static diag::Expected<Enumerator> at(size_t);             //! @brief get enum by index
 
 public:
     //! @brief get enum value info (O(n))

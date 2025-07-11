@@ -19,7 +19,7 @@ template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable
 }
 
 // find by name
-template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(const char* in) {
+template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(const StringView in) {
     if(!cache) {
         return diag::error(diag::Code::TYPE_MISMATCH);
     }
@@ -31,11 +31,6 @@ template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable
         }
     }
     return diag::error(diag::Code::INVALID_DATA); // not found
-}
-
-// find by name
-template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable>::find(const string& in) {
-    return find(in.c_str());
 }
 
 // get by index
