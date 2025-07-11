@@ -8,7 +8,7 @@ LWE_BEGIN
 namespace stl {
 
 DECLARE_CONTAINER((typename K, typename V), Map, LWE::container::Dictionary, K, V);
-REGISTER_CONTAINER((typename K, typename V), Map, STL_MAP, K, V);
+REGISTER_CONTAINER((typename K, typename V), Map, Keyword::STL_MAP, K, V);
 
 } // namespace stl
 LWE_END

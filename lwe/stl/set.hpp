@@ -8,7 +8,7 @@ LWE_BEGIN
 namespace stl {
 
 DECLARE_CONTAINER((typename T), Set, LWE::container::Hashtable, T);
-REGISTER_CONTAINER((typename T), Set, STL_SET, T);
+REGISTER_CONTAINER((typename T), Set, Keyword::TL_SET, T);
 
 } // namespace stl
 LWE_END
