@@ -4,31 +4,31 @@
 LWE_BEGIN
 namespace container {
 
-template<typename Key, typename Value> void Dictionary<Key, Value>::push(Entry&& in) {
-    insert(std::move(in));
+template<typename K, typename V> void Dictionary<K, V>::push(Entry&& in) {
+    emplace(std::move(in));
 }
 
-template<typename Key, typename Value> void Dictionary<Key, Value>::push(const Entry& in) {
-    insert(in);
+template<typename K, typename V> void Dictionary<K, V>::push(const Entry& in) {
+    emplace(in);
 }
 
-template<typename Key, typename Value> void Dictionary<Key, Value>::push(const Key& key, const Value& value) {
-    insert(Entry{ key, value });
+template<typename K, typename V> void Dictionary<K, V>::push(const K& K, const V& V) {
+    emplace(Entry{ K, V });
 }
 
-template<typename Key, typename Value> void Dictionary<Key, Value>::push(Key&& key, Value&& value) {
-    insert(Entry{ std::move(key), std::move(value) });
+template<typename K, typename V> void Dictionary<K, V>::push(K&& K, V&& V) {
+    emplace(Entry{ std::move(K), std::move(V) });
 }
 
-template<typename Key, typename Value> void Dictionary<Key, Value>::push(const Key& key, Value&& value) {
-    insert(Entry{ key, std::move(value) });
+template<typename K, typename V> void Dictionary<K, V>::push(const K& K, V&& V) {
+    emplace(Entry{ K, std::move(V) });
 }
 
-template<typename Key, typename Value> void Dictionary<Key, Value>::push(Key&& key, const Value& value) {
-    insert(Entry{ std::move(key), value });
+template<typename K, typename V> void Dictionary<K, V>::push(K&& K, const V& V) {
+    emplace(Entry{ std::move(K), V });
 }
 
-template<typename Key, typename Value> bool Dictionary<Key, Value>::pop(const Key& in) {
+template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
     auto it = find(in);
     if(it != set.end()) {
         set.pop(it);
@@ -37,16 +37,16 @@ template<typename Key, typename Value> bool Dictionary<Key, Value>::pop(const Ke
     return false;
 }
 
-template<typename Key, typename Value> bool Dictionary<Key, Value>::pop(const Iterator<FWD>& in) {
+template<typename K, typename V> bool Dictionary<K, V>::pop(const Iterator<FWD>& in) {
     return set.pop(in);
 }
 
-template<typename Key, typename Value> bool Dictionary<Key, Value>::pop(hash_t in) {
+template<typename K, typename V> bool Dictionary<K, V>::pop(hash_t in) {
     return set.pop(in);
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::find(const Key& in) noexcept -> Iterator<FWD> {
+template<typename K, typename V>
+auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
     // avoiding unnecessary copy logic
     hash_t hashed = util::hashof(in);
     size_t index  = set.indexing(hashed);
@@ -72,89 +72,91 @@ auto Dictionary<Key, Value>::find(const Key& in) noexcept -> Iterator<FWD> {
     return set.end(); // not found
 }
 
-template<typename Key, typename Value> auto Dictionary<Key, Value>::find(hash_t in) noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto Dictionary<K, V>::find(hash_t in) noexcept -> Iterator<FWD> {
     return set.find(in);
 }
 
-template<typename Key, typename Value> auto Dictionary<Key, Value>::at(size_t in) noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto Dictionary<K, V>::at(size_t in) noexcept -> Iterator<FWD> {
     return set.at(in);
 }
 
-template<typename Key, typename Value> auto Dictionary<Key, Value>::begin() noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto Dictionary<K, V>::begin() noexcept -> Iterator<FWD> {
     return set.begin();
 }
 
-template<typename Key, typename Value> auto Dictionary<Key, Value>::end() noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto Dictionary<K, V>::end() noexcept -> Iterator<FWD> {
     return set.end();
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::find(const Key& in) const noexcept -> Iterator<FWD | VIEW> {
+template<typename K, typename V>
+auto Dictionary<K, V>::find(const K& in) const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->find(in);
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::find(hash_t in) const noexcept -> Iterator<FWD | VIEW> {
+template<typename K, typename V>
+auto Dictionary<K, V>::find(hash_t in) const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->find(in);
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
+template<typename K, typename V>
+auto Dictionary<K, V>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->at(in);
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::begin() const noexcept -> Iterator<FWD | VIEW> {
+template<typename K, typename V>
+auto Dictionary<K, V>::begin() const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->begin();
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::end() const noexcept -> Iterator<FWD | VIEW> {
+template<typename K, typename V>
+auto Dictionary<K, V>::end() const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->end();
 }
 
-template<typename Key, typename Value> size_t Dictionary<Key, Value>::size() const noexcept {
-    return set.size();
+template<typename K, typename V> size_t Dictionary<K, V>::size() const noexcept {
+    return set.counter;
 }
 
-template<typename Key, typename Value> size_t Dictionary<Key, Value>::capacity() const noexcept {
-    return set.capacity();
+template<typename K, typename V> size_t Dictionary<K, V>::capacity() const noexcept {
+    return set.capaictor;
 }
 
-template<typename Key, typename Value> bool Dictionary<Key, Value>::exist(hash_t in) const noexcept {
+template<typename K, typename V> bool Dictionary<K, V>::exist(hash_t in) const noexcept {
     return set.exist(in);
 }
 
-template<typename Key, typename Value> bool Dictionary<Key, Value>::exist(const Key& in) const noexcept {
+template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const noexcept {
     return find(in) != end();
 }
 
-template<typename Key, typename Value>
-auto Dictionary<Key, Value>::bucket(size_t in) const noexcept -> const typename Hashtable::Bucket* {
+template<typename K, typename V>
+auto Dictionary<K, V>::bucket(size_t in) const noexcept -> const typename Hashtable::Bucket* {
     return set.bucket(in);
 }
 
-template<typename Key, typename Value>
-template<typename U>
-bool Dictionary<Key, Value>::insert(U&& in) const noexcept {
-    hash_t hashed = hashof(in.first);
-    size_t index  = indexing(hashed);
+template<typename K, typename V> template<typename U>
+bool Dictionary<K, V>::emplace(U&& in) noexcept {
+    hash_t hashed = util::hashof(in.first);
+    size_t index  = set.indexing(hashed);
 
-    typename Set::Bucket& bucket = std.buckets[index]; // get ref
+    if(set.counter >= set.capacitor) { 
+        set.resize(set.log + 1);
+    }
+    const Hashtable::Bucket& bucket = set.buckets[index]; // get ref
 
     // duplicated check (pair::first only)
     if(bucket.used == true) {
-        if(bucket.data == in.first) {
+        if(bucket.data.first == in.first) {
             return false;
         }
         for(uint16_t i = 0; i < bucket.size; ++i) {
-            if(bucket.chain[i].data == in.first) {
+            if(bucket.chain[i].data.first == in.first) {
                 return false;
             }
         }
     }
 
-    set.insert(in, hashed, false); // no check
+    return set.emplace(in, hashed, false); // no check
 }
 
 } // namespace container

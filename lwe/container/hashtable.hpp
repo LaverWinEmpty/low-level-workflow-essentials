@@ -45,15 +45,9 @@ namespace container {
 template<typename T> class Hashtable {
 public:
     template<typename, typename> friend class Dictionary; //!< for composition
-    template<Mod, typename> friend class Iterator;        //!< iterator
-    template<Mod MOD> using Iterator = Iterator<MOD, Hashtable>;
 
 public:
-    using value_type             = T;
-    using iterator               = Iterator<FWD>;
-    using reverse_iterator       = Iterator<BWD>;
-    using const_iterator         = Iterator<FWD | VIEW>;
-    using const_reverse_iterator = Iterator<BWD | VIEW>;
+    CONTAINER_BODY(Hashtable, T, T);
 
 protected:
     struct Chain {
@@ -115,8 +109,8 @@ public:
     Iterator<FWD> end() noexcept;          //!< non-const
 
 protected:
-    template<typename U> bool insert(U&&);
-    template<typename U> bool insert(U&&, hash_t, bool = true);
+    template<typename U> bool emplace(U&&);
+    template<typename U> bool emplace(U&&, hash_t, bool = true);
 
 protected:
     bool resize(uint64_t);

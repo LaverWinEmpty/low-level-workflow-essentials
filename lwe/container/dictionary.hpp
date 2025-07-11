@@ -19,17 +19,11 @@ template<typename> class Hashtable;
 template<typename K, typename V>
 class Dictionary {
 public:
-    using Entry     = std::pair<K, V>;
-    using Hashtable = Hashtable<Entry>;
-    template<Mod, typename> friend class Iterator; //!< iterator
-    template<Mod MOD> using Iterator = Iterator<MOD, Hashtable>;
-
+    using Entry = std::pair<K, V>;
 public:
-    using value_type             = Entry;
-    using iterator               = Iterator<FWD>;
-    using reverse_iterator       = Iterator<BWD>;
-    using const_iterator         = Iterator<FWD | VIEW>;
-    using const_reverse_iterator = Iterator<BWD | VIEW>;
+    CONTAINER_BODY(Hashtable, Entry, Entry);
+private:
+    using Hashtable = Hashtable<Entry>;
 
 public:
     V& operator[](const K& in) {
@@ -75,11 +69,11 @@ public:
     bool   exist(hash_t) const noexcept;
     bool   exist(const K&) const noexcept;
 
-private:
-    template<typename U> void insert(U&&) const noexcept;
-
 public:
     const typename Hashtable::Bucket* bucket(size_t in) const noexcept;
+
+private:
+    template<typename U> bool emplace(U&&) noexcept;
 
 public:
     Hashtable set;

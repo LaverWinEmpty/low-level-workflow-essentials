@@ -166,15 +166,15 @@ template<typename T> bool Hashtable<T>::resize(uint64_t caplog) {
         for(size_t i = 0; i < capacitor; ++i) {
             // main data
             if(old[i].used == true) {
-                insert(std::move(old[i].data), old[i].hash); // move
-                old[i].data.~T();                            // delete
+                emplace(std::move(old[i].data), old[i].hash); // move
+                old[i].data.~T();                             // delete
             }
             // chained datas
             if(old[i].chain) {
                 for(uint16_t j = 0; j < old[i].size; ++j) {
                     Chain& chain = old[i].chain[j];
-                    insert(std::move(chain.data), chain.hash); // move
-                    chain.data.~T();                           // delete
+                    emplace(std::move(chain.data), chain.hash); // move
+                    chain.data.~T();                            // delete
                 }
                 // MSVC C6001 FALSE POSITIVE
                 std::free(old[i].chain); // delete
@@ -214,11 +214,11 @@ template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> cons
 }
 
 template<typename T> bool Hashtable<T>::push(T&& in) {
-    return insert(std::move(in));
+    return emplace(std::move(in));
 }
 
 template<typename T> bool Hashtable<T>::push(const T& in) {
-    return insert(in);
+    return emplace(in);
 }
 
 template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
@@ -428,7 +428,7 @@ template<typename T> auto Hashtable<T>::end() noexcept -> Iterator<FWD> {
 }
 
 template<typename T>
-template<typename U> bool Hashtable<T>::insert(U&& in) {
+template<typename U> bool Hashtable<T>::emplace(U&& in) {
     // size check
     if(counter >= factor) {
         if(!resize(log + 1)) {
@@ -437,11 +437,11 @@ template<typename U> bool Hashtable<T>::insert(U&& in) {
         factor = size_t(float(capacitor) * LOAD_FACTOR);
     }
     hash_t hash = util::hashof(in); // const T&
-    return insert(std::forward<U>(in), hash);
+    return emplace(std::forward<U>(in), hash);
 }
 
 template<typename T>
-template<typename U> bool Hashtable<T>::insert(U&& in, hash_t hashed, bool check) {
+template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed, bool check) {
     size_t index = indexing(hashed); // to index
 
     Bucket& bucket = buckets[index];
@@ -462,7 +462,7 @@ template<typename U> bool Hashtable<T>::insert(U&& in, hash_t hashed, bool check
 
     // false -> empty
     if(bucket.used == false) {
-        // insert
+        // emplace
         new(&bucket.data) T(std::forward<U>(in)); // copy or move, can throw
         bucket.used = true;                       // check
         bucket.hash = hashed;                     // store
@@ -496,7 +496,7 @@ template<typename U> bool Hashtable<T>::insert(U&& in, hash_t hashed, bool check
 
     // isnert data
     new(&bucket.chain[size].data) T(std::forward<U>(in)); // copy or move, can throw
-    bucket.chain[size].hash = hashed;                     // insert hash
+    bucket.chain[size].hash = hashed;                     // emplace hash
 
     ++bucket.size; // size
     ++counter;     // total size
