@@ -84,6 +84,10 @@ template<typename T, typename U> bool Dictionary<K, V>::insert(T&& k, U&& v) {
 
 template<typename K, typename V>
 auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
+    if(set.buckets == nullptr) {
+        return end();
+    }
+
     // avoiding unnecessary copy logic
     hash_t  hashed = util::hashof(in);
     size_t  index  = set.indexof(hashed);

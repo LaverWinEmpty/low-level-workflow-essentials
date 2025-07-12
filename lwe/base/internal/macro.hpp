@@ -349,6 +349,7 @@ public:                                                                         
                                        public LWE::meta::Container {    \
         using Base = BASE<__VA_ARGS__>;                                 \
     public:                                                             \
+        using Base::Base;                                               \
         virtual std::string serialize() const override {                \
             return LWE::meta::Codec::encode<CLASS<__VA_ARGS__>>(*this); \
         }                                                               \

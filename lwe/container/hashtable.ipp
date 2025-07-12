@@ -252,6 +252,10 @@ template<typename T> void Hashtable<T>::clear() noexcept {
 }
 
 template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<FWD> {
+    if(buckets == nullptr) { 
+        return end();
+    }
+
     hash_t  hashed = util::hashof(in); // get hash
     size_t  index  = indexof(hashed);
     Bucket& bucket = buckets[index];
@@ -260,13 +264,13 @@ template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<F
     if(bucket.used == true) {
         // not chain, or first data
         if(bucket.hash == hashed && bucket.data == in) {
-            return Iterator(this, index);
+            return Iterator<FWD>(this, index);
         }
         // return chain
         for(uint16_t i = 0; i < bucket.size; ++i) {
             Chain* chain = bucket.chain + i;
             if(chain->hash == hashed && chain->data == in) {
-                return Iterator(this, index, i);
+                return Iterator<FWD>(this, index, i);
             }
         }
     }

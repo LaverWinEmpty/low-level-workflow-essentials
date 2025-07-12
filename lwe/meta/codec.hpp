@@ -9,6 +9,9 @@
 #include "object.hpp"
 // #include "../stl/pair.hpp"
 
+template<typename T>
+struct TypeError;
+
 LWE_BEGIN
 namespace meta {
 
@@ -57,14 +60,17 @@ template<typename T> String Codec::from(const T& in) {
     if constexpr(std::is_base_of_v<Encoder, T> || std::is_same_v<Encoder, T>) {
         return static_cast<const Encoder&>(in).serialize();
     }
+
     // template
     else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
         return encode(in); // pair, container, etc
     }
-    // enum
+
+    // enum TODO
     else if constexpr(std::is_enum_v<T>) { }
-    // else
-    else {
+
+    // primitive
+    else if constexpr(std::is_arithmetic_v<T>) {
         std::stringstream ss;
         if constexpr(std::is_same_v<T, int8_t> || std::is_same_v<T, uint8_t>) ss << int(in);
         // else if constexpr(std::is_same_v<T, float>) ss << std::fixed << std::setprecision(6) << in;
@@ -72,6 +78,9 @@ template<typename T> String Codec::from(const T& in) {
         else ss << in;
         return ss.str();
     }
+
+    // etc call: exception
+    throw diag::error(diag::INVALID_DATA);
 }
 
 // deserialize
@@ -82,12 +91,14 @@ template<typename T> T Codec::to(const StringView in) {
         static_cast<Encoder&>(data).deserialize(in);
         return std::move(data);
     }
+
     // template
     else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
         T data;
         decode(&data, in); // container, pair, etc...
         return data;
     }
+
     // enum
     else if constexpr(std::is_enum_v<T>) {
         const Enumeration& info = Enumeration::find<T>();
@@ -98,28 +109,32 @@ template<typename T> T Codec::to(const StringView in) {
         }
         return "";
     }
-
-    // TODO: exeption
-    // 1. out of range
-    // 2. format mismatch
-    // 3. type mismatch ?
-    else {
+    
+    // primitive
+    else if constexpr(std::is_arithmetic_v<T>) {
         // string to primitive type
         Decoder decoder(in);
         if(!decoder.next<void>()) {
             throw diag::error(diag::INVALID_DATA);
         }
         const StringView str = decoder.get();
-
+        
         T result;
+
         if constexpr(std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
             int temp;
             std::from_chars(str.data(), str.data() + str.size(), temp);
-            return temp;
+            return T(temp);
         }
-        else std::from_chars(str.data(), str.data() + str.size(), result);
-        return result;
+
+        else {
+            std::from_chars(str.data(), str.data() + str.size(), result);
+            return result;
+        }
     }
+
+    // etc call: exception
+    throw diag::error(diag::INVALID_DATA);
 }
 
 /**************************************************************************************************
@@ -213,8 +228,6 @@ template<> String Codec::to<String>(const StringView in) {
  **************************************************************************************************/
 // serialize
 template<typename T> String Codec::encode(const Container& in) {
-    using Element = typename T::value_type;
-
     auto curr = reinterpret_cast<const T&>(in).begin();
     auto last = reinterpret_cast<const T&>(in).end();
 
@@ -225,7 +238,7 @@ template<typename T> String Codec::encode(const Container& in) {
         out.append("[ ");
         // for each
         while(true) {
-            out.append(from<Element>(*curr)); // auto
+            out.append(from<typename T::value_type>(*curr)); // auto
             ++curr;
             if(curr != last) {
                 out.append(", ");
@@ -240,8 +253,6 @@ template<typename T> String Codec::encode(const Container& in) {
 
 // deserialize
 template<typename T> void Codec::decode(Container* ptr, StringView in) {
-    // TODO: value_type keep? rename?
-    using Element = typename T::value_type;
     if(in == "[]") {
         return; // empty
     }
@@ -250,11 +261,11 @@ template<typename T> void Codec::decode(Container* ptr, StringView in) {
     Decoder decoder(in);
     decoder.move(2); // ignore `[ `
     while(true) {
-        decoder.next<Element>();
+        decoder.next<typename T::value_type>();
 
         // deserialize
-        Element data;
-        data = to<Element>(decoder.get()); // auto
+        typename T::value_type data;
+        data = to<typename T::value_type>(decoder.get()); // auto
         out.push(std::move(data));
 
         // move 2 reason
