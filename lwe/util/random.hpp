@@ -33,13 +33,13 @@ public:
         static Random rand;
 
         if constexpr(std::is_floating_point_v<T>) {
-            return rand.real(a, b);
+            return static_cast<T>(rand.real(a, b));
         }
         else if constexpr(std::is_signed_v<T>) {
-            return rand.sint(a, b);
+            return static_cast<T>(rand.sint(a, b));
         }
         else {
-            return rand.uint(a, b);
+            return static_cast<T>(rand.uint(a, b));
         }
     }
 
