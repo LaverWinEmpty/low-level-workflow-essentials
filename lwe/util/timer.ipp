@@ -16,8 +16,8 @@ auto Timer::timestamp(bool flag) const -> StringProxy {
 
     // get and limit
     float elapsed = sec();
-    if(elapsed >= MAX) {
-        elapsed = MAX;
+    if(elapsed >= DEFAULT_MAX) {
+        elapsed = DEFAULT_MAX;
     }
 
     // get sec
@@ -65,8 +65,12 @@ auto Timer::system(const StringView format, bool utc) -> StringProxy {
 #endif
     }
     StringProxy out;
-    std::strftime(out.data(), sizeof(StringProxy), format.data(), &info);
+    size_t last = std::strftime(out.data(), sizeof(StringProxy), format.data(), &info);
     return out;
+}
+
+auto Timer::system(bool utc) -> StringProxy { 
+    return system(DEFAULT_FORMAT, utc);
 }
 
 void Tick::initialize(float fps) {

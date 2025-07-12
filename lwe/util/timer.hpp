@@ -11,9 +11,11 @@ class Timer {
     using Clock = std::chrono::steady_clock;
     using MS    = std::chrono::milliseconds;
 
-    static constexpr float MAX = 3599999.99f; // 999:59:59.99
+    static constexpr float       DEFAULT_MAX    = 3599999.99f; // 999:59:59.99
+    static constexpr const char* DEFAULT_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 private:
+    //! @note "0000-00-00T00:00:00" -> 20 (without "Z" or "UTC+00:00")
     using StringProxy = mem::Block<20>;
 
 public:
@@ -40,7 +42,12 @@ public:
     //! @brief get system timestamp
     //! @param [in] true: UTC
     //! @note the delimiter can only be 1 byte
-    static StringProxy system(const StringView = "%Y-%m-%d %H:%M:%S", bool = false);
+    static StringProxy system(const StringView = DEFAULT_FORMAT, bool = false);
+
+public:
+    //! @brief get system timestamp (default format)
+    //! @param [in] true: UTC
+    static StringProxy system(bool);
 
 private:
     Clock::time_point last = Clock::now();
