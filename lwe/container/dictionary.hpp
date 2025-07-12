@@ -4,13 +4,6 @@
 #include "../config/config.h"
 #include "iterator.hpp"
 
-// TODO:
-// template<typename,  typename> typename T = LWE::container::Record -> std::pair
-// Remove isKVP
-// Remove KeyValue
-// Remove stl::Pair
-// using std::pair like as std::string
-
 LWE_BEGIN
 namespace container {
 
@@ -46,6 +39,7 @@ public:
     bool push(const K&, V&&);
     bool push(K&&, const V&);
     bool pop(const K&);
+    bool exist(const K&) const noexcept;
 
 public:
     template<typename T> bool             insert(T&&);
@@ -65,19 +59,19 @@ public:
     Iterator<FWD | VIEW> end() const noexcept;
 
 public:
+    size_t indexof(hash_t) const noexcept;
     size_t size() const noexcept;
     size_t capacity() const noexcept;
-    bool   exist(const K&) const noexcept;
+    bool   reserve(size_t) noexcept;
 
 public:
-    const Bucket* bucket(size_t) const noexcept;
-    const Bucket* slot(hash_t) const noexcept;
-    const Chain*  slot(hash_t, const K&) const noexcept;
+    const Bucket* bucket(size_t) const noexcept; //!< get bucket(index)
 
 private:
-    Bucket* bucket(size_t) noexcept;
-    Bucket* slot(hash_t) noexcept;
-    Chain*  slot(hash_t, const K&) noexcept;
+    Bucket*       slot(hash_t) noexcept;                 //!< get bucket slot
+    Chain*        slot(hash_t, const K&) noexcept;       //!< get chain slot
+    const Bucket* slot(hash_t) const noexcept;           //!< get bucket slot
+    const Chain*  slot(hash_t, const K&) const noexcept; //!< get chain slot
 
 private:
     template<typename T> bool emplace(T&&);

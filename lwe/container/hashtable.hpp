@@ -103,11 +103,6 @@ public:
     void clear() noexcept;         //!< clear, but no shrink
 
 public:
-    const Bucket* bucket(size_t) const noexcept;         // get bucket (array[index])
-    const Bucket* slot(hash_t) const noexcept;           // get slot   (bucket[hash])
-    const Chain*  slot(hash_t, const T&) const noexcept; //!< get, null == not found
-
-public:
     Iterator<FWD> find(const T&) noexcept; //!< find by data
     Iterator<FWD> at(size_t) noexcept;     //!< find by order
     Iterator<FWD> begin() noexcept;        //!< get begin
@@ -124,13 +119,17 @@ private:
     void                      remove(Bucket*, Chain*); //!< pop detail
 
 private:
-    bool   rehash(uint64_t);       //!< bucket resize
-    bool   expand(Bucket*);        //!< chain resize
+    bool rehash(uint64_t); //!< bucket resize
+    bool expand(Bucket*);  //!< chain resize
+
+public:
+    const Bucket* bucket(size_t) const noexcept; // get bucket(index)
 
 private:
-    Bucket* bucket(size_t) noexcept;         //!< non-const is private
-    Bucket* slot(hash_t) noexcept;           //!< non-const is private
-    Chain*  slot(hash_t, const T&) noexcept; //!< non-const is private
+    Bucket*       slot(hash_t) noexcept;                 //!< get bucket slot
+    Chain*        slot(hash_t, const T&) noexcept;       //!< get chain slot
+    const Bucket* slot(hash_t) const noexcept;           //!< get bucket slot
+    const Chain*  slot(hash_t, const T&) const noexcept; //!< get chain slot
 
 private:
     size_t counter   = 0; //!< element counter

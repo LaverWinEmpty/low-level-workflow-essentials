@@ -167,7 +167,7 @@ template<typename U> bool Hashtable<T>::insert(U&& in) {
     if(slot(hashed, in) != nullptr) {
         return false;
     }
-    if(factor >= LOAD_FACTOR) {
+    if(counter >= factor) {
         // capacitor << 1
         if(!rehash(log + 1)) {
             return false;
@@ -252,17 +252,18 @@ template<typename T> void Hashtable<T>::clear() noexcept {
 }
 
 template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<FWD> {
-    hash_t hashed = util::hashof(in); // get hash
-    size_t index  = indexof(hashed);
+    hash_t  hashed = util::hashof(in); // get hash
+    size_t  index  = indexof(hashed);
+    Bucket& bucket = buckets[index];
 
     // check has data
-    if(bucket->used == true) {
+    if(bucket.used == true) {
         // not chain, or first data
-        if(bucket->hash == hashed && bucket->data == in) {
+        if(bucket.hash == hashed && bucket.data == in) {
             return Iterator(this, index);
         }
         // return chain
-        for(uint16_t i = 0; i < bucket->size; ++i) {
+        for(uint16_t i = 0; i < bucket.size; ++i) {
             Chain* chain = bucket.chain + i;
             if(chain->hash == hashed && chain->data == in) {
                 return Iterator(this, index, i);
@@ -357,7 +358,7 @@ template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed) {
         if(bucket->size >= bucket->capacity && !expand(bucket)) {
             return false; // no space
         }
-        pos = bucket->chain + bucket->size - 1; // get last
+        pos = bucket->chain + bucket->size; // get last
     }
 
     // copy or move, can throw
@@ -427,12 +428,17 @@ template<typename T> bool Hashtable<T>::rehash(uint64_t caplog) {
         buckets[i].size     = 0;
         buckets[i].capacity = 0;
     }
-    counter = 0; // reset
+    size_t loop = capacitor; // old size for loop
+
+    log       = caplog;                     // update for fibonachi hash
+    capacitor = size;                       // update
+    factor    = size_t(size * LOAD_FACTOR); // update
+    counter   = 0;                          // reser for recount
 
     // has data
     if(old) {
         // move
-        for(size_t i = 0; i < capacitor; ++i) {
+        for(size_t i = 0; i < loop; ++i) {
             // main data
             if(old[i].used == true) {
                 emplace(std::move(old[i].data), old[i].hash); // move
@@ -451,9 +457,6 @@ template<typename T> bool Hashtable<T>::rehash(uint64_t caplog) {
         }
         std::free(old); // delete
     }
-
-    capacitor = size;
-    log       = caplog;
     return true;
 }
 
@@ -478,18 +481,6 @@ template<typename T> bool Hashtable<T>::expand(Bucket* in) {
 }
 
 template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* { 
-    return const_cast<Hashtable*>(this)->bucket(in);
-}
-
-template<typename T> auto Hashtable<T>::slot(hash_t in) const noexcept -> const Bucket* { 
-    return const_cast<Hashtable*>(this)->slot(in);
-}
-
-template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) const noexcept -> const Chain* {
-    return const_cast<Hashtable*>(this)->slot(in, data);
-}
-
-template<typename T> auto Hashtable<T>::bucket(size_t in) noexcept -> Bucket* {
     if(in >= capacitor) {
         return nullptr; // exception
     }
@@ -497,10 +488,16 @@ template<typename T> auto Hashtable<T>::bucket(size_t in) noexcept -> Bucket* {
 }
 
 template<typename T> auto Hashtable<T>::slot(hash_t in) noexcept -> Bucket* {
+    if (capacitor == 0) {
+        rehash(log); // init
+    }
     return bucket + indexof(in);
 }
 
 template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) noexcept -> Chain* {
+    if(capacitor == 0) {
+        rehash(log); // init
+    }
     Bucket* bucket = buckets + (indexof(in));
 
     if(bucket->hash == in && bucket->data == data) {
@@ -513,6 +510,14 @@ template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) noexcept 
         }
     }
     return nullptr;
+}
+
+template<typename T> auto Hashtable<T>::slot(hash_t in) const noexcept -> const Bucket* {
+    return const_cast<Hashtable*>(this)->slot(in);
+}
+
+template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) const noexcept -> const Chain* {
+    return const_cast<Hashtable*>(this)->slot(in, data);
 }
 
 } // namespace container

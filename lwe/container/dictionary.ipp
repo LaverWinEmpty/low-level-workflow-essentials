@@ -6,13 +6,17 @@ namespace container {
 
 template<typename K, typename V> V& Dictionary<K, V>::operator[](const K& in) {
     hash_t hashed = util::hashof(in);
-    
-    // insert and return
-    // empty data for call constructor
-    if(!push(Entry{ in, V{} })) {
-        throw diag::error(diag::BAD_ALLOC);
+
+    Chain* pos = slot(hashed, in);
+    if(pos == nullptr) {
+        // insert and return
+        // empty data for call constructor
+        if(!push(Entry{ in, V{} })) {
+            throw diag::error(diag::BAD_ALLOC);
+        }
+        return slot(hashed, in)->data.second;
     }
-    return slot(hashed, in)->data.second;
+    else return pos->data.second;
 }
 
 template<typename K, typename V> const V& Dictionary<K, V>::operator[](const K& in) const {
@@ -56,6 +60,10 @@ template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
     return true;
 }
 
+template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const noexcept {
+    return slot(util::hashof(in), in) != nullptr;
+}
+
 template<typename K, typename V> bool Dictionary<K, V>::erase(const Iterator<FWD>& in) {
     if (in != end()) {
         return set.pop(*in);
@@ -83,8 +91,8 @@ auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
 
     // found
     if(bucket.used) {
-        // first data only
-        if(bucket.size == 0) {
+        // not chain, or first data
+        if(bucket.hash == hashed && bucket.data.first == in) {
             Iterator<FWD> it = { &set, index }; // create iterator
             return it;
         }
@@ -132,6 +140,10 @@ auto Dictionary<K, V>::end() const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<Dictionary*>(this)->end();
 }
 
+template<typename K, typename V> size_t Dictionary<K, V>::indexof(hash_t in) const noexcept {
+    return set.indexof(in);
+}
+
 template<typename K, typename V> size_t Dictionary<K, V>::size() const noexcept {
     return set.counter;
 }
@@ -140,27 +152,12 @@ template<typename K, typename V> size_t Dictionary<K, V>::capacity() const noexc
     return set.capacitor;
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const noexcept {
-    return slot(util::hashof(in), in) != nullptr;
+template<typename K, typename V> bool Dictionary<K, V>::reserve(size_t in) noexcept {
+    return set.reserve(in);
 }
 
 template<typename K, typename V>
 auto Dictionary<K, V>::bucket(size_t in) const noexcept -> const Bucket* {
-    return set.bucket(in);
-}
-
-template<typename K, typename V>
-auto Dictionary<K, V>::slot(hash_t in) const noexcept -> const Bucket* {
-    return set.slot(in);
-}
-
-template<typename K, typename V>
-auto Dictionary<K, V>::slot(hash_t in, const K& data) const noexcept -> const Chain* {
-    return const_cast<Dictionary*>(this)->slot(in, data);
-}
-
-template<typename K, typename V>
-auto Dictionary<K, V>::bucket(size_t in) noexcept -> Bucket* {
     return set.bucket(in);
 }
 
@@ -171,6 +168,9 @@ auto Dictionary<K, V>::slot(hash_t in) noexcept -> Bucket* {
 
 template<typename K, typename V>
 auto Dictionary<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
+    if (set.capacitor == 0) {
+        set.rehash(set.log); // init
+    }
     Bucket* bucket = set.buckets + (set.indexof(in));
 
     if(bucket->hash == in && bucket->data.first == data) {
@@ -186,6 +186,16 @@ auto Dictionary<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
 }
 
 template<typename K, typename V>
+auto Dictionary<K, V>::slot(hash_t in) const noexcept -> const Bucket* {
+    return const_cast<Dictionary*>(this)->slot(in);
+}
+
+template<typename K, typename V>
+auto Dictionary<K, V>::slot(hash_t in, const K& data) const noexcept -> const Chain* {
+    return const_cast<Dictionary*>(this)->slot(in, data);
+}
+
+template<typename K, typename V>
 template<typename T> bool Dictionary<K, V>::emplace(T&& in) {
     hash_t hashed = util::hashof(in.first); // first only
 
@@ -195,8 +205,8 @@ template<typename T> bool Dictionary<K, V>::emplace(T&& in) {
     }
 
     // check size
-    if(set.factor >= set.LOAD_FACTOR) {
-        if(set.rehash(set.log + 1)) {
+    if(set.counter >= set.factor) {
+        if(!set.rehash(set.log + 1)) {
             return false;
         }
     }
