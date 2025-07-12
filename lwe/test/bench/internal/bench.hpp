@@ -81,12 +81,12 @@ private:
         }
         // exception
         else if(before == 0) {
-            printf("RESULT: LATENCY INCREASED FROM ZERO\n");
+            printf("RESULT: LATENCY REDUCED TO ZERO\n");
             return false;
         }
         // exception
         else if(after == 0) {
-            printf("RESULT: LATENCY REDUCED TO ZERO\n");
+            printf("RESULT: LATENCY INCREASED FROM ZERO\n");
             return false;
         }
         return true;
