@@ -1,5 +1,5 @@
-#define SMALL  0
-#define MEDIUM 0
+#define SMALL  1
+#define MEDIUM 1
 #define LARGE  1
 
 /**************************************************************************************************
@@ -17,7 +17,7 @@ using namespace lwe::stl;
 /**************************************************************************************************
  * SETTING
  **************************************************************************************************/
-static constexpr float LOAD_FACTOR = 2.f; // extream case
+static constexpr float LOAD_FACTOR = 1.f; // LWE load factor
 
 char table[255]; // dummy, for fill buffer
 
@@ -96,7 +96,14 @@ template<size_t N, int INSERT> void test_main() {
                  "RAM:      DDR4-3200 / 8GB x 2\n"
                  "OS:       Windows 11\n"
                  "Compiler: MSVC 2022 v143\n"
-                 "Option:   Release (/O2)\n\n";
+                 "Option:   ";
+
+#ifdef NDEBUG
+    std::cout << "Release (/O2)\n\n";
+#else
+    std::cout << "Debug\n\n";
+#endif
+
 
     auto seed = time(nullptr);
 
@@ -124,8 +131,7 @@ template<size_t N, int INSERT> void test_main() {
  * insert test code
  **************************************************************************************************/
 template<size_t SIZE, int COUNT> void test_insert() {
-    static constexpr int ITERATE = 10'000'000; // circulation
-    static constexpr int FIND    = 1'000'000;    // find count
+    static constexpr int FIND = 1'000'000; // find count
 
     float        sec = 0;
     float        stlsec;
@@ -237,26 +243,22 @@ template<size_t SIZE, int COUNT> void test_insert() {
 
     var = 0;
     bench.loop([&]() {
-        auto       itr = stdset.begin();
         const auto end = stdset.end();
-        for(int i = 0; i < ITERATE; ++i) {
+        for(auto itr = stdset.begin(); itr != end; ++itr) {
             var += itr->n;
-            if((++itr) == end) itr = stdset.begin();
         }
     });
-    bench.output("STD READ 0 ~ ", ITERATE);
+    bench.output("STD READ BEGIN ~ END");
     stlsec = bench.average();
 
     var = 0;
     bench.loop([&]() {
-        auto       itr = lweset.begin();
         const auto end = lweset.end();
-        for(int i = 0; i < ITERATE; ++i) {
+        for(auto itr = lweset.begin(); itr != end; ++itr) {
             var += itr->n;
-            if((++itr) == end) itr = lweset.begin();
         }
     });
-    bench.output("LWE READ 0 ~ ", ITERATE);
+    bench.output("LWE READ BEGIN ~ END");
     bench.from(stlsec);
 
     ///////////////////////////////////////////////////////////////////////////
