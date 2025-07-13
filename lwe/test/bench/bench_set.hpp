@@ -1,7 +1,3 @@
-#define SMALL  1
-#define MEDIUM 1
-#define LARGE  1
-
 /**************************************************************************************************
  * include
  **************************************************************************************************/
@@ -76,17 +72,7 @@ int main() {
     // init for dummy data
     for(int i = 0; i < 255; ++i) table[i] = i;
 
-#if SMALL
-    test_main<8, 16'000'000>(); // small size data
-#endif
-
-#if MEDIUM
-    test_main<512, 1'000'000>(); // medium size test
-#endif
-
-#if LARGE
-    test_main<4'096, 125'000>(); // large size test
-#endif
+    test_main<128, 2'000'000>();
 }
 
 template<size_t N, int INSERT> void test_main() {
