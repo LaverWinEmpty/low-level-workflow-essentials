@@ -5,7 +5,7 @@ LWE_BEGIN
 namespace container {
 
 template<typename K, typename V> V& Dictionary<K, V>::operator[](const K& in) {
-    hash_t hashed = util::hashof(in);
+    hash_t hashed = util::Hash<K>(in);
 
     Chain* pos = slot(hashed, in);
     if(pos == nullptr) {
@@ -48,7 +48,7 @@ template<typename K, typename V> bool Dictionary<K, V>::push(K&& K, const V& V) 
 }
 
 template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
-    hash_t  hashed = util::hashof(in);
+    hash_t  hashed = util::Hash<K>(in);
     Bucket* bucket = slot(hashed);
     Chain*  pos    = slot(hashed, in);
 
@@ -61,7 +61,7 @@ template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
 }
 
 template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const noexcept {
-    return slot(util::hashof(in), in) != nullptr;
+    return slot(util::Hash<K>(in), in) != nullptr;
 }
 
 template<typename K, typename V> bool Dictionary<K, V>::erase(const Iterator<FWD>& in) {
@@ -89,7 +89,7 @@ auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
     }
 
     // avoiding unnecessary copy logic
-    hash_t  hashed = util::hashof(in);
+    hash_t  hashed = util::Hash<K>(in);
     size_t  index  = set.indexof(hashed);
     Bucket& bucket = set.buckets[index];
 
@@ -201,7 +201,7 @@ auto Dictionary<K, V>::slot(hash_t in, const K& data) const noexcept -> const Ch
 
 template<typename K, typename V>
 template<typename T> bool Dictionary<K, V>::emplace(T&& in) {
-    hash_t hashed = util::hashof(in.first); // first only
+    hash_t hashed = util::Hash<K>(in.first); // first only
 
     // check collide
     if(slot(hashed, in.first) != nullptr) {

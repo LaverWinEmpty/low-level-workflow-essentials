@@ -4,6 +4,27 @@
 #include "../base/base.h"
 #include "../mem/block.hpp"
 
+#include "iostream"
+
+/*
+    Hash for 64bit fixed
+
+    Specilaization 
+    - Recommended
+      - inheritence `Hash<void>`
+      - constructor with set `value`
+      - constructor single argument
+    ```
+    template<typename T> struct Hash: Hash<void> {
+        Hash(const T& in) {
+            value = f(in);
+        }
+        // Delegating constructor can be utilized
+        Hash(T&& in): Hash<void>(f(in)) { }
+    };
+    ```
+*/
+
 LWE_BEGIN
 namespace container {
 template<typename K, typename V> struct Record;
@@ -11,70 +32,33 @@ template<typename K, typename V> struct Record;
 
 namespace util {
 
-// specializationable
-template<typename T = void> struct Hasher {
-    hash_t operator()(const T& in) const {
-        if constexpr(std::is_same_v<String, T> || std::is_same_v<StringView, T>) {
-            return fnv1a(in.data(), in.size());
-        }
-        else if constexpr(std::is_same_v<const char*, T>) {
-            return fnv1a(in, std::strlen(in));
-        }
-        else if constexpr(std::is_integral_v<T>) {
-            return hash_t(in);
-        }
-        if constexpr(std::is_floating_point_v<T>) {
-            if(in == -0) in = 0;
-        }
-        return fnv1a(&in, sizeof(T));
-    }
+template<typename T> struct Hash;
 
-private:
-    //! @brief default
-    static hash_t fnv1a(const void* in, size_t n) {
-        static constexpr uint64_t FNV1A64_BASIS = 14'695'981'039'346'656'037ULL;
-        static constexpr uint64_t FNV1A64_PRIME = 1'099'511'628'211ULL;
-
-        hash_t         val = FNV1A64_BASIS;
-        const uint8_t* ptr = reinterpret_cast<const uint8_t*>(in);
-        for(size_t i = 0; i < n; i++) {
-            val ^= ptr[i];
-            val *= FNV1A64_PRIME;
-        }
-        return val;
-    }
-};
-
-template<typename T> class Hash {
+// default interface
+template<> class Hash<void> {
     using StringProxy = mem::Block<17>;
 
-public:
-    Hash(const T& in): val(Hasher<T>{}(in)) { }
+protected:
+    Hash(hash_t); //!< for dervied
 
 public:
-    operator hash_t() const { return val; }
+    template<typename T> Hash(const T&); //!< default hash
+    operator hash_t() const;             //!< get hash
+    StringProxy operator*() const;       //!< to string
 
-public:
-    StringProxy operator*() const {
-        StringProxy out;
-        snprintf(out.data(), 17, "%016llX", val);
-        return out;
-    }
+protected:
+    static hash_t fnv1a(const void*, size_t); //!< default
 
-private:
-    hash_t val = 0;
+protected:
+    hash_t value;
 };
 
-template<typename K, typename V> struct hash<LWE::util::container::Record<K, V>> {
-    std::size_t operator()(const LWE::util::container::Record<K, V>&) const;
+template<typename T> struct Hash: Hash<void> {
+    using Hash<void>::Hash;
 };
 
 } // namespace util
 LWE_END
 
-// {
-//     size_t operator() { return }
-// }
-
-// #include "hash.ipp"
+#include "hash.ipp"
 #endif

@@ -146,7 +146,7 @@ template<typename T> bool Hashtable<T>::push(const T& in) {
 }
 
 template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
-    hash_t  hashed = util::hashof(in);          // get hash
+    hash_t  hashed = util::Hash<T>(in);          // get hash
     Bucket* bucket = buckets + indexof(hashed); // get bucket
     Chain*  pos    = slot(hashed, in);          // get delete pos
     if(pos == nullptr) {
@@ -157,12 +157,12 @@ template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
 }
 
 template<typename T> bool Hashtable<T>::exist(const T& in) noexcept {
-    return slot(in, util::hashof(in)) != nullptr;
+    return slot(in, util::Hash<T>(in)) != nullptr;
 }
 
 template<typename T>
 template<typename U> bool Hashtable<T>::insert(U&& in) {
-    hash_t hashed = util::hashof(in);
+    hash_t hashed = util::Hash<T>(in);
     // check
     if(slot(hashed, in) != nullptr) {
         return false;
@@ -256,7 +256,7 @@ template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<F
         return end();
     }
 
-    hash_t  hashed = util::hashof(in); // get hash
+    hash_t  hashed = util::Hash<T>(in); // get hash
     size_t  index  = indexof(hashed);
     Bucket& bucket = buckets[index];
 
