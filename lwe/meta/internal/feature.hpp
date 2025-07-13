@@ -9,7 +9,7 @@ namespace meta {
 
 //! @brief type codes
 enum class Keyword : uint8_t {
-    UNREGISTERED,
+    UNREGISTERED, // TODO: STRUCT
     VOID,
     SIGNED_INT,
     SIGNED_CHAR,
@@ -32,32 +32,64 @@ enum class Keyword : uint8_t {
     POINTER,
     REFERENCE,
     STD_STRING,
-    STL_DEQUE,
+    STD_PAIR,
+    STL_VECTOR,
     STL_SET,
     STL_MAP,
-    STL_PAIR,
+    STL_ANY,
     CONST,
 };
 
-//! my custom container interface
-class Container {
-public:
-    virtual ~Container() noexcept                 = default;
-    virtual string serialize() const              = 0;
-    virtual void   deserialize(const string_view) = 0;
-};
+constexpr bool storable(Keyword in) {
+    switch(in) {
+        case lwe::meta::Keyword::STL_VECTOR: return true;
+        case lwe::meta::Keyword::STL_SET:    return true;
+        case lwe::meta::Keyword::STL_MAP:    return true;
+        default:                             return false;
+    }
+}
 
-//! my custom pair interface
-class KeyValue {
+// TODO: Container / KeyCalue to Encoder
+//! @brief interface: callable in `Codec`
+class Encoder {
 public:
-    ~KeyValue() noexcept                          = default;
-    virtual string serialize() const              = 0;
-    virtual void   deserialize(const string_view) = 0;
+    virtual ~Encoder() noexcept                  = default;
+    virtual String serialize() const             = 0;
+    virtual void   deserialize(const StringView) = 0;
 };
+//! @brief container type eraser
+class Container: public Encoder { };
+
+////! my custom container interface
+// class Container {
+// public:
+//    virtual ~Container() noexcept                = default;
+//    virtual String serialize() const             = 0;
+//    virtual void   deserialize(const StringView) = 0;
+//};
+//
+////! my custom pair interface
+// class KeyValue {
+// public:
+//    ~KeyValue() noexcept                         = default;
+//    virtual String serialize() const             = 0;
+//    virtual void   deserialize(const StringView) = 0;
+//};
 
 //! @brief get container type code structur
 template<typename T> struct ContainerCode {
     static constexpr Keyword VALUE = Keyword::UNREGISTERED;
+};
+
+//! @brief type eraser default
+template<typename T, typename = void>
+struct TypeEraser {
+    static constexpr auto KEYWORD = Keyword::UNREGISTERED;
+};
+// pair
+template<typename T>
+struct TypeEraser<T, std::void_t<typename T::first_type, typename T::second_type>> {
+    static constexpr auto KEYWORD = Keyword::STD_PAIR;
 };
 
 //! @brief unused type
@@ -69,19 +101,14 @@ enum class Registered : bool {
 template<typename T> constexpr Keyword typecode();          //!< get type code
 constexpr const char*                  typestring(Keyword); //!< reflect type name string by enum
 
-template<typename T> constexpr bool isSTL();                        //!< check container explicit
-template<typename T> constexpr bool isSTL(const T&);                //!< check container implicit
-template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container runtime
-
-template<typename T> constexpr bool isOBJ();         //!< check object explicit
-template<typename T> constexpr bool isOBJ(const T&); //!< check object implicit
-
-/**
- * Key-Value Pair check, std::pair IS NOT KVP
- */
-template<typename T> constexpr bool isKVP();                        //!< check pair explicit
-template<typename T> constexpr bool isKVP(const T&);                //!< check pair implicit
-template<> bool                     isKVP<Keyword>(const Keyword&); //!< check container runtime
+// template<typename T> constexpr bool isSTL();                        //!< check container explicit
+// template<typename T> constexpr bool isSTL(const T&);                //!< check container implicit
+// template<> bool                     isSTL<Keyword>(const Keyword&); //!< check container runtime
+// template<typename T> constexpr bool isOBJ();         //!< check object explicit
+// template<typename T> constexpr bool isOBJ(const T&); //!< check object implicit
+// template<typename T> constexpr bool isKVP();                        //!< check pair explicit
+// template<typename T> constexpr bool isKVP(const T&);                //!< check pair implicit
+// template<> bool                     isKVP<Keyword>(const Keyword&); //!< check container runtime
 
 //! @brief pre-registered metadata of T, return value is unused
 template<typename T> Registered registclass();

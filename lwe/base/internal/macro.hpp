@@ -102,7 +102,7 @@
 #        define OS WINDOWS
 #    elif defined(__linux__)
 #        define OS LINUX
-#    elif defined(__unix___
+#    elif defined(__unix__)
 #        define OS UNIX
 #    elif defined(__FreeBSD__)
 #        define OS BSD
@@ -188,13 +188,13 @@ public:                                                                         
  /*
   * @breif register class field (Type Name, Scope Name)
   */
-#define REGISTER_FIELD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
-        Macro__register_field_begin_scoped,\
-        Macro__register_field_begin_global \
+#define REGISTER_CLASS_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
+        Macro__register_class_begin_scoped,\
+        Macro__register_class_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, ::)
-#define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::)
-#define Macro__register_field_begin_detail(TYPE, SCOPE)                                                                \
+#define Macro__register_class_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, ::)
+#define Macro__register_class_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::)
+#define Macro__register_class_begin_detail(TYPE, SCOPE)                                                                \
     template<> LWE::meta::Class* LWE::meta::classof<SCOPE TYPE>() {                                                    \
         static LWE::meta::Class* META = nullptr;                                                                       \
         if(!META) META = LWE::meta::Registry<LWE::meta::Class>::find(#TYPE);                                           \
@@ -250,7 +250,7 @@ public:                                                                         
         	return result->second;                                                                                     \
         }                                                                                                              \
         LWE::meta::Structure INFO; // {
-#define REGISTER_FIELD(FIELD)                                                                                          \
+#define CLASS_FIELD(FIELD)                                                                                             \
         INFO.push(                                                                                                     \
                 LWE::meta::Field {                                                                                     \
                     typeof<decltype(CLASS::FIELD)>(),                                                                  \
@@ -259,9 +259,9 @@ public:                                                                         
                     offsetof(CLASS, FIELD)                                                                             \
                 }                                                                                                      \
             ) // }
-#define REGISTER_FIELD_END                                                                                             \
+#define REGISTER_CLASS_END                                                                                             \
         INFO.shrink();                                                                                                 \
-        map().insert({ NAME, INFO });                                                                                  \
+        map().push({ NAME, INFO });                                                                                    \
         return map()[NAME];                                                                                            \
     }
 
@@ -339,7 +339,7 @@ public:                                                                         
             INFO.push(LWE::meta::Enumerator{ static_cast<uint64_t>(ENUM_ALIAS::VALUE), #VALUE }) // }
 #define REGISTER_ENUM_END                                                                                              \
         INFO.shrink();                                                                                                 \
-        map().insert({ NAME, INFO });                                                                                  \
+        map().push({ NAME, INFO });                                                                                    \
         return map()[NAME];                                                                                            \
     }
 
@@ -349,6 +349,7 @@ public:                                                                         
                                        public LWE::meta::Container {    \
         using Base = BASE<__VA_ARGS__>;                                 \
     public:                                                             \
+        using Base::Base;                                               \
         virtual std::string serialize() const override {                \
             return LWE::meta::Codec::encode<CLASS<__VA_ARGS__>>(*this); \
         }                                                               \
@@ -360,31 +361,20 @@ public:                                                                         
 //! register container code
 #define REGISTER_CONTAINER(TEMPLATE, CLASS, CODE, ...)                            \
     template<WRAP TEMPLATE> struct LWE::meta::ContainerCode<CLASS<__VA_ARGS__>> { \
-        using ENUM_ALIAS                     = LWE::meta::Keyword;                \
-        static constexpr meta::Keyword VALUE = ENUM_ALIAS::CODE;                  \
+        static constexpr meta::Keyword KEYWORD = static_cast<LWE::meta::Keyword>(CODE);   \
     }
 
 /**
  * @brief default container serializer and deserializer override
  */
-#define CONTAINER_BODY(ELEMENT, CONTAINER, ...)                                                                        \
-    friend LWE::meta::Container;                                                                                       \
-public:                                                                                                                \
+#define CONTAINER_BODY(CONTAINER, ELEMENT, ...)                                                                        \
     template<Mod MOD> using Iterator = Iterator<MOD, CONTAINER<__VA_ARGS__>>;                                          \
-    template<Mod, typename> friend class LWE::stl::Iterator;                                                           \
+    template<Mod, typename> friend class LWE::container::Iterator;                                                     \
     using iterator               = Iterator<FWD>;                                                                      \
     using const_iterator         = Iterator<FWD | VIEW>;                                                               \
     using reverse_iterator       = Iterator<BWD>;                                                                      \
     using const_reverse_iterator = Iterator<BWD | VIEW>;                                                               \
-    using CONTAINER##Element = ELEMENT;                                                                                \
-    virtual std::string serialize() const override {                                                                   \
-        return LWE::meta::Codec::encode<CONTAINER<__VA_ARGS__>>(*this);                                                \
-    }                                                                                                                  \
-    virtual void deserialize(const string_view in) override {                                                          \
-        const LWE::meta::Container* ptr = const_cast<Container*>(static_cast<const Container*>(this));                 \
-        LWE::meta::Codec::decode<CONTAINER<__VA_ARGS__>>(this, in);                                                    \
-    }                                                                                                                  \
-    using value_type = CONTAINER##Element
+    using value_type             = ELEMENT
 
 #define ITERATOR_BODY(MOD, CONTAINER, ...)                       \
     using CONTAINER = CONTAINER<__VA_ARGS__>;                    \

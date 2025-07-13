@@ -1,91 +1,90 @@
+/*
+    Hash functional object
+    - Stability: Enforced 64-bit design ensures identical results across platforms
+    - Flexibility: Enhanced usability and specialization flexibility
+
+    ? How to Specialization
+    - Recommended
+      1. inheritence `Hash<void>`
+      2. constructor with set `value`
+      3. constructor single argument
+    ! But ignore when not using `Hashtable`
+      This interface is for `Hashtable`
+    e.g.
+    ```
+    template<typename T> struct LWE::util::Hash: Hash<void> {
+        Hash(const T& in) {
+            value = f(in);
+        }
+        // Delegating constructor can be utilized
+        Hash(T&& in): Hash<void>(f(in)) { }
+    };
+    ```
+*/
+
 #ifndef LWE_UTIL_HASH
 #define LWE_UTIL_HASH
 
 #include "../base/base.h"
+#include "../mem/block.hpp"
 
 LWE_BEGIN
-namespace stl { 
-    template<typename, typename> struct Pair;
-}
-
-namespace container {
-template<typename K, typename V> struct Record;
-} // namespace container
 
 namespace util {
-class Hash {
-    static constexpr unsigned long long FNV1A64_BASIS = 14'695'981'039'346'656'037ULL;
-    static constexpr unsigned long long FNV1A64_PRIME = 1'099'511'628'211ULL;
+
+template<typename T = void> struct Hash;
+
+// default interface
+template<> class Hash<void> {
+    using StringProxy = mem::Block<17>;
+
+protected:
+    Hash(hash_t); //!< for dervied
 
 public:
-    //! string proxy
-    struct String;
+    template<typename T> Hash(const T&); //!< ctor: default hash
+    Hash() = default;                    //!< ctor: uninit
+    operator hash_t() const;             //!< operator: get hash
+    StringProxy operator*() const;       //!< operator: to string
 
 public:
-    Hash(const void*, size_t);
-    Hash(const char*);
-    Hash(const string&);
-    template<typename T> Hash(const T&);
+    /**************************************************************************
+     * PREDEFIND HASH FUNCTIONS
+     **************************************************************************/
+    static hash_t fnv1a(const void*, size_t); //!< default
 
-public:
-    bool operator==(const Hash&) const;
-    bool operator!=(const Hash&) const;
-
-public:
-    operator hash_t() const; //!< get value
-
-public:
-    String operator*() const; //! get string adapter;
-
-public:
-    String stringify() const;
-
-private:
-    hash_t                   val = 0;
-    static thread_local char buffer[17];
+protected:
+    hash_t value;
 };
 
-//! @brief type hash for specialization
-template<typename T> hash_t hashof(const T& in) {
-    return Hash(&in, sizeof(in));
-}
-
-//! @brief pair hash overload
-template<typename K, typename V> size_t hashof(const container::Record<K, V>&);
-
-//! @brief pair hash overload
-template<typename K, typename V> size_t hashof(const stl::Pair<K, V>&);
-
-// float
-template<> hash_t hashof<float>(const float& in) {
-    return hash_t(*reinterpret_cast<const uint32_t*>(&in));
-}
-
-// double
-template<> hash_t hashof<double>(const double& in) {
-    return hash_t(*reinterpret_cast<const uint64_t*>(&in));
-}
-
-// long double
-template<> hash_t hashof<long double>(const long double& in) {
-    if constexpr(sizeof(long double) == sizeof(uint64_t)) {
-        return hash_t(*reinterpret_cast<const uint64_t*>(&in));
-    }
-    else return Hash(&in, sizeof(in)); // default hash
-}
-
+/**************************************************************************************************
+ * DEFAULT TYPES
+ **************************************************************************************************/
 // clang-format off
-template<> hash_t hashof<char>(const char& in) { return in; }
-template<> hash_t hashof<bool>(const bool& in) { return in; }
-template<> hash_t hashof<int8_t>(const int8_t& in) { return in; }
-template<> hash_t hashof<int16_t>(const int16_t& in) { return in; }
-template<> hash_t hashof<int32_t>(const int32_t& in) { return in; }
-template<> hash_t hashof<int64_t>(const int64_t& in) { return in; }
-template<> hash_t hashof<uint8_t>(const uint8_t& in) { return in; }
-template<> hash_t hashof<uint16_t>(const uint16_t& in) { return in; }
-template<> hash_t hashof<uint32_t>(const uint32_t& in) { return in; }
-template<> hash_t hashof<uint64_t>(const uint64_t& in) { return in; }
+Hash(signed int)         -> Hash<void>;
+Hash(signed char)        -> Hash<void>;
+Hash(signed short)       -> Hash<void>;
+Hash(signed long)        -> Hash<void>;
+Hash(signed long long)   -> Hash<void>;
+Hash(unsigned int)       -> Hash<void>;
+Hash(unsigned char)      -> Hash<void>;
+Hash(unsigned short)     -> Hash<void>;
+Hash(unsigned long)      -> Hash<void>;
+Hash(unsigned long long) -> Hash<void>;
+Hash(char)               -> Hash<void>;
+Hash(float)              -> Hash<void>;
+Hash(double)             -> Hash<void>;
+Hash(long double)        -> Hash<void>;
+Hash(const char*)        -> Hash<void>;
+Hash(String)             -> Hash<void>;
+Hash(StringView)         -> Hash<void>;
+Hash(void*)              -> Hash<void>;
 // clang-format on
+
+// for unregistered type
+template<typename T> struct Hash: Hash<void> {
+    using Hash<void>::Hash;
+};
 
 } // namespace util
 LWE_END

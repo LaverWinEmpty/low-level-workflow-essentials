@@ -6,9 +6,9 @@ namespace diag {
 template<typename Code, typename>
 Alert::Alert(Code code, const std::error_category& category) noexcept: Alert(category.message(code), code) { }
 
-Alert::Alert(const char* msg, int32_t code) noexcept: Alert(string{ msg }, code) { }
+Alert::Alert(const char* msg, int32_t code) noexcept: Alert(String{ msg }, code) { }
 
-Alert::Alert(const string& msg, int32_t code) noexcept: code(code) {
+Alert::Alert(const String& msg, int32_t code) noexcept: code(code) {
     char buffer[FORMAT_SIZE + 1];
     std::snprintf(buffer, sizeof(buffer), FORMAT, code);
 

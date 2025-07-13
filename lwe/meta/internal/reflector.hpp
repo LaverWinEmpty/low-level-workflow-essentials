@@ -2,6 +2,7 @@
 #define LWE_META_REFLECTOR
 
 #include "../../base/base.h"
+#include "../../container/dictionary.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -13,6 +14,8 @@ struct Field;
 //! @note  Relfector<MyClass> == MyClass reflector class
 //! @tparam T Field or Enumerator
 template<typename T> class Reflector {
+    using Table = container::Dictionary<String, Reflector<T>>;
+
 public:
     //! @tparam C constructor: type info to create
     template<class C> static const Reflector<T>& reflect();
@@ -20,8 +23,8 @@ public:
 public:
     template<typename C> static const Reflector<T>& find();              //!< get registred C type data
     template<typename C> static const Reflector<T>& find(const C&);      //!< get registred C type data
+    static const Reflector<T>&                      find(const String&); //!< get registred C type data by name
     static const Reflector<T>&                      find(const char*);   //!< get registred C type data by name
-    static const Reflector<T>&                      find(const string&); //!< get registred C type data by name
 
 public:
     Reflector() = default;
@@ -52,7 +55,7 @@ private:
     size_t count     = 0;
 
 private:
-    inline static std::unordered_map<string, Reflector<T>>& map();
+    static Table& map();
 };
 
 using Enumeration = Reflector<Enumerator>;

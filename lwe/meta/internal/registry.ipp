@@ -1,11 +1,10 @@
 LWE_BEGIN
 namespace meta {
-
-template<typename T> T* Registry<T>::find(const char* in) {
-    return find(string{ in });
+template<typename T> T* Registry<T>::find(const char* in) { 
+    return find(String{ in });
 }
 
-template<typename T> T* Registry<T>::find(const string& in) {
+template<typename T> T* Registry<T>::find(const String& in) {
     auto result = instance().find(in);
     if(result != instance().end()) {
         return result->second;
@@ -14,13 +13,13 @@ template<typename T> T* Registry<T>::find(const string& in) {
 }
 
 template<typename T> template<typename U> void Registry<T>::add(const char* in) {
-    add<U>(string{ in });
+    add<U>(String{ in });
 }
 
-template<typename T> template<typename U> void Registry<T>::add(const string& in) {
+template<typename T> template<typename U> void Registry<T>::add(const String& in) {
     Table& table = instance();
     if(table.find(in) == table.end()) {
-        table.insert({ in, static_cast<T*>(new U()) });
+        table.push({ in, static_cast<T*>(new U()) });
     }
 }
 

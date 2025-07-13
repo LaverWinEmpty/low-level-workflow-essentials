@@ -5,14 +5,14 @@ namespace container {
  * Iterator Specialization
  **************************************************************************************************/
 
-template<typename T, size_t SVO> class Iterator<FWD, Vector<T, SVO>> {
-    ITERATOR_BODY(FWD, Vector, T, SVO);
+template<typename T, size_t SVO> class Iterator<FWD, Deque<T, SVO>> {
+    ITERATOR_BODY(FWD, Deque, T, SVO);
 public:
-    Iterator(Vector*, index_t) noexcept;
+    Iterator(Deque*, index_t) noexcept;
     Iterator(const Iterator&) noexcept;
     Iterator(const Reverse&) noexcept;
     Iterator& operator=(const Iterator&) noexcept;
-    Iterator& operator=(const Iterator<BWD, Vector>&) noexcept;
+    Iterator& operator=(const Iterator<BWD, Deque>&) noexcept;
     Iterator& operator++() noexcept;
     Iterator& operator--() noexcept;
     Iterator  operator++(int) noexcept;
@@ -38,14 +38,14 @@ public:
     T&       operator*() noexcept;
     T*       operator->() noexcept;
 private:
-    Vector* outer;
+    Deque*  outer;
     index_t index;
 };
 
-template<typename T, size_t SVO> class Iterator<BWD, Vector<T, SVO>> {
-    ITERATOR_BODY(BWD, Vector, T, SVO);
+template<typename T, size_t SVO> class Iterator<BWD, Deque<T, SVO>> {
+    ITERATOR_BODY(BWD, Deque, T, SVO);
 public:
-    Iterator(Vector*, index_t) noexcept;
+    Iterator(Deque*, index_t) noexcept;
     Iterator(const Iterator&) noexcept;
     Iterator(const Reverse&) noexcept;
     Iterator& operator=(const Iterator&) noexcept;
@@ -78,27 +78,27 @@ private:
     Reverse iterator;
 };
 
-REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, Vector, T, SVO);
-REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, Vector, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, Deque, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, Deque, T, SVO);
 
 /**************************************************************************************************
- * Vector
+ * Deque
  **************************************************************************************************/
 
-template<typename T, size_t SVO> Vector<T, SVO>::Vector() { }
+template<typename T, size_t SVO> Deque<T, SVO>::Deque() { }
 
-template<typename T, size_t SVO> Vector<T, SVO>::~Vector() {
+template<typename T, size_t SVO> Deque<T, SVO>::~Deque() {
     clear();
     if(container != stack) {
         free(container);
     }
 }
 
-template<typename T, size_t SVO> T& Vector<T, SVO>::operator[](index_t index) const noexcept {
+template<typename T, size_t SVO> T& Deque<T, SVO>::operator[](index_t index) const noexcept {
     return container[relative(index)];
 }
 
-template<typename T, size_t SVO> template<size_t N> Vector<T, SVO>::Vector(const Vector<T, N>& in) {
+template<typename T, size_t SVO> template<size_t N> Deque<T, SVO>::Deque(const Deque<T, N>& in) {
     // allocate: auto container set heap or stack / and auto set capacitor
     if(!reallocate(in.counter)) {
         throw std::bad_alloc(); // failed
@@ -115,7 +115,7 @@ template<typename T, size_t SVO> template<size_t N> Vector<T, SVO>::Vector(const
     tail    = counter - 1;
 }
 
-template<typename T, size_t SVO> template<size_t N> Vector<T, SVO>::Vector(Vector<T, N>&& in) {
+template<typename T, size_t SVO> template<size_t N> Deque<T, SVO>::Deque(Deque<T, N>&& in) {
     // use stack: unable to move -> allocate
     if(in.container == in.stack) {
         if(!reallocate(in.counter)) {
@@ -149,7 +149,7 @@ template<typename T, size_t SVO> template<size_t N> Vector<T, SVO>::Vector(Vecto
     in.tail      = -1;
 }
 
-template<typename T, size_t SVO> template<size_t N> Vector<T, N>& Vector<T, SVO>::operator=(const Vector<T, N>& in) {
+template<typename T, size_t SVO> template<size_t N> Deque<T, N>& Deque<T, SVO>::operator=(const Deque<T, N>& in) {
     clear();
 
     if(!reallocate(in.counter)) {
@@ -163,7 +163,7 @@ template<typename T, size_t SVO> template<size_t N> Vector<T, N>& Vector<T, SVO>
     return *this;
 }
 
-template<typename T, size_t SVO> template<size_t N> Vector<T, N>& Vector<T, SVO>::operator=(Vector<T, N>&& in) {
+template<typename T, size_t SVO> template<size_t N> Deque<T, N>& Deque<T, SVO>::operator=(Deque<T, N>&& in) {
     if(this != &in) {
         // counter == stack == not allocated
         if(in.container == in.stack) {
@@ -198,7 +198,7 @@ template<typename T, size_t SVO> template<size_t N> Vector<T, N>& Vector<T, SVO>
     return *this;
 }
 
-template<typename T, size_t SVO> template<typename Arg> bool Vector<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
+template<typename T, size_t SVO> template<typename Arg> bool Deque<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
     if((counter == capacitor && !reserve(capacitor << 1))) {
         return false;
     }
@@ -234,7 +234,7 @@ template<typename T, size_t SVO> template<typename Arg> bool Vector<T, SVO>::emp
     return true;
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::erase(index_t index, T* out) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::erase(index_t index, T* out) noexcept {
     if(index < 0 || index >= counter) {
         return false;
     }
@@ -259,47 +259,47 @@ template<typename T, size_t SVO> bool Vector<T, SVO>::erase(index_t index, T* ou
     return true;
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::push() noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::push() noexcept {
     return emplace(counter, T{});
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::shift() noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::shift() noexcept {
     return emplace(-1, T{});
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::push(T&& in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::push(T&& in) noexcept {
     return emplace(counter, std::move(in));
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::push(const T& in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::push(const T& in) noexcept {
     return emplace(counter, in);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::shift(T&& in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::shift(T&& in) noexcept {
     return emplace(-1, std::move(in));
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::shift(const T& in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::shift(const T& in) noexcept {
     return emplace(-1, in);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::pop(T* out) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::pop(T* out) noexcept {
     return erase(counter - 1, out);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::pop(T& out) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::pop(T& out) noexcept {
     return erase(counter - 1, &out);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::pull(T* out) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::pull(T* out) noexcept {
     return erase(0, out);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::pull(T& out) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::pull(T& out) noexcept {
     return erase(0, &out);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::resize(size_t in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::resize(size_t in) noexcept {
     // reallocate
     if(in > capacitor) {
         if(!reallocate(in)) {
@@ -318,18 +318,18 @@ template<typename T, size_t SVO> bool Vector<T, SVO>::resize(size_t in) noexcept
     return true;
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::reserve(size_t in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::reserve(size_t in) noexcept {
     if(in < capacitor) {
         return true;
     }
     return reallocate(in);
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::compact() noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::compact() noexcept {
     return reallocate(counter);
 }
 
-template<typename T, size_t SVO> void Vector<T, SVO>::clear() noexcept {
+template<typename T, size_t SVO> void Deque<T, SVO>::clear() noexcept {
     for(index_t i = 0; i < counter; ++i) {
         container[relative(i)].~T();
     }
@@ -339,139 +339,139 @@ template<typename T, size_t SVO> void Vector<T, SVO>::clear() noexcept {
     tail    = 0;
 }
 
-template<typename T, size_t SVO> size_t Vector<T, SVO>::size() const noexcept {
+template<typename T, size_t SVO> size_t Deque<T, SVO>::size() const noexcept {
     return counter;
 }
 
-template<typename T, size_t SVO> size_t Vector<T, SVO>::capacity() const noexcept {
+template<typename T, size_t SVO> size_t Deque<T, SVO>::capacity() const noexcept {
     return capacitor;
 }
 
-template<typename T, size_t SVO> inline bool Vector<T, SVO>::full() const noexcept {
+template<typename T, size_t SVO> inline bool Deque<T, SVO>::full() const noexcept {
     return counter == capacitor;
 }
 
-template<typename T, size_t SVO> inline bool Vector<T, SVO>::empty() const noexcept {
+template<typename T, size_t SVO> inline bool Deque<T, SVO>::empty() const noexcept {
     return counter == 0;
 }
 
-template<typename T, size_t SVO> T* Vector<T, SVO>::data() noexcept {
+template<typename T, size_t SVO> T* Deque<T, SVO>::data() noexcept {
     return container;
 }
 
-template<typename T, size_t SVO> const T* Vector<T, SVO>::data() const noexcept {
-    return const_cast<Vector*>(this)->data();
+template<typename T, size_t SVO> const T* Deque<T, SVO>::data() const noexcept {
+    return const_cast<Deque*>(this)->data();
 }
 
-template<typename T, size_t SVO> T& Vector<T, SVO>::at(index_t in) {
+template<typename T, size_t SVO> T& Deque<T, SVO>::at(index_t in) {
     if(in < 0 || in >= counter) {
         throw diag::error(diag::OUT_OF_RANGE);
     }
     return container[relative(in)];
 }
 
-template<typename T, size_t SVO> const T& Vector<T, SVO>::at(index_t in) const {
-    return const_cast<Vector*>(this)->at(in);
+template<typename T, size_t SVO> const T& Deque<T, SVO>::at(index_t in) const {
+    return const_cast<Deque*>(this)->at(in);
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::begin() noexcept -> Iterator<FWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::begin() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ this, 0 };
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::end() noexcept -> Iterator<FWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::end() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ this, counter }; // overflow safe: bitwise
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ this, counter - 1 }; // overflow safe: bitwise
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::rend() noexcept -> Iterator<BWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::rend() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ this, -1 };
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::front() noexcept -> Iterator<FWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::front() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ begin() };
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::rear() noexcept -> Iterator<BWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::rear() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ rbegin() };
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::top() noexcept -> Iterator<BWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::top() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ rbegin() };
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::bottom() noexcept -> Iterator<FWD> {
+template<typename T, size_t SVO> auto Deque<T, SVO>::bottom() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ begin() };
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Vector*>(this)->begin();
+template<typename T, size_t SVO> auto Deque<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->begin();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Vector*>(this)->end();
+template<typename T, size_t SVO> auto Deque<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->end();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
-    return const_cast<Vector*>(this)->rbegin();
+template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->rbegin();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
-    return const_cast<Vector*>(this)->rend();
+template<typename T, size_t SVO> auto Deque<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->rend();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::front() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Vector*>(this)->front();
+template<typename T, size_t SVO> auto Deque<T, SVO>::front() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->front();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::rear() const noexcept -> Iterator<BWD | VIEW> {
-    return const_cast<Vector*>(this)->rear();
+template<typename T, size_t SVO> auto Deque<T, SVO>::rear() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->rear();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::top() const noexcept -> Iterator<BWD | VIEW> {
-    return const_cast<Vector*>(this)->top();
+template<typename T, size_t SVO> auto Deque<T, SVO>::top() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<Deque*>(this)->top();
 }
 
-template<typename T, size_t SVO> auto Vector<T, SVO>::bottom() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Vector*>(this)->bottom();
+template<typename T, size_t SVO> auto Deque<T, SVO>::bottom() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<Deque*>(this)->bottom();
 }
 
-template<typename T, size_t SVO> template<typename U> void Vector<T, SVO>::push_back(U&& in) {
+template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_back(U&& in) {
     emplace(0, std::forward<U>(in));
 }
 
-template<typename T, size_t SVO> template<typename U> void Vector<T, SVO>::push_front(U&& in) {
+template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_front(U&& in) {
     shift(std::forward<U>(in));
 }
 
-template<typename T, size_t SVO> void Vector<T, SVO>::pop_back() {
+template<typename T, size_t SVO> void Deque<T, SVO>::pop_back() {
     push();
 }
 
-template<typename T, size_t SVO> void Vector<T, SVO>::pop_front() {
+template<typename T, size_t SVO> void Deque<T, SVO>::pop_front() {
     shift();
 }
 
-template<typename T, size_t SVO> index_t Vector<T, SVO>::forward(index_t in) noexcept {
+template<typename T, size_t SVO> index_t Deque<T, SVO>::forward(index_t in) noexcept {
     return (in - 1) & (capacitor - 1);
 }
 
-template<typename T, size_t SVO> index_t Vector<T, SVO>::backward(index_t in) noexcept {
+template<typename T, size_t SVO> index_t Deque<T, SVO>::backward(index_t in) noexcept {
     return (in + 1) & (capacitor - 1);
 }
 
-template<typename T, size_t SVO> index_t Vector<T, SVO>::relative(index_t in) const noexcept {
+template<typename T, size_t SVO> index_t Deque<T, SVO>::relative(index_t in) const noexcept {
     return (head + in) & (capacitor - 1);
 }
 
-template<typename T, size_t SVO> index_t Vector<T, SVO>::clamp(index_t in) const noexcept {
+template<typename T, size_t SVO> index_t Deque<T, SVO>::clamp(index_t in) const noexcept {
     index_t temp = (in % counter + counter);
     return temp >= counter ? temp - counter : temp; // return temp % counter
 }
 
-template<typename T, size_t SVO> bool Vector<T, SVO>::reallocate(size_t in) noexcept {
+template<typename T, size_t SVO> bool Deque<T, SVO>::reallocate(size_t in) noexcept {
     if(in < config::SMALLVECTOR) {
         in = config::SMALLVECTOR; // set default min
     }
@@ -526,301 +526,301 @@ template<typename T, size_t SVO> bool Vector<T, SVO>::reallocate(size_t in) noex
  **************************************************************************************************/
 
 template<typename T, size_t SVO>
-Iterator<FWD, Vector<T, SVO>>::Iterator(Vector* in, index_t idx) noexcept: outer(in), index(idx) { }
+Iterator<FWD, Deque<T, SVO>>::Iterator(Deque* in, index_t idx) noexcept: outer(in), index(idx) { }
 
 template<typename T, size_t SVO>
-Iterator<FWD, Vector<T, SVO>>::Iterator(const Iterator& in) noexcept: outer(in.outer), index(in.index) { }
+Iterator<FWD, Deque<T, SVO>>::Iterator(const Iterator& in) noexcept: outer(in.outer), index(in.index) { }
 
 template<typename T, size_t SVO>
-Iterator<FWD, Vector<T, SVO>>::Iterator(const Reverse& in) noexcept: Iterator(in.iterator) { }
+Iterator<FWD, Deque<T, SVO>>::Iterator(const Reverse& in) noexcept: Iterator(in.iterator) { }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator=(const Iterator& in) noexcept -> Iterator& {
+auto Iterator<FWD, Deque<T, SVO>>::operator=(const Iterator& in) noexcept -> Iterator& {
     outer = in.outer;
     index = in.index;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator=(const Reverse& in) noexcept -> Iterator& {
+auto Iterator<FWD, Deque<T, SVO>>::operator=(const Reverse& in) noexcept -> Iterator& {
     *this = in.iterator;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator++() noexcept -> Iterator& {
+auto Iterator<FWD, Deque<T, SVO>>::operator++() noexcept -> Iterator& {
     ++index;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator--() noexcept -> Iterator& {
+auto Iterator<FWD, Deque<T, SVO>>::operator--() noexcept -> Iterator& {
     --index;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator++(int) noexcept -> Iterator {
+auto Iterator<FWD, Deque<T, SVO>>::operator++(int) noexcept -> Iterator {
     Iterator<FWD> temp = *this;
     ++*this;
     return temp;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator--(int) noexcept -> Iterator {
+auto Iterator<FWD, Deque<T, SVO>>::operator--(int) noexcept -> Iterator {
     Iterator<FWD> temp = *this;
     --*this;
     return temp;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator+(index_t in) const noexcept -> Iterator {
+auto Iterator<FWD, Deque<T, SVO>>::operator+(index_t in) const noexcept -> Iterator {
     return Iterator(outer, index + in);
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator-(index_t in) const noexcept -> Iterator {
+auto Iterator<FWD, Deque<T, SVO>>::operator-(index_t in) const noexcept -> Iterator {
     return Iterator(outer, index - in);
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator+=(index_t in) noexcept -> Iterator& {
+auto Iterator<FWD, Deque<T, SVO>>::operator+=(index_t in) noexcept -> Iterator& {
     *this = *this + in;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<FWD, Vector<T, SVO>>::operator-=(index_t in) noexcept -> Iterator& {
+auto Iterator<FWD, Deque<T, SVO>>::operator-=(index_t in) noexcept -> Iterator& {
     *this = *this - in;
     return *this;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator==(const Iterator& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator==(const Iterator& in) const noexcept {
     return index == in.index;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator!=(const Iterator& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator!=(const Iterator& in) const noexcept {
     return !(*this == in);
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator==(const Reverse& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator==(const Reverse& in) const noexcept {
     return *this == in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator!=(const Reverse& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator!=(const Reverse& in) const noexcept {
     return *this != in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator<(const Iterator& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator<(const Iterator& in) const noexcept {
     return index < in.index;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator>(const Iterator& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator>(const Iterator& in) const noexcept {
     return index > in.index;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator>=(const Iterator& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator>=(const Iterator& in) const noexcept {
     return index >= in.index;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator<=(const Iterator& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator<=(const Iterator& in) const noexcept {
     return index <= in.index;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator<(const Reverse& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator<(const Reverse& in) const noexcept {
     return *this < in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator>(const Reverse& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator>(const Reverse& in) const noexcept {
     return *this > in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator<=(const Reverse& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator<=(const Reverse& in) const noexcept {
     return *this <= in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<FWD, Vector<T, SVO>>::operator>=(const Reverse& in) const noexcept {
+bool Iterator<FWD, Deque<T, SVO>>::operator>=(const Reverse& in) const noexcept {
     return *this >= in.iterator;
 }
 
 template<typename T, size_t SVO>
-const T& Iterator<FWD, Vector<T, SVO>>::operator*() const noexcept {
+const T& Iterator<FWD, Deque<T, SVO>>::operator*() const noexcept {
     return const_cast<Iterator*>(this)->operator*();
 }
 
 template<typename T, size_t SVO>
-T& Iterator<FWD, Vector<T, SVO>>::operator*() noexcept {
+T& Iterator<FWD, Deque<T, SVO>>::operator*() noexcept {
     return outer->container[outer->relative(outer->clamp(index))];
 }
 
 template<typename T, size_t SVO>
-const T* Iterator<FWD, Vector<T, SVO>>::operator->() const noexcept {
+const T* Iterator<FWD, Deque<T, SVO>>::operator->() const noexcept {
     return const_cast<Iterator*>(this)->operator->();
 }
 
 template<typename T, size_t SVO>
-T* Iterator<FWD, Vector<T, SVO>>::operator->() noexcept {
+T* Iterator<FWD, Deque<T, SVO>>::operator->() noexcept {
     return &**this;
 }
 
 template<typename T, size_t SVO>
-Iterator<BWD, Vector<T, SVO>>::Iterator(Vector* in, index_t idx) noexcept: iterator(in, idx) { }
+Iterator<BWD, Deque<T, SVO>>::Iterator(Deque* in, index_t idx) noexcept: iterator(in, idx) { }
 
 template<typename T, size_t SVO>
-Iterator<BWD, Vector<T, SVO>>::Iterator(const Iterator& in) noexcept: iterator(in.iterator) { }
+Iterator<BWD, Deque<T, SVO>>::Iterator(const Iterator& in) noexcept: iterator(in.iterator) { }
 
 template<typename T, size_t SVO>
-Iterator<BWD, Vector<T, SVO>>::Iterator(const Reverse& in) noexcept: iterator(in) { }
+Iterator<BWD, Deque<T, SVO>>::Iterator(const Reverse& in) noexcept: iterator(in) { }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator=(const Iterator& in) noexcept -> Iterator& {
+auto Iterator<BWD, Deque<T, SVO>>::operator=(const Iterator& in) noexcept -> Iterator& {
     iterator = in.iterator;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator=(const Reverse& in) noexcept -> Iterator& {
+auto Iterator<BWD, Deque<T, SVO>>::operator=(const Reverse& in) noexcept -> Iterator& {
     iterator = in;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator++() noexcept -> Iterator& {
+auto Iterator<BWD, Deque<T, SVO>>::operator++() noexcept -> Iterator& {
     --iterator; // reverse
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator--() noexcept -> Iterator& {
+auto Iterator<BWD, Deque<T, SVO>>::operator--() noexcept -> Iterator& {
     ++iterator; // reverse
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator++(int) noexcept -> Iterator {
+auto Iterator<BWD, Deque<T, SVO>>::operator++(int) noexcept -> Iterator {
     Iterator<BWD> temp = *this;
     ++*this;
     return temp;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator--(int) noexcept -> Iterator {
+auto Iterator<BWD, Deque<T, SVO>>::operator--(int) noexcept -> Iterator {
     Iterator<BWD> temp = *this;
     --*this;
     return temp;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator+(index_t in) const noexcept -> Iterator {
+auto Iterator<BWD, Deque<T, SVO>>::operator+(index_t in) const noexcept -> Iterator {
     return Iterator{ iterator - in }; // reverse
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator-(index_t in) const noexcept -> Iterator {
+auto Iterator<BWD, Deque<T, SVO>>::operator-(index_t in) const noexcept -> Iterator {
     return Iterator{ iterator + in }; // reverse
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator+=(index_t in) noexcept -> Iterator& {
+auto Iterator<BWD, Deque<T, SVO>>::operator+=(index_t in) noexcept -> Iterator& {
     *this = *this + in;
     return *this;
 }
 
 template<typename T, size_t SVO>
-auto Iterator<BWD, Vector<T, SVO>>::operator-=(index_t in) noexcept -> Iterator& {
+auto Iterator<BWD, Deque<T, SVO>>::operator-=(index_t in) noexcept -> Iterator& {
     *this = *this - in;
     return *this;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator==(const Iterator& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator==(const Iterator& in) const noexcept {
     return iterator == in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator!=(const Iterator& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator!=(const Iterator& in) const noexcept {
     return iterator != in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator==(const Reverse& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator==(const Reverse& in) const noexcept {
     return iterator == in;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator!=(const Reverse& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator!=(const Reverse& in) const noexcept {
     return iterator != in;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator<(const Iterator& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator<(const Iterator& in) const noexcept {
     return iterator > in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator>(const Iterator& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator>(const Iterator& in) const noexcept {
     return iterator < in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator<=(const Iterator& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator<=(const Iterator& in) const noexcept {
     return iterator >= in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator>=(const Iterator& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator>=(const Iterator& in) const noexcept {
     return iterator <= in.iterator;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator<(const Reverse& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator<(const Reverse& in) const noexcept {
     return iterator > in;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator>(const Reverse& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator>(const Reverse& in) const noexcept {
     return iterator < in;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator<=(const Reverse& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator<=(const Reverse& in) const noexcept {
     return iterator >= in;
 }
 
 template<typename T, size_t SVO>
-bool Iterator<BWD, Vector<T, SVO>>::operator>=(const Reverse& in) const noexcept {
+bool Iterator<BWD, Deque<T, SVO>>::operator>=(const Reverse& in) const noexcept {
     return iterator <= in;
 }
 
 template<typename T, size_t SVO>
-const T& Iterator<BWD, Vector<T, SVO>>::operator*() const noexcept {
+const T& Iterator<BWD, Deque<T, SVO>>::operator*() const noexcept {
     return *iterator;
 }
 
 template<typename T, size_t SVO>
-const T* Iterator<BWD, Vector<T, SVO>>::operator->() const noexcept {
+const T* Iterator<BWD, Deque<T, SVO>>::operator->() const noexcept {
     return &*iterator;
 }
 
 template<typename T, size_t SVO>
-T& Iterator<BWD, Vector<T, SVO>>::operator*() noexcept {
+T& Iterator<BWD, Deque<T, SVO>>::operator*() noexcept {
     return *iterator;
 }
 
 template<typename T, size_t SVO>
-T* Iterator<BWD, Vector<T, SVO>>::operator->() noexcept {
+T* Iterator<BWD, Deque<T, SVO>>::operator->() noexcept {
     return &*iterator;
 }
 

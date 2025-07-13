@@ -14,7 +14,7 @@ public:
     Random(uint64_t = 0);
 
 public:
-    Random* instance(uint64_t seed = 0);
+    static Random* instance(uint64_t seed = 0);
 
 public:
     void initialize(uint64_t);
@@ -33,13 +33,13 @@ public:
         static Random rand;
 
         if constexpr(std::is_floating_point_v<T>) {
-            return rand.real(a, b);
+            return static_cast<T>(rand.real(a, b));
         }
         else if constexpr(std::is_signed_v<T>) {
-            return rand.sint(a, b);
+            return static_cast<T>(rand.sint(a, b));
         }
         else {
-            return rand.uint(a, b);
+            return static_cast<T>(rand.uint(a, b));
         }
     }
 

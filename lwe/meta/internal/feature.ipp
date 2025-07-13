@@ -5,8 +5,12 @@ namespace meta {
 // clang-format off
 template<typename T> constexpr Keyword typecode() {
     // if constexpr(std::is_base_of_v<LWE::meta::Container, T>) return ContainerCode<T>::VALUE;
-    if constexpr(isSTL<T>())                                 return ContainerCode<T>::VALUE;
-    if constexpr(isKVP<T>())                                 return Keyword::STL_PAIR;
+    // if constexpr(isKVP<T>())                                 return Keyword::STL_PAIR;
+    // if constexpr(isSTL<T>())                                 return ContainerCode<T>::VALUE;
+
+    if constexpr (TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
+        return TypeEraser<T>::KEYWORD;
+    }
     if constexpr(std::is_enum_v<T>)                          return Keyword::ENUM;
     if constexpr(std::is_pointer_v<T>)                       return Keyword::POINTER;
     if constexpr(std::is_reference_v<T>)                     return Keyword::REFERENCE;
@@ -56,10 +60,10 @@ constexpr const char* typestring(Keyword code) {
     case Keyword::POINTER:            return "*";
     case Keyword::REFERENCE:          return "&";
     case Keyword::STD_STRING:         return "string";
-    case Keyword::STL_DEQUE:          return "Deque";
+    case Keyword::STL_VECTOR:         return "Vector";
     case Keyword::STL_SET:            return "Set";
     case Keyword::STL_MAP:            return "Map";
-    case Keyword::STL_PAIR:           return "Pair";
+    case Keyword::STD_PAIR:           return "Pair";
     case Keyword::CONST:              return "const";
     case Keyword::ENUM:               return "enum";
     }
@@ -72,47 +76,47 @@ template<typename T> Registered registenum() {
     return Registered::REGISTERED;
 }
 
-template<typename T> constexpr bool isSTL() {
-    if constexpr(std::is_same_v<Container, T>) {
-        return true;
-    }
-    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != Keyword::UNREGISTERED;
-};
-
-template<typename T> constexpr bool isSTL(const T&) {
-    return isSTL<T>();
-}
-
-template<> bool isSTL<Keyword>(const Keyword& code) {
-    switch(code) {
-        case Keyword::STL_DEQUE: return true;
-        case Keyword::STL_SET:   return true;
-        case Keyword::STL_MAP:   return true;
-    }
-    return false;
-}
-
-class Object;
-
-template<typename T> constexpr bool isOBJ() {
-    return std::is_same_v<Object, T> || std::is_base_of_v<Object, T>;
-}
-
-template<typename T> constexpr bool isOBJ(const T&) {
-    return isOBJ<T>();
-}
-
-template<typename T> constexpr bool isKVP() {
-    return std::is_same_v<KeyValue, T> || std::is_base_of_v<KeyValue, T>;
-}
-
-template<typename T> constexpr bool isKVP(const T&) {
-    return isKVP<T>();
-}
-
-template<> bool isKVP<Keyword>(const Keyword& code) {
-    return code == Keyword::STL_PAIR;
-}
+//template<typename T> constexpr bool isSTL() {
+//    if constexpr(std::is_same_v<Container, T>) {
+//        return true;
+//    }
+//    return std::is_base_of_v<LWE::meta::Container, T> && ContainerCode<T>::VALUE != Keyword::UNREGISTERED;
+//};
+//
+//template<typename T> constexpr bool isSTL(const T&) {
+//    return isSTL<T>();
+//}
+//
+//template<> bool isSTL<Keyword>(const Keyword& code) {
+//    switch(code) {
+//        case Keyword::STL_VECTOR: return true;
+//        case Keyword::STL_SET:    return true;
+//        case Keyword::STL_MAP:    return true;
+//    }
+//    return false;
+//}
+// 
+// class Object;
+// 
+//template<typename T> constexpr bool isOBJ() {
+//    return std::is_same_v<Object, T> || std::is_base_of_v<Object, T>;
+//}
+//
+//template<typename T> constexpr bool isOBJ(const T&) {
+//    return isOBJ<T>();
+//}
+//
+//template<typename T> constexpr bool isKVP() {
+//    return std::is_same_v<KeyValue, T> || std::is_base_of_v<KeyValue, T>;
+//}
+//
+//template<typename T> constexpr bool isKVP(const T&) {
+//    return isKVP<T>();
+//}
+//
+//template<> bool isKVP<Keyword>(const Keyword& code) {
+//    return code == Keyword::STL_PAIR;
+//}
 
 } // namespace meta
 LWE_END

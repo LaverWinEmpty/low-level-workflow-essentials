@@ -7,7 +7,7 @@ LWE_BEGIN
 namespace meta {
 
 struct Decoder {
-    Decoder(const string_view);
+    Decoder(const StringView);
 
 public:
     // proxy
@@ -25,11 +25,24 @@ public:
     bool                      check(const Type&); //!< Type is outer type
 
 public:
-    const string_view get();
+    const StringView get();
 
 public:
     void move(int);
     void trim(int);
+
+private:
+    template<typename T> static constexpr bool isstr() { 
+        return std::is_same_v<String, T>;
+    }
+    template<typename T> static constexpr bool iscont() {
+        constexpr Keyword keyword = TypeEraser<T>::KEYWORD;
+        return storable(keyword);
+    }
+    template<typename T> static constexpr bool isobj() {
+        return std::is_base_of_v<Object, T> || std::is_same_v<Object, T>;
+    }
+    template<typename T> static constexpr bool ispair() { return TypeEraser<T>::KEYWORD == Keyword::STD_PAIR; }
 
 private:
     const char* str;

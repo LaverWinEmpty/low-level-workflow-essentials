@@ -1,8 +1,8 @@
 #ifndef LWE_UTIL_TIMER
 #define LWE_UTIL_TIMER
 
-#include <chrono>
 #include "../base/base.h"
+#include "../mem/block.hpp"
 
 LWE_BEGIN
 namespace util {
@@ -11,11 +11,12 @@ class Timer {
     using Clock = std::chrono::steady_clock;
     using MS    = std::chrono::milliseconds;
 
-    static constexpr float MAX = 3599999.99f; // 999:59:59.99
+    static constexpr float       DEFAULT_MAX    = 3599999.99f; // 999:59:59.99
+    static constexpr const char* DEFAULT_FORMAT = "%Y-%m-%d %H:%M:%S";
 
 private:
-    //! string proxy
-    struct String;
+    //! @note "0000-00-00T00:00:00" -> 20 (without "Z" or "UTC+00:00")
+    using StringProxy = mem::Block<20>;
 
 public:
     Timer() = default;
@@ -30,23 +31,23 @@ public:
 
 public:
     //! @brief get time, max: 999:59:59.99
-    //! @param [in] true "0:0:0.99" / false "0:0:0"
-    String timestamp(bool = true) const;
+    //! @param [in] true: "0:0:0.99" / false: "0:0:0"
+    StringProxy timestamp(bool = true) const;
 
 public:
-    //! @brief get process time, max: 999:59.59 (41d_15:59:59)
-    //! @param [in] true "1d_0:0:0" / false "24:0:0"
-    static String process(bool = false);
-
-public:
-    //! @brief get system timestamp
-    //! @note the delimiter can only be 1 byte
-    static String system(string, bool = false);
+    //! @brief get process timer
+    static const Timer& process();
 
 public:
     //! @brief get system timestamp
+    //! @param [in] true: UTC
     //! @note the delimiter can only be 1 byte
-    static String system(const char* = "%Y-%m-%d %H:%M:%S", bool = false);
+    static StringProxy system(const StringView = DEFAULT_FORMAT, bool = false);
+
+public:
+    //! @brief get system timestamp (default format)
+    //! @param [in] true: UTC
+    static StringProxy system(bool);
 
 private:
     Clock::time_point last = Clock::now();

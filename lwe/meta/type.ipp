@@ -58,7 +58,7 @@ void Type::shrink() {
 template<typename T> static const Type& Type::reflect() {
     static Registered flag = Registered::UNREGISTERED;
     static Type       buf;
-    static string     str;
+    static String     str;
     static std::mutex mtx;
 
     if(flag == Registered::UNREGISTERED) {
@@ -90,22 +90,20 @@ template<typename T> static void Type::reflect(Type* out) {
         reflect<typename std::remove_const_t<T>>(out);
     }
 
-    // container
-    else if constexpr(isSTL<T>()) {
-        out->push(ContainerCode<T>::VALUE);
+    // template
+    else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
+        out->push(TypeEraser<T>::KEYWORD);
         // map
-        if constexpr(ContainerCode<T>::VALUE == Keyword::STL_MAP) {
-            reflect<typename T::value_type::key_type>(out);
-            reflect<typename T::value_type::value_type>(out);
+        if constexpr(TypeEraser<T>::VALUE == Keyword::STL_MAP) {
+            reflect<typename T::value_type::first_type>(out);
+            reflect<typename T::value_type::second_type>(out);
+        }
+        // pair
+        if constexpr(TypeEraser<T>::VALUE == Keyword::STD_PAIR) {
+            reflect<typename T::value_type::first_type>(out);
+            reflect<typename T::value_type::second_type>(out);
         }
         else reflect<typename T::value_type>(out);
-    }
-
-    // pair
-    else if constexpr(isKVP<T>()) {
-        out->push(Keyword::STL_PAIR);
-        reflect<typename T::key_type>(out);
-        reflect<typename T::value_type>(out);
     }
 
     else if constexpr(std::is_pointer_v<T>) {
@@ -120,7 +118,7 @@ template<typename T> static void Type::reflect(Type* out) {
      **************************************************************************/
 
     // string
-    else if constexpr(std::is_same_v<T, std::string>) {
+    else if constexpr(std::is_same_v<T, String>) {
         out->push(Keyword::STD_STRING);
     }
 
@@ -329,7 +327,7 @@ bool Type::operator!=(Keyword in) const {
     return !operator==(in);
 }
 
-Type::operator string() const {
+Type::operator String() const {
     return this->operator*(); // copy
 }
 
@@ -351,7 +349,7 @@ size_t Type::count() const {
     return counter;
 }
 
-size_t Type::stringify(string* out, const Type& in, size_t idx) {
+size_t Type::stringify(String* out, const Type& in, size_t idx) {
     if(idx >= in.count()) {
         return idx;
     }
@@ -395,7 +393,7 @@ size_t Type::stringify(string* out, const Type& in, size_t idx) {
         out->append(typestring(in[idx]));
     }
     // has template, container
-    if(isSTL(in[idx])) {
+    if(storable(in[idx])) {
         out->append("<");
         size_t next = stringify(out, in, idx + 1);
         size_t last = next;
@@ -410,7 +408,7 @@ size_t Type::stringify(string* out, const Type& in, size_t idx) {
         return last + 1;
     }
     // pair
-    else if(isKVP(in[idx])) {
+    else if(in[idx] == Keyword::STD_PAIR) {
         out->append(1, '<');
         size_t next = stringify(out, in, idx + 1);
         out->append(", ");
@@ -423,10 +421,10 @@ size_t Type::stringify(string* out, const Type& in, size_t idx) {
 }
 
 const Field& Class::field(const char* name) const {
-    return field(string{ name });
+    return field(String{ name });
 }
 
-const Field& Class::field(const string& name) const {
+const Field& Class::field(const String& name) const {
     static const Field failed = { /*.type   = */ Type{},
                                   /*.name   = */ nullptr,
                                   /*.size   = */ 0,
@@ -478,12 +476,12 @@ template<typename T> Class* classof(const T&) {
     return classof<T>();
 }
 
-Class* classof(const char* in) {
-    return classof(string{ in });
+Class* classof(const String& in) {
+    return Registry<Class>::find(in);
 }
 
-Class* classof(const string& in) {
-    return Registry<Class>::find(in);
+Class* classof(const char* in) {
+    return classof(String{ in });
 }
 
 template<typename T> Enum* enumof() {
@@ -494,12 +492,12 @@ template<typename T> Enum* enumof(const T&) {
     return enumof<T>();
 }
 
-Enum* enumof(const char* in) {
-    return enumof(string{ in });
+Enum* enumof(const String& in) {
+    return Registry<Enum>::find(in);
 }
 
-Enum* enumof(const string& in) {
-    return Registry<Enum>::find(in);
+Enum* enumof(const char* in) {
+    return enumof(String{ in });
 }
 
 template<typename T> T* statics() {
@@ -517,12 +515,12 @@ template<typename T> T* statics(const T&) {
     return statics<T>();
 }
 
-Object* statics(const char* in) {
-    return statics(string{ in });
+Object* statics(const String& in) {
+    return Registry<Object>::find(in);
 }
 
-Object* statics(const string& in) {
-    return Registry<Object>::find(in);
+Object* statics(const char* in) {
+    return statics(String{ in });
 }
 
 } // namespace meta

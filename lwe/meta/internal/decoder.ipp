@@ -1,7 +1,7 @@
 LWE_BEGIN
 namespace meta {
 
-Decoder::Decoder(string_view in): str(in.data()), len(0), esc(0), depth(0) { }
+Decoder::Decoder(StringView in): str(in.data()), len(0), esc(0), depth(0) { }
 
 template<typename T> bool Decoder::next() {
     if(str[len] == '\0') {
@@ -13,13 +13,13 @@ template<typename T> bool Decoder::next() {
     esc  = 0;   // init
 
     // check
-    if constexpr(std::is_same_v<string, T>) {
+    if constexpr(isstr<T>()) {
         if(str[len] != '\"') throw diag::error(diag::INVALID_DATA);
     }
-    if constexpr(isSTL<T>()) {
+    if constexpr(iscont<T>()) {
         if(str[len] != '[') throw diag::error(diag::INVALID_DATA);
     }
-    if constexpr(isOBJ<T>() || isKVP<T>()) {
+    if constexpr(isobj<T>() || ispair<T>()) {
         if(str[len] != '{') throw diag::error(diag::INVALID_DATA);
     }
 
@@ -35,14 +35,14 @@ template<typename T> bool Decoder::next() {
         }
         else {
             // string check ""
-            if constexpr(std::is_same_v<string, T>) {
+            if constexpr(isstr<T>()) {
                 if(curr == '\"' && !(esc & 1)) {
                     ++len; // pass `\"`
                     break; // not escape sequence
                 }
             }
             // container check []
-            else if constexpr(isSTL<T>()) {
+            else if constexpr(iscont<T>()) {
                 if(curr == '[' && !(esc & 1)) {
                     ++depth; // check
                 }
@@ -55,7 +55,7 @@ template<typename T> bool Decoder::next() {
                 }
             }
             // object or depth check {}
-            else if constexpr(isOBJ<T>() || isKVP<T>()) {
+            if constexpr(isobj<T>() || ispair<T>()) {
                 if(curr == '{' && !(esc & 1)) {
                     ++depth; // check
                 }
@@ -89,16 +89,16 @@ bool Decoder::next(const Type& in) {
         return next<Object>();
     }
     // check container
-    else if(isSTL(static_cast<Keyword>(in))) {
+    else if(storable(static_cast<Keyword>(in))) {
         return next<Container>();
     }
     // check string
     else if(in == Keyword::STD_STRING) {
-        return next<string>();
+        return next<String>();
     }
     // check pair
-    else if(in == Keyword::STL_PAIR) {
-        return next<KeyValue>();
+    else if(in == Keyword::STD_PAIR) {
+        return next<std::pair<int, int>>(); // use {}
     }
     return next<void>();
 }
@@ -106,10 +106,10 @@ bool Decoder::next(const Type& in) {
 template<typename T> bool Decoder::check() {
     // string is no overlap, so no need to check
     // pair is fixed object count, so no need to check
-    if constexpr(isOBJ<T>()) {
+    if constexpr(isobj<T>() || ispair<T>()) {
         if(str[len - 1] == '}') return false; // // find }, or }\0
     }
-    else if constexpr(isSTL<T>()) {
+    else if constexpr(iscont<T>()) {
         if(str[len - 1] == ']') return false; // find ], or ]\0
     }
     return str[len] != '\0'; // check end of string
@@ -125,17 +125,17 @@ bool Decoder::check(const Type& in) {
         return check<Object>();
     }
     // check container
-    else if(isSTL(static_cast<Keyword>(in))) {
+    else if(storable(static_cast<Keyword>(in))) {
         return check<Container>();
     }
     else return check<void>();
 }
 
-const string_view Decoder::get() {
+const StringView Decoder::get() {
     if(len == 0) {
-        return string_view{ str, size_t(2) }; // [] or {} for container and object, else error
+        return StringView{ str, size_t(2) }; // [] or {} for container and object, else error
     }
-    return string_view{ str, size_t(len) };
+    return StringView{ str, size_t(len) };
 }
 
 void Decoder::move(int begin) {

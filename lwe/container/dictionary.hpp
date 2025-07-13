@@ -2,7 +2,6 @@
 #define LWE_CONTAINER_DICTIONARY
 
 #include "../config/config.h"
-#include "record.hpp"
 #include "iterator.hpp"
 
 LWE_BEGIN
@@ -10,66 +9,72 @@ namespace container {
 
 template<typename> class Hashtable;
 
+template<typename K, typename V>
+struct Record: public std::pair<K, V> {
+    using std::pair<K, V>::pair;
+
+    bool operator==(const std::pair<K, V>& in) const { return this->first == in.first; }
+    bool operator!=(const std::pair<K, V>& in) const { return this->first != in.first; }
+};
+
 template<typename K, typename V> class Dictionary {
 public:
-    using Entry     = Record<K, V>;
+    using Entry = Record<K, V>;
+public:
+    CONTAINER_BODY(Hashtable, Entry, Entry);
+private:
     using Hashtable = Hashtable<Entry>;
-    template<Mod, typename> friend class Iterator; //!< iterator
-    template<Mod MOD> using Iterator = Iterator<MOD, Hashtable>;
+    using Bucket    = typename Hashtable::Bucket;
+    using Chain     = typename Hashtable::Chain;
 
 public:
-    using value_type             = Entry;
-    using iterator               = Iterator<FWD>;
-    using reverse_iterator       = Iterator<BWD>;
-    using const_iterator         = Iterator<FWD | VIEW>;
-    using const_reverse_iterator = Iterator<BWD | VIEW>;
+    V&       operator[](const K&);
+    const V& operator[](const K& in) const;
 
 public:
-    V& operator[](const K& in) {
-        Iterator<FWD> it = find(in);
-        return it->value;
-    }
-
-    const V& operator[](const K& in) const {
-        Iterator<FWD | VIEW> it = find(in);
-        return it->value;
-    }
-
-public:
-    void push(Entry&&);
-    void push(const Entry&);
-    void push(const K&, const V&);
-    void push(K&&, V&&);
-    void push(const K&, V&&);
-    void push(K&&, const V&);
-
-public:
+    bool push(Entry&&);
+    bool push(const Entry&);
+    bool push(const K&, const V&);
+    bool push(K&&, V&&);
+    bool push(const K&, V&&);
+    bool push(K&&, const V&);
     bool pop(const K&);
-    bool pop(const Iterator<FWD>&);
-    bool pop(hash_t);
+    bool exist(const K&) const noexcept;
+
+public:
+    template<typename T> bool             insert(T&&);
+    template<typename T, typename U> bool insert(T&&, U&&);
+    bool                                  erase(const Iterator<FWD>&);
 
 public:
     Iterator<FWD> find(const K&) noexcept;
-    Iterator<FWD> find(hash_t) noexcept;
     Iterator<FWD> at(size_t) noexcept;
     Iterator<FWD> begin() noexcept;
     Iterator<FWD> end() noexcept;
 
 public:
     Iterator<FWD | VIEW> find(const K&) const noexcept;
-    Iterator<FWD | VIEW> find(hash_t) const noexcept;
     Iterator<FWD | VIEW> at(size_t) const noexcept;
     Iterator<FWD | VIEW> begin() const noexcept;
     Iterator<FWD | VIEW> end() const noexcept;
 
 public:
+    size_t indexof(hash_t) const noexcept;
     size_t size() const noexcept;
     size_t capacity() const noexcept;
-    bool   exist(hash_t) const noexcept;
-    bool   exist(const K&) const noexcept;
+    bool   reserve(size_t) noexcept;
 
 public:
-    const typename Hashtable::Bucket* bucket(size_t in) const noexcept;
+    const Bucket* bucket(size_t) const noexcept; //!< get bucket(index)
+
+private:
+    Bucket*       slot(hash_t) noexcept;                 //!< get bucket slot
+    Chain*        slot(hash_t, const K&) noexcept;       //!< get chain slot
+    const Bucket* slot(hash_t) const noexcept;           //!< get bucket slot
+    const Chain*  slot(hash_t, const K&) const noexcept; //!< get chain slot
+
+private:
+    template<typename T> bool emplace(T&&);
 
 public:
     Hashtable set;

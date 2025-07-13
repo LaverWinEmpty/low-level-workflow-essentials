@@ -49,11 +49,11 @@ private:
 };
 
 template<typename T> Method* methodof(const char* name);                      //!< get method
-template<typename T> Method* methodof(const string& name);                    //!< get method
+template<typename T> Method* methodof(const String& name);                    //!< get method
 Method*                      methodof(const char* cls, const char* name);     //!< get method
-Method*                      methodof(const char* cls, const string& name);   //!< get method
-Method*                      methodof(const string& cls, const char* name);   //!< get method
-Method*                      methodof(const string& cls, const string& name); //!< get method
+Method*                      methodof(const char* cls, const String& name);   //!< get method
+Method*                      methodof(const String& cls, const char* name);   //!< get method
+Method*                      methodof(const String& cls, const String& name); //!< get method
 
 //! @brief reigstry class specialize
 template<> class Registry<Method> {
@@ -64,19 +64,19 @@ public:
     ~Registry();
 
 public:
-    using Table = std::unordered_map<string, std::unordered_map<string, Method*>>;
+    using Table = container::Dictionary<String, container::Dictionary<String, Method*>>;
 
 public:
     static void add(const char* cls, const char* name, Method* in);
-    static void add(const char* cls, const string& name, Method* in);
-    static void add(const string& cls, const char* name, Method* in);
-    static void add(const string& cls, const string& name, Method* in);
+    static void add(const char* cls, const String& name, Method* in);
+    static void add(const String& cls, const char* name, Method* in);
+    static void add(const String& cls, const String& name, Method* in);
 
 public:
     static Method* find(const char* cls, const char* name);
-    static Method* find(const char* cls, const string& name);
-    static Method* find(const string& cls, const char* name);
-    static Method* find(const string& cls, const string& name);
+    static Method* find(const char* cls, const String& name);
+    static Method* find(const String& cls, const char* name);
+    static Method* find(const String& cls, const String& name);
 
 private:
     Table table;

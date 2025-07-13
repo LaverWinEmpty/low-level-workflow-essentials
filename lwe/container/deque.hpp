@@ -66,31 +66,24 @@
 LWE_BEGIN
 namespace container {
 
-template<typename T, size_t SVO = 0> class Vector {
-public:
-    template<typename, size_t> friend class Vector; //!< for Deuqe<T, OTHER_SVO_SIZE>
-    template<Mod, typename> friend class Iterator;  //!< iterator
-    template<Mod MOD> using Iterator = Iterator<MOD, Vector>;
+template<typename T, size_t SVO = 0> class Deque {
+    template<typename, size_t> friend class Deque; //!< for Deuqe<T, OTHER_SVO_SIZE>
 
 public:
-    using value_type             = T;
-    using iterator               = Iterator<FWD>;
-    using reverse_iterator       = Iterator<BWD>;
-    using const_iterator         = Iterator<FWD | VIEW>;
-    using const_reverse_iterator = Iterator<BWD | VIEW>;
+    CONTAINER_BODY(Deque, T, T, SVO);
 
 protected:
     static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < config::SMALLVECTOR ? config::SMALLVECTOR : align(SVO));
 
 public:
-    Vector();
-    ~Vector();
+    Deque();
+    ~Deque();
 
 public:
-    template<size_t N> Vector(const Vector<T, N>&);
-    template<size_t N> Vector(Vector<T, N>&&);
-    template<size_t N> Vector<T, N>& operator=(const Vector<T, N>&);
-    template<size_t N> Vector<T, N>& operator=(Vector<T, N>&&);
+    template<size_t N> Deque(const Deque<T, N>&);
+    template<size_t N> Deque(Deque<T, N>&&);
+    template<size_t N> Deque<T, N>& operator=(const Deque<T, N>&);
+    template<size_t N> Deque<T, N>& operator=(Deque<T, N>&&);
 
 public:
     T& operator[](index_t) const noexcept; //!< circulation operator[], error: count == 0
@@ -185,5 +178,5 @@ protected:
 
 } // namespace container
 LWE_END
-#include "vector.ipp"
+#include "deque.ipp"
 #endif

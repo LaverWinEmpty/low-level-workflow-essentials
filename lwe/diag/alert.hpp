@@ -43,7 +43,7 @@ public:
     /// @brief get custom error
     /// @param [in] char* error message
     /// @param [in] int32 error code
-    Alert(const string&, int32_t = -1) noexcept;
+    Alert(const String&, int32_t = -1) noexcept;
 
 public:
     /// @brief copy
@@ -77,7 +77,7 @@ public:
     operator std::runtime_error() const;
 
 private:
-    string  message = "";
+    String  message = "";
     int32_t code    = 0;
     // size_t  offset  = 0; //!< message begin pos
 };

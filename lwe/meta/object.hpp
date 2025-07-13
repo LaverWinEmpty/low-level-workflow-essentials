@@ -15,7 +15,7 @@ struct Class; // meta class
 /**
  * @brief serializable object: template, array not support
  */
-class Object {
+class Object: public Encoder {
     template<typename T> friend class RC;
 
 protected:
@@ -31,15 +31,15 @@ public:
     virtual Class* meta() const;
 
 public:
-    std::string serialize() const;
-    void        deserialize(const string_view in);
-    static void deserialize(Object* out, const string_view in);
+    String serialize() const;
+    void   deserialize(const StringView);
+    // static void deserialize(Object*, const StringView);
 
 public:
     template<typename T> bool isof() const;              //!< check same type of derived by template
     bool                      isof(const Class*) const;  //!< check same type of derived by meta class
     bool                      isof(const char*) const;   //!< check same type of derived by name
-    bool                      isof(const string&) const; //!< check same type of derived by name
+    bool                      isof(const String&) const; //!< check same type of derived by name
 
 private:
     struct Pool {

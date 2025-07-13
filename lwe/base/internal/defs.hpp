@@ -19,7 +19,7 @@ using ssize_t = std::make_signed_t<size_t>;
 
 using uint = unsigned int;
 
-using hash_t  = std::size_t;                //!< hash type
+using hash_t  = uint64_t;                   //!< 64-bit hash type
 using index_t = std::make_signed_t<size_t>; //!< index type
 
 } // namespace core
