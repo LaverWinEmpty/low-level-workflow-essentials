@@ -5,7 +5,10 @@
 #include "../../../util/timer.hpp"
 #include <functional>
 
-template<int TRY = 3> class Bench {
+template<int TRY = 5> class Bench {
+public:
+    static constexpr int TRY = TRY;
+
 public:
     void loop(const std::function<void()>& fn) { while(once(fn)); }
 
@@ -21,8 +24,17 @@ public:
 
         ++idx;
         if(idx == TRY) {
-            avg /= TRY;
             idx  = 0; // init for next
+            avg /= TRY;
+
+            rsd = 0;
+            if constexpr(TRY > 1) {
+                for(int i = 0; i < TRY; ++i) {
+                    float temp  = (arr[i] - avg);
+                    rsd        += temp * temp;
+                }
+                rsd = (std::sqrtf(rsd) / avg) * 100;
+            }
             return false;
         }
         return true;
@@ -42,7 +54,10 @@ public:
             line(false);
             printf("AVG: %.3f SEC\n", avg);
         }
-        else printf("RES: %.3f SEC\n", avg); // only once
+        else {
+            printf("RES: %.3f SEC\n", avg); // only once
+        }
+        printf("RSD: ¡¾%.3f%%\n", rsd); // standard deviation
     }
 
     static void line(bool thick = true) {
@@ -112,7 +127,8 @@ private:
 
     int idx = 0;
 
-    float avg;
+    float avg = 0;
+    float rsd = 0;
 };
 
 #endif
