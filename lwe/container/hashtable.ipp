@@ -15,81 +15,53 @@ public:
 
 public:
     Iterator& operator++() {
-        // find valid data, in range
-        while(index != self->capacitor) {
-            // bucket data -> chain data (index 0 -> 1)
-            if(chaining == false) {
-                chaining = true; // 0 -> 1
-
-                // break when has data
-                if(self->buckets[index].size != 0) {
-                    break; // break for return bucket[0].chain[0]
+        size_t max = self->capacitor;
+        if(index == max) {
+            return *this; // end
+        }
+        // chaining
+        if(chaining == false) {
+            chaining = true;
+        }
+        else ++chain;
+        if(chain >= self->buckets[index].capacity) {
+            chaining = false;
+            chain = 0;
+            // next
+            while(index < max) {
+                ++index;
+                if(self->buckets[index].used == true) {
+                    break; // found
                 }
             }
-            // in chain
-            else {
-                ++chain; // next
-                // reached the end of chain
-                if(chain >= self->buckets[index].size) {
-                    chain    = 0;     // init
-                    chaining = false; // index to 0 (chain -> bucket)
-                    ++index;          // next bucket
-
-                    // end
-                    if(index >= self->capacitor) {
-                        break;
-                    }
-                    // break when bucket not empty
-                    if(self->buckets[index].used == true) {
-                        break;
-                    }
-                }
-                // haven't reached the end yet.
-                else break;
-            }
-        } // end while
-
+        }
         return *this;
     }
 
     Iterator& operator--() {
-        // [0][0]
-        if(index == 0 && !chaining) {
-            return *this;
+        if(index == 0 && chaining == false) {
+            return *this; // end
         }
-
-        // find valid data, in range
-        do {
-            // bucket -> chain
-            if(chaining == false) {
-                // begin
-                if(index == 0) {
-                    break;
-                }
-                --index; // prev
-
-                // has data
+        // chaining and prev
+        if(chaining == true) {
+            if(chain > 0) {
+                --chain;
+            }
+            else chaining = false;
+        }
+        // find prev bucket
+        else {
+            while(index > 0) {
+                --index;
                 if(self->buckets[index].used == true) {
-                    // has chain
                     if(self->buckets[index].size != 0) {
-                        chain    = self->buckets[index].size - 1; // last chain
-                        chaining = true;                          // mark in chain
+                        chaining = true;                          // chain
+                        chain    = self->buckets[index].size - 1; // chain end
                     }
-                    else chaining = false; // not chain
                     break;
                 }
             }
-
-            // in chain
-            else {
-                if(chain == 0) {
-                    chaining = false; // chain -> bucket
-                }
-                else --chain; // prev chain
-                break;
-            }
         }
-        while(index || chaining);
         return *this;
     }
 
