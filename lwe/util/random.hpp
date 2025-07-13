@@ -14,7 +14,7 @@ public:
     Random(uint64_t = 0);
 
 public:
-    Random* instance(uint64_t seed = 0);
+    static Random* instance(uint64_t seed = 0);
 
 public:
     void initialize(uint64_t);
