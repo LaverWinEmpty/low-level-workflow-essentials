@@ -439,7 +439,8 @@ template<typename T, size_t SVO> auto Deque<T, SVO>::bottom() const noexcept -> 
 }
 
 template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_back(U&& in) {
-    emplace(0, std::forward<U>(in));
+    // emplace(0, std::forward<U>(in));
+    push(std::forward<U>(in));
 }
 
 template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_front(U&& in) {
@@ -447,11 +448,11 @@ template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_f
 }
 
 template<typename T, size_t SVO> void Deque<T, SVO>::pop_back() {
-    push();
+    pop();
 }
 
 template<typename T, size_t SVO> void Deque<T, SVO>::pop_front() {
-    shift();
+    pull();
 }
 
 template<typename T, size_t SVO> index_t Deque<T, SVO>::forward(index_t in) noexcept {
