@@ -28,10 +28,10 @@ public:
             chaining = false;
             chain = 0;
             // next
-            while(index < max) {
+            while(true) {
                 ++index;
-                if(self->buckets[index].used == true) {
-                    break; // found
+                if(index == max || self->buckets[index].used == true) {
+                    break; // end or found
                 }
             }
         }
