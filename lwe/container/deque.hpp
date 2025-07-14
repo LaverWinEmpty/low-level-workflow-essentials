@@ -66,14 +66,15 @@
 LWE_BEGIN
 namespace container {
 
-template<typename T, size_t SVO = 0> class Deque {
+template<typename T, size_t SVO = align(config::SMALLVECTOR / sizeof(T))>
+class Deque {
     template<typename, size_t> friend class Deque; //!< for Deuqe<T, OTHER_SVO_SIZE>
 
 public:
     CONTAINER_BODY(Deque, T, T, SVO);
 
-protected:
-    static constexpr size_t MIN = SVO == 0 ? 0 : (SVO < config::SMALLVECTOR ? config::SMALLVECTOR : align(SVO));
+public:
+    static constexpr size_t MIN = SVO < 4 ? 0 : SVO; //!< SVO min
 
 public:
     Deque();

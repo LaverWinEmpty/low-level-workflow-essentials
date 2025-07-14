@@ -19,10 +19,10 @@ inline constexpr size_t
     MEMORYPAGE = CONFIGDEF_MEMORYPAGE_SIZE;
 #endif
 
-// deque small vector optimization
+// deque small vector optimization (byte)
 inline constexpr size_t
 #ifndef CONFIGDEF_SMALLVECTOR_SIZE
-    SMALLVECTOR = 8;
+    SMALLVECTOR = 64;
 #else
     SMALLVECTOR = CONFIGDEF_SMALLVECTOR_SIZE;
 #endif
