@@ -1,113 +1,107 @@
-/**************************************************************************************************
- * circulation container
- *
- * description
- * use small vector
- * random accessible
- * has iterator and reverse iterator
- *
- * mix of signed and unsigned.
- * it is safe from overflow by using bitwise operations.
- * e.g
- *  index: 0 -> -1
- *  0b0 -> 0b1111...1111
- *  0b1111...1111 & 0b1111 (capacity is 16)
- *  index: -1 -> 15
- **************************************************************************************************
- * example
- *
- * capacitor -> power of 2
- * [0] [1] [2] [3] [4] [5] [6] [7]
- *  a   b   X   Y   Z   c   d   e
- *          ^       ^   ^
- *          begin   |   end
- *          front   rear
- *          top     bottom
- *
- * iterator
- *   X -> Y -> Z -> X ... (cycle only within range)
- *
- * rear and bottom
- * - last index getter
- * - return reverse iterator
- * - if to point to end(), sub 1 (auto itr = rear() - 1;)
- * - if going to begin(), add (auto itr = rear(); ++itr;)
- *
- * indexing
- *  [0] -> X (2)
- *  [2] -> Z (4)
- *  [3] -> c (5, out of range)
- *  [8] -> X (2, circulation)
- **************************************************************************************************
- * feature
- *
- * - push_back:  push
- * - pop_back:   pop
- * - push_front: unshift
- * - pop_front:  shift
- *
- * exception
- * - push return bool -> allocation failed
- * - pop return bool -> not exist data
- *
- * performance
- * - push/pop: O(1) amortized, O(n) worst case (reallocation)
- * - indexing overhead: relative address convert to absolute (bitmask optimized)
- * - call realloc() instead of new() (possible optimization)
- **************************************************************************************************/
+#ifndef LWE_CONTAINER_DEQUE
+#define LWE_CONTAINER_DEQUE
 
-#ifndef LWE_CONTAINER_VECTOR
-#define LWE_CONTAINER_VECTOR
+#include "stack.hpp"
 
-#include "../config/config.h"
-#include "../mem/block.hpp"
-#include "iterator.hpp"
+/*
+    Deque
+    - Ring buffer class
+
+    API
+    - push(T)    push back
+    - pop(T&)    LIFO (T& or T*, nullable)
+    - pull(T&)   FIFO (T& or T*, nullable)
+    - prepend(T) push front
+
+    - insert(index, T)
+    - remove(index, T*)
+    - operator[](index)
+    relative index
+    e.g.
+    +--------------------------+
+    | [d][e][ ][ ][ ][a][b][c] |
+    +--------------------------+
+    | begin    5               |
+    | size     5               |
+    | capacity 8               |
+    +--------------------------+
+    in: 0 -> process [7] ... a
+    in: 2 -> process [7] ... c
+    in: 4 -> process [2] ... e
+    in: 7 -> process [4] ... out of range
+    in: 8 -> out of range
+
+    ! SWAP AND DELETE / INSERT !
+    e.g.
+    +--------------------+
+    | [ ][0][1][2][ ][ ] |
+    +--------------------+
+    insert(1, T{ 3 });
+    +--------------------+
+    | [ ][0][3][2][1][ ] |
+    |              ^swap |
+    +--------------------+
+    remove(2);
+    +--------------------+
+    | [ ][0][3][1][ ][ ] |
+    |           ^swap    |
+    +--------------------+
+
+    emplace / erase (private)
+    absolute index
+    0 -> 0
+    16 -> 16
+    32 -> 32
+
+    iterator
+    - absolute index
+    ! MODULO OPERATION ON ACCESS !
+    0 -> 0
+    4 -> 4
+    8 -> 0 (8 % 8)    | capacity == 8
+    -1 -> 7 (255 % 8) | capacity == 8
+*/
 
 LWE_BEGIN
 namespace container {
-
-template<typename T, size_t SVO = align(config::SMALLVECTOR / sizeof(T))>
-class Deque {
-    template<typename, size_t> friend class Deque; //!< for Deuqe<T, OTHER_SVO_SIZE>
+template<typename T, size_t SVO = 0> class Deque {
 
 public:
     CONTAINER_BODY(Deque, T, T, SVO);
 
 public:
-    static constexpr size_t MIN = SVO < 4 ? 0 : SVO; //!< SVO min
+    Deque() = default;
+    Deque(const Deque&);
+    Deque(Deque&&) noexcept;
+    Deque& operator=(const Deque&);
+    Deque& operator=(Deque&&) noexcept;
 
 public:
-    Deque();
-    ~Deque();
+    template<size_t X> Deque(const Deque<T, X>&);
+    template<size_t X> Deque(Deque<T, X>&&) noexcept;
+    template<size_t X> Deque& operator=(const Deque<T, X>&);
+    template<size_t X> Deque& operator=(Deque<T, X>&&) noexcept;
 
 public:
-    template<size_t N> Deque(const Deque<T, N>&);
-    template<size_t N> Deque(Deque<T, N>&&);
-    template<size_t N> Deque<T, N>& operator=(const Deque<T, N>&);
-    template<size_t N> Deque<T, N>& operator=(Deque<T, N>&&);
+    T&       operator[](size_t);
+    const T& operator[](size_t) const;
 
 public:
-    T& operator[](index_t) const noexcept; //!< circulation operator[], error: count == 0
+    bool push(const T&);
+    bool push(T&&);
+    bool pop(T* = nullptr);
+    bool pop(T&);
 
 public:
-    template<typename Arg> bool emplace(index_t, Arg&&) noexcept; //!< out of range: push_back or push_front
-    bool                        erase(index_t, T* = nullptr) noexcept;
+    bool prepend(const T&);
+    bool prepend(T&&);
+    bool pull(T* = nullptr);
+    bool pull(T&);
 
 public:
-    bool push() noexcept;  //!< push_back default constructor
-    bool shift() noexcept; //!< push_front default constructor
-
-public:
-    bool push(T&&) noexcept;       //!< push_back
-    bool push(const T&) noexcept;  //!< push_back
-    bool shift(T&&) noexcept;      //!< push_front
-    bool shift(const T&) noexcept; //!< push_front
-
-public:
-    bool pop(T* = nullptr) noexcept;  //!< pop_back
-    bool pop(T&) noexcept;            //!< pop_back
-    bool pull(T* = nullptr) noexcept; //!< pop_front
-    bool pull(T&) noexcept;           //!< pop_front
+    template<typename Arg> bool insert(index_t, Arg&&);
+    bool                        remove(index_t, T&);
+    bool                        remove(index_t, T* = nullptr);
 
 public:
     bool resize(size_t) noexcept;  //!< realloc
@@ -128,53 +122,48 @@ public:
     const T& at(index_t) const;     //!< at const
 
 public:
-    Iterator<FWD | VIEW> begin() const noexcept;  //!< iterator begin
-    Iterator<FWD | VIEW> end() const noexcept;    //!< iterator end
-    Iterator<BWD | VIEW> rbegin() const noexcept; //!< reverse iterator begin
-    Iterator<BWD | VIEW> rend() const noexcept;   //!< reverse iterator end
-
-public:
-    Iterator<FWD | VIEW> front() const noexcept;  //!< iterator for head to tail
-    Iterator<BWD | VIEW> rear() const noexcept;   //!< iterator for tail to head
-    Iterator<BWD | VIEW> top() const noexcept;    //!< iterator for tail to head
-    Iterator<FWD | VIEW> bottom() const noexcept; //!< iterator for head to tail
-
-public:
     Iterator<FWD> begin() noexcept;  //!< iterator begin
     Iterator<FWD> end() noexcept;    //!< iterator end
     Iterator<BWD> rbegin() noexcept; //!< reverse iterator begin
     Iterator<BWD> rend() noexcept;   //!< reverse iterator end
 
 public:
-    Iterator<FWD> front() noexcept;  //!< iterator for head to tail
-    Iterator<BWD> rear() noexcept;   //!< iterator for tail to head
-    Iterator<BWD> top() noexcept;    //!< iterator for tail to head
-    Iterator<FWD> bottom() noexcept; //!< iterator for head to tail
+    Iterator<FWD | VIEW> begin() const noexcept;  //!< iterator begin
+    Iterator<FWD | VIEW> end() const noexcept;    //!< iterator end
+    Iterator<BWD | VIEW> rbegin() const noexcept; //!< reverse iterator begin
+    Iterator<BWD | VIEW> rend() const noexcept;   //!< reverse iterator end
+
+public:
+    T* top() noexcept;
+    T* bottom() noexcept;
+    T* front() noexcept;
+    T* rear() noexcept;
+
+public:
+    const T* top() const noexcept;
+    const T* bottom() const noexcept;
+    const T* front() const noexcept;
+    const T* rear() const noexcept;
 
 public:
     template<typename U> void push_back(U&&);  //!< STL compatible
-    template<typename U> void push_front(U&&); //!< STL compatible
     void                      pop_back();      //!< STL compatible
+    template<typename U> void push_front(U&&); //!< STL compatible
     void                      pop_front();     //!< STL compatible
 
-protected:
-    index_t forward(index_t) noexcept;        //!< out: in - 1
-    index_t backward(index_t) noexcept;       //!< out: in + 1
-    index_t relative(index_t) const noexcept; //!< out: index 0 to head, circulation 0 ~ capacity
-    index_t clamp(index_t) const noexcept;    //!< out: index 0 to head, clamped to head ~ tail
+private:
+    template<typename Arg> bool emplace(index_t, Arg&&);
+    bool                        erase(index_t, T*);
+    bool                        reallocate(size_t);
 
-protected:
-    bool reallocate(size_t) noexcept; //!< call realloc function
+private:
+    index_t absidx(index_t) const noexcept;
+    index_t relidx(index_t) const noexcept;
 
-protected:
-    union {
-        mem::Block<MIN, T> stack; // stack, union for uninitialize
-    };
-    T*      container = nullptr; //!< container
-    size_t  capacitor = 0;       //!< size: container
-    index_t counter   = 0;       //!< size: element
-    index_t head      = 0;       //!< index: front / bottom
-    index_t tail      = -1;      //!< index: rear / top
+private:
+    Stack<T, SVO> stack;
+    index_t       head = 0; // pos of inserted front
+    index_t       tail = 0; // pos to insert back
 };
 
 } // namespace container
