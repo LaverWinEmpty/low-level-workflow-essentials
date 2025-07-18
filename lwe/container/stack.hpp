@@ -1,63 +1,31 @@
-/**************************************************************************************************
- * circulation container
- *
- * description
- * use small vector
- * random accessible
- * has iterator and reverse iterator
- *
- * mix of signed and unsigned.
- * it is safe from overflow by using bitwise operations.
- * e.g
- *  index: 0 -> -1
- *  0b0 -> 0b1111...1111
- *  0b1111...1111 & 0b1111 (capacity is 16)
- *  index: -1 -> 15
- **************************************************************************************************
- * example
- *
- * capacitor -> power of 2
- * [0] [1] [2] [3] [4] [5] [6] [7]
- *  a   b   X   Y   Z   c   d   e
- *          ^       ^   ^
- *          begin   |   end
- *          front   rear
- *          top     bottom
- *
- * iterator
- *   X -> Y -> Z -> X ... (cycle only within range)
- *
- * rear and bottom
- * - last index getter
- * - return reverse iterator
- * - if to point to end(), sub 1 (auto itr = rear() - 1;)
- * - if going to begin(), add (auto itr = rear(); ++itr;)
- *
- * indexing
- *  [0] -> X (2)
- *  [2] -> Z (4)
- *  [3] -> c (5, out of range)
- *  [8] -> X (2, circulation)
- **************************************************************************************************
- * feature
- *
- * - push_back:  push
- * - pop_back:   pop
- * - push_front: unshift
- * - pop_front:  shift
- *
- * exception
- * - push return bool -> allocation failed
- * - pop return bool -> not exist data
- *
- * performance
- * - push/pop: O(1) amortized, O(n) worst case (reallocation)
- * - indexing overhead: relative address convert to absolute (bitmask optimized)
- * - call realloc() instead of new() (possible optimization)
- **************************************************************************************************/
+/*
+    vector,
 
-#ifndef LWE_CONTAINER_VECTOR
-#define LWE_CONTAINER_VECTOR
+    API
+    - push(T)
+    - pop(T& or T*, nullable)
+    - insert(index, T)
+    - remove(index, T*)
+
+    ! SWAP AND DELETE / INSERT !
+    e.g.
+    +-----------------+
+    | [0][1][2][ ][ ] |
+    +-----------------+
+    insert(1, T{ 3 });
+    +-----------------+
+    | [0][3][2][1][ ] |
+    |           ^swap |
+    +-----------------+
+    remove(0);
+    +-----------------+
+    | [1][3][2][ ][ ] |
+    |  ^swap          |
+    +-----------------+
+*/
+
+#ifndef LWE_CONTAINER_STACK
+#define LWE_CONTAINER_STACK
 
 #include "../config/config.h"
 #include "../mem/block.hpp"
@@ -69,7 +37,8 @@ namespace container {
 //! @tparam N count of T, 0 is auto size (64 byte)
 template<typename T, size_t N = 0>
 class Stack {
-    template<typename, size_t> friend class Stack; //!< for Deuqe<T, OTHER_SVO_SIZE>
+    template<typename, size_t> friend class Stack; //!< for Stack<T, OTHER_SVO_SIZE>
+    template<typename, size_t> friend class Deque; //!< for composition
 
 public:
     CONTAINER_BODY(Stack, T, T, N);
@@ -103,20 +72,18 @@ public:
     const T& operator[](index_t) const noexcept; //!<
 
 public:
-    template<typename Arg> bool emplace(index_t, Arg&&) noexcept; //!< out of range: push_back or push_front
-    bool                        erase(index_t, T* = nullptr) noexcept;
-
-public:
-    bool push() noexcept;  //!< push_back default constructor
-    bool shift() noexcept; //!< push_front default constructor
-
-public:
+    bool push() noexcept;         //!< push_back default constructor
     bool push(T&&) noexcept;      //!< push_back
     bool push(const T&) noexcept; //!< push_back
 
 public:
     bool pop(T* = nullptr) noexcept; //!< pop_back
     bool pop(T&) noexcept;           //!< pop_back
+
+public:
+    template<typename Arg> bool insert(index_t, Arg&&);
+    bool                        remove(index_t, T&);
+    bool                        remove(index_t, T* = nullptr);
 
 public:
     bool resize(size_t) noexcept;  //!< realloc
@@ -165,6 +132,11 @@ public:
     void                      pop_back();     //!< STL compatible
 
 private:
+    template<typename Arg> bool emplace(index_t, Arg&&) noexcept; //!< out of range: push_back or push_front
+    bool                        erase(index_t, T* = nullptr) noexcept;
+
+
+private:
     template<size_t X, bool COPY> using Other = std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&&>;
     template<size_t X, bool COPY> bool ctor(Other<X, COPY>, size_t = 0);           //!< copy / move delegator
     template<bool> void                transfer(const T*, T*, size_t, size_t = 0); //!< @tparam true: copy, false: move
@@ -184,5 +156,5 @@ protected:
 
 } // namespace container
 LWE_END
-#include "vector.ipp"
+#include "stack.ipp"
 #endif

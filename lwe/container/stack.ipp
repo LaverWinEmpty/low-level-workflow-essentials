@@ -2,29 +2,23 @@ LWE_BEGIN
 namespace container {
 
 /**************************************************************************************************
- * Iterator
+ * Iterator Specialization
  **************************************************************************************************/
 
 template<typename T, size_t SVO> class Iterator<FWD, Stack<T, SVO>> {
     ITERATOR_BODY(FWD, Stack, T, SVO);
 public:
     Iterator(T* in) noexcept: ptr(in) { }
-    Iterator(const Iterator& in): ptr(in.ptr) { }
     Iterator(const Reverse& in) noexcept: ptr(in.it.ptr) { }
-    Iterator& operator=(const Iterator& in) noexcept { return ptr = in.ptr, *this; }
     Iterator& operator=(const Reverse& in) noexcept { return ptr = in.it.ptr, *this; }
     Iterator& operator++() noexcept { return ++ptr, *this; }
     Iterator& operator--() noexcept { return --ptr, *this; }
     Iterator  operator++(int) noexcept { return Iterator(ptr++); }
     Iterator  operator--(int) noexcept { return Iterator(ptr--); }
-    Iterator  operator+(index_t in) const noexcept { return ptr + in; }
-    Iterator  operator-(index_t in) const noexcept { return ptr - in; }
-    Iterator& operator+=(index_t in) noexcept { return ptr += in, *this; }
-    Iterator& operator-=(index_t in) noexcept { return ptr -= in, *this; }
     bool      operator==(const Iterator& in) const noexcept { return ptr == in.ptr; }
-    bool      operator!=(const Iterator& in) const noexcept { return ptr != in.ptr; }
-    bool      operator==(const Reverse& in) const noexcept { return ptr == in.it.ptr; }
-    bool      operator!=(const Reverse& in) const noexcept { return ptr != in.it.ptr; }
+    bool      operator!=(const Iterator& in) const noexcept { return !operator==(in); }
+    bool      operator==(const Reverse& in) const noexcept { return *this == in.it; }
+    bool      operator!=(const Reverse& in) const noexcept { return *this != in.it; }
     const T&  operator*() const noexcept { return *ptr; }
     const T*  operator->() const noexcept { return ptr; }
     T&        operator*() noexcept { return *ptr; }
@@ -33,32 +27,11 @@ private:
     T* ptr;
 };
 
+// reverse iterator
 template<typename T, size_t SVO> class Iterator<BWD, Stack<T, SVO>> {
-    ITERATOR_BODY(BWD, Stack, T, SVO);
+    ITERATOR_BODY_REVERSE(Stack, T, SVO);
 public:
     Iterator(T* in) noexcept: it(in) { }
-    Iterator(const Iterator& in) noexcept: it(in.it.ptr) { }
-    Iterator(const Reverse& in) noexcept: it(in.ptr) { }
-    Iterator& operator=(const Iterator& in) noexcept { return it.ptr = in.it.ptr, *this; }
-    Iterator& operator=(const Reverse& in) noexcept { return it.ptr = in.ptr, *this; }
-    Iterator& operator++() noexcept { return --it.ptr, *this; }
-    Iterator& operator--() noexcept { return ++it.ptr, *this; }
-    Iterator  operator++(int) noexcept { return Iterator(--it.ptr); }
-    Iterator  operator--(int) noexcept { return Iterator(++it.ptr); }
-    Iterator  operator+(index_t in) const noexcept { return it.ptr - in; }
-    Iterator  operator-(index_t in) const noexcept { return it.ptr + in; }
-    Iterator& operator+=(index_t in) noexcept { return in.ptr -= in, *this; }
-    Iterator& operator-=(index_t in) noexcept { return in.ptr += in, *this; }
-    bool      operator==(const Iterator& in) const noexcept { return it.ptr == in.it.ptr; }
-    bool      operator!=(const Iterator& in) const noexcept { return it.ptr != in.it.ptr; }
-    bool      operator==(const Reverse& in) const noexcept { return it.ptr == in.ptr; }
-    bool      operator!=(const Reverse& in) const noexcept { return it.ptr != in.ptr; }
-    const T&  operator*() const noexcept { return *it.ptr; }
-    const T*  operator->() const noexcept { return it.ptr; }
-    T&        operator*() noexcept { return *it.ptr; }
-    T*        operator->() noexcept { return it.ptr; }
-private:
-    Reverse it;
 };
 
 REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, Stack, T, SVO);
@@ -181,15 +154,6 @@ bool Stack<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
         return false;
     }
 
-    index_t last = 0;
-    if(counter) {
-        // swap and insert
-        last = counter - 1;
-        if(index < last) {
-            new(container + last) T(std::move(container[index]));
-        }
-    }
-
     // construct
     new(container + index) T(std::forward<Arg>(in));
 
@@ -205,14 +169,9 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::erase(index_t index, T* out
     if(out) {
         *out = std::move(container[index]);
     }
-    else container[index].~T();
+    container[index].~T();
     --counter;
 
-    // swap and delete
-    size_t last = counter - 1;
-    if(index < last) {
-        new(container + index) T(std::move(container[last]));
-    }
     return true;
 }
 
@@ -234,6 +193,56 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::pop(T* out) noexcept {
 
 template<typename T, size_t SVO> bool Stack<T, SVO>::pop(T& out) noexcept {
     return erase(counter - 1, &out);
+}
+
+template<typename T, size_t SVO>
+template<typename Arg> bool Stack<T, SVO>::insert(index_t index, Arg&& in) {
+    if(index < 0) index = 0;
+    else if(index >= counter) index = counter;
+
+    // full, bad alloc
+    if((counter == capacitor && !reallocate(capacitor << 1))) {
+        return false;
+    }
+
+    index_t last = 0;
+    if(counter) {
+        // swap and insert
+        last = counter - 1;
+        if(index < last) {
+            new(container + last) T(std::move(container[index]));
+        }
+    }
+
+    emplace(index, in);
+    return true;
+}
+
+template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t index, T* out) {
+    if(counter == 0) {
+        return false;
+    }
+
+    if(index < 0) index = 0;
+    else if(index >= counter) index = counter;
+
+    if(out) {
+        *out = std::move(container[index]); // return
+    }
+
+    // swap and delete
+    size_t last = counter - 1;
+    if(index < last) {
+        container[index] = std::move(container[last]); // move
+        container[last].~T();                        // destruct
+    }
+
+    else container[index].~T(); // destruct
+    --counter;       // count
+}
+
+template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t idx, T& out) {
+    remove(idx, &out);
 }
 
 template<typename T, size_t SVO> bool Stack<T, SVO>::resize(size_t in) noexcept {
@@ -313,15 +322,31 @@ template<typename T, size_t SVO> auto Stack<T, SVO>::begin() noexcept -> Iterato
 }
 
 template<typename T, size_t SVO> auto Stack<T, SVO>::end() noexcept -> Iterator<FWD> {
-    return Iterator<FWD | VIEW>{ container + counter };
+    return Iterator<FWD | VIEW>{ container + counter }; // overflow safe: bitwise
 }
 
 template<typename T, size_t SVO> auto Stack<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
-    return Iterator<BWD | VIEW>{ container + counter - 1 };
+    return Iterator<BWD | VIEW>{ container + counter - 1 }; // overflow safe: bitwise
 }
 
 template<typename T, size_t SVO> auto Stack<T, SVO>::rend() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ container - 1 };
+}
+
+template<typename T, size_t SVO> T* Stack<T, SVO>::front() noexcept {
+    return Iterator<FWD | VIEW>{ begin() };
+}
+
+template<typename T, size_t SVO> T* Stack<T, SVO>::rear() noexcept {
+    return Iterator<BWD | VIEW>{ rbegin() };
+}
+
+template<typename T, size_t SVO> T* Stack<T, SVO>::top() noexcept {
+    return Iterator<BWD | VIEW>{ rbegin() };
+}
+
+template<typename T, size_t SVO> T* Stack<T, SVO>::bottom() noexcept {
+    return Iterator<FWD | VIEW>{ begin() };
 }
 
 template<typename T, size_t SVO> auto Stack<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
@@ -340,27 +365,11 @@ template<typename T, size_t SVO> auto Stack<T, SVO>::rend() const noexcept -> It
     return const_cast<Stack*>(this)->rend();
 }
 
-template<typename T, size_t SVO> T* Stack<T, SVO>::front() noexcept {
-    return container;
-}
-
-template<typename T, size_t SVO> T* Stack<T, SVO>::rear() noexcept {
-    return container + counter;
-}
-
-template<typename T, size_t SVO> T* Stack<T, SVO>::top() noexcept {
-    return container + counter;
-}
-
-template<typename T, size_t SVO> T* Stack<T, SVO>::bottom() noexcept {
-    return container;   
-}
-
 template<typename T, size_t SVO> const T* Stack<T, SVO>::front() const noexcept {
     return const_cast<Stack*>(this)->front();
 }
 
-template<typename T, size_t SVO> const T* Stack<T, SVO>::rear() const noexcept  {
+template<typename T, size_t SVO> const T* Stack<T, SVO>::rear() const noexcept {
     return const_cast<Stack*>(this)->rear();
 }
 
@@ -378,7 +387,7 @@ template<typename T, size_t SVO> template<typename U> void Stack<T, SVO>::push_b
 }
 
 template<typename T, size_t SVO> void Stack<T, SVO>::pop_back() {
-    pop(nullptr);
+    pop();
 }
 
 template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, size_t begin) {

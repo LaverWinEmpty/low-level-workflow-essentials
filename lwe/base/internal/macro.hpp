@@ -382,6 +382,29 @@ public:                                                                         
     using Const     = Iterator<MOD | VIEW, CONTAINER>;           \
     friend class Reverse
 
+// NOTE
+// require: constructor(const Reverse&)
+// require: increment and decrement operators
+// require: access and dereference operators
+#define ITERATOR_BODY_REVERSE(CONTAINER, ...)                                       \
+    ITERATOR_BODY(BWD, CONTAINER, __VA_ARGS__);                                     \
+public:                                                                             \
+    Iterator(const Reverse& in) noexcept: it(in) { }                                \
+    Iterator& operator++() { return --it, *this; }                                  \
+    Iterator& operator--() { return ++it, *this; }                                  \
+    Iterator  operator++(int) { return Iterator(it--); }                            \
+    Iterator  operator--(int) { return Iterator(it++); }                            \
+    bool      operator==(const Iterator& in) const noexcept { return it == in.it; } \
+    bool      operator!=(const Iterator& in) const noexcept { return it != in.it; } \
+    bool      operator==(const Reverse& in) const noexcept { return it == in; }     \
+    bool      operator!=(const Reverse& in) const noexcept { return it != in; }     \
+    const T&  operator*() const noexcept { return *it; }                            \
+    const T*  operator->() const noexcept { return it; }                            \
+    T&        operator*() noexcept { return *it; }                                  \
+    T*        operator->() noexcept { return it; }                                  \
+private:                                                                            \
+    Reverse it
+
 #define REGISTER_CONST_ITERATOR(TEMPLATE, MOD, CONTAINER, ...)                         \
     template<WRAP TEMPLATE>                                                            \
     class Iterator<MOD | VIEW, CONTAINER<__VA_ARGS__>>                                 \
