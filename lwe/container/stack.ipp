@@ -43,7 +43,7 @@ REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, Stack, T, SVO);
 
 template<typename T, size_t N>
 template<size_t X, bool COPY>
-bool Stack<T, N>::ctor(std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&&> in, size_t begin) {
+bool Stack<T, N>::ctor(std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&&> in, index_t begin) {
     // reset data
     if(counter != 0) {
         clear();
@@ -390,7 +390,7 @@ template<typename T, size_t SVO> void Stack<T, SVO>::pop_back() {
     pop();
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, size_t begin) {
+template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, index_t begin) {
     // adjust and check
     if(in < MIN) in = MIN; // set MIN
     else if((in = align(in)) > INT64_MAX) {
@@ -420,12 +420,12 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, size_
 }
 
 template<typename T, size_t SVO>
-template<bool COPY> void Stack<T, SVO>::transfer(const T* in, T* out, size_t begin, size_t size) {
+template<bool COPY> void Stack<T, SVO>::transfer(const T* in, T* out, index_t begin, size_t size) {
     // logic for cirulation ...
-    size_t adjust    = size < size_t(capacitor) ? size : capacitor; // set for reduce
-    size_t length    = size - begin;                                // begin ~ end
-    size_t current   = adjust <= length ? adjust : length;          // begin ~ end size
-    size_t remainder = adjust <= length ? 0 : adjust - length;      // 0 ~ begin size
+    size_t  adjust    = size < capacitor ? size : capacitor;    // set for reduce
+    size_t  length    = size - begin;                           // begin ~ end
+    size_t  current   = adjust <= length ? adjust : length;     // begin ~ end size
+    size_t  remainder = adjust <= length ? 0 : adjust - length; // 0 ~ begin size
 
     for(size_t i = 0; i < current; ++i) {
         if constexpr(!COPY) {

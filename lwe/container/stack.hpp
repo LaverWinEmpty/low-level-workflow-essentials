@@ -138,9 +138,9 @@ private:
 
 private:
     template<size_t X, bool COPY> using Other = std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&&>;
-    template<size_t X, bool COPY> bool ctor(Other<X, COPY>, size_t = 0);           //!< copy / move delegator
-    template<bool> void                transfer(const T*, T*, size_t, size_t = 0); //!< @tparam true: copy, false: move
-    bool                               reallocate(size_t, size_t = 0);             //!< call realloc (size, begin)
+    template<size_t X, bool COPY> bool ctor(Other<X, COPY>, index_t = 0);           //!< copy / move delegator
+    template<bool> void                transfer(const T*, T*, index_t, size_t = 0); //!< true: copy, false: move
+    bool                               reallocate(size_t, index_t = 0);             //!< call realloc (size, begin)
 
 protected:
     void clear(size_t);

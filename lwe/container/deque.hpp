@@ -68,6 +68,7 @@ template<typename T, size_t SVO = 0> class Deque {
 
 public:
     CONTAINER_BODY(Deque, T, T, SVO);
+    using Stack = Stack<T, SVO>;
 
 public:
     Deque() = default;
@@ -161,9 +162,9 @@ private:
     index_t relidx(index_t) const noexcept;
 
 private:
-    Stack<T, SVO> stack;
-    index_t       head = 0; // pos of inserted front
-    index_t       tail = 0; // pos to insert back
+    Stack   stack;
+    index_t head = 0; // pos of inserted front
+    index_t tail = 0; // pos to insert back
 };
 
 } // namespace container

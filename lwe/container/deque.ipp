@@ -40,41 +40,44 @@ template<typename T, size_t SVO> index_t Deque<T, SVO>::relidx(index_t in) const
 }
 
 template<typename T, size_t SVO> Deque<T, SVO>::Deque(const Deque& in) {
-    stack.ctor<true>(in.stack.container, in.head);
+    stack.ctor<SVO, true>(in.stack, in.head);
 }
 
 template<typename T, size_t SVO> Deque<T, SVO>::Deque(Deque&& in) noexcept {
-    stack.ctor<false>(in.stack.container, in.head);
+    stack.ctor<SVO, false>(std::move(in.stack), in.head);
+    in.clear();
 }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::operator=(const Deque& in) -> Deque& {
     if(this != &in) {
-        stack.ctor<true>(in.stack.container, in.head);
+        stack.ctor<SVO, true>(in.stack, in.head);
     }
     return *this;
 }
 
 template<typename T, size_t SVO> auto Deque<T, SVO>::operator=(Deque&& in) noexcept -> Deque& {
     if(this != &in) {
-        stack.ctor<false>(in.stack.container, in.head);
+        stack.ctor<SVO, false>(std::move(in.stack), in.head);
+        in.clear();
     }
     return *this;
 }
 
 template<typename T, size_t SVO>
 template<size_t X> Deque<T, SVO>::Deque(const Deque<T, X>& in) {
-    stack.ctor<true>(in.container, in.head);
+    stack.ctor<SVO, true>(in.stack, in.head);
 }
 
 template<typename T, size_t SVO>
 template<size_t X> Deque<T, SVO>::Deque(Deque<T, X>&& in) noexcept {
-    stack.ctor<false>(in.container, in.head);
+    stack.ctor<SVO, false>(std::move(in.stack), in.head);
+    in.clear();
 }
 
 template<typename T, size_t SVO>
 template<size_t X> auto Deque<T, SVO>::operator=(const Deque<T, X>& in) -> Deque& {
     if(this != &in) {
-        stack.ctor<true>(in.container, in.head);
+        stack.ctor<SVO, true>(in.stack, in.head);
     }
     return *this;
 }
@@ -82,7 +85,8 @@ template<size_t X> auto Deque<T, SVO>::operator=(const Deque<T, X>& in) -> Deque
 template<typename T, size_t SVO>
 template<size_t X> auto Deque<T, SVO>::operator=(Deque<T, X>&& in) noexcept -> Deque& {
     if(this != &in) {
-        stack.ctor<false>(in.container, in.head);
+        stack.ctor<SVO, false>(std::move(in.stack), in.head);
+        in.clear();
     }
     return *this;
 }
