@@ -51,7 +51,7 @@ private:
 
 public:
     static constexpr size_t SVO = N;
-    static constexpr size_t MIN = min();
+    static constexpr size_t MIN = SVO ? SVO : min();
 
 public:
     Stack();
