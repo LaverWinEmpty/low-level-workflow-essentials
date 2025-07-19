@@ -72,7 +72,7 @@ Pool::Pool(size_t chunk, size_t alignment, size_t count) noexcept:
     ALIGN{ alignment <= sizeof(void*) ? sizeof(void*) : align(alignment) }, // align min: ptr size (64-bits: 8)
     CHUNK{ align(chunk + sizeof(void*), ALIGN) },                           // with ptr for outer block address
     META{ align(sizeof(Block) + sizeof(void*), ALIGN) },                    // padding for first chunk alignment
-    COUNT{ count ? count : ((config::MEMORYPAGE - META) / CHUNK) },         // adjust for mem page size
+    COUNT{ count ? count : ((config::BLOCK - META) / CHUNK) },              // adjust for mem page size
     SRC{ chunk },                                                           // chunk original size backup
     counter{ 0 } { }
 
@@ -211,7 +211,7 @@ size_t Pool::release() noexcept {
 
 void Pool::Queue::enqueue(Block* in) noexcept {
     if(!in) {
-        // TODO: 
+        // TODO:
         // assert(in);
         return;
     }

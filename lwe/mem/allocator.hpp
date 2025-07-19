@@ -10,8 +10,7 @@ namespace mem {
 using namespace config;
 
 //! @brief default allocator
-template<typename T, size_t ALIGN = DEF_ALIGN>
-class Allocator {
+template<typename T, size_t ALIGN = 1> class Allocator {
     using Adapter = Allocator<Block<core::align(sizeof(T), sizeof(void*))>, ALIGN>;
 public:
     template<typename... Args> static T* allocate(Args&&...) noexcept; //!< @return false: bad alloc

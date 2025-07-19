@@ -5,43 +5,43 @@
 /**************************************************************************************************
  * configs
  *
- * override: #define CONFIGDEF_`value name`_`type`
+ * override: #define SET_`value name`
  **************************************************************************************************/
 
 LWE_BEGIN
 namespace config {
 
-// array default allocate size (count)
+//! container initial capacity (count)
 inline constexpr size_t
-#ifndef CONFIGDEF_ELEMENTCOUNT_SIZE
-    ELEMENTCOUNT = 8;
+#ifndef SET_CAPACITY
+    CAPACITY = 4;
 #else
-    ELEMENTCOUNT = CONFIGDEF_ELEMENTCOUNT_SIZE;
+    CAPACITY = align(SET_CAPACITY);
+#endif
+inline constexpr size_t CAPACITY_LOG = nlog(CAPACITY); // for hash table
+
+//! memory pool allocate unit block (byte)
+inline constexpr size_t
+#ifndef SET_BLOCK
+    BLOCK = 4'096;
+#else
+    BLOCK = align(SET_BLOCK, 1'024);
 #endif
 
-
-// memory pool allocation unit
+//! small vector optimize (byte)
 inline constexpr size_t
-#ifndef CONFIGDEF_MEMORYPAGE_SIZE
-    MEMORYPAGE = 4'096;
-#else
-    MEMORYPAGE = CONFIGDEF_MEMORYPAGE_SIZE;
-#endif
-
-// deque small vector optimization (byte)
-inline constexpr size_t
-#ifndef CONFIGDEF_SMALLVECTOR_SIZE
+#ifndef SET_SMALLVECTOR
     SMALLVECTOR = 64;
 #else
-    SMALLVECTOR = CONFIGDEF_SMALLVECTOR_SIZE;
+    SMALLVECTOR = SET_SMALLVECTOR;
 #endif
 
-// hash set load factor
+// default hash table load factor (ratio)
 inline constexpr float
-#ifndef CONFIGDEF_LOADFACTOR_RATIO
+#ifndef SET_LOADFACTOR
     LOADFACTOR = 1.f;
 #else
-    LOADFACTOR = CONFIGDEF_LOADFACTOR_RATIO;
+    LOADFACTOR = SET_LOADFACTOR;
 #endif
 
 } // namespace config

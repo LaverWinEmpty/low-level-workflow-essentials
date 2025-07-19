@@ -47,6 +47,18 @@ inline static constexpr uint64_t align(uint64_t in, uint64_t unit) noexcept {
 }
 
 /**
+ * @brief
+ */
+inline static constexpr uint64_t nlog(uint64_t in) {
+    if(in == 0 || aligned(in) == false) {
+        throw std::exception("");
+    }
+    int res = 0;
+    while(in >>= 1) ++res;
+    return res;
+}
+
+/**
  * @brief MSVC _aligned_malloc / POSIX aligned_alloc
  *
  * @param [in] size corrected to multiples of powers of 2

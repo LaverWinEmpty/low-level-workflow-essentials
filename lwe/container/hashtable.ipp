@@ -26,7 +26,7 @@ public:
         else ++chain;
         if(chain >= self->buckets[index].capacity) {
             chaining = false;
-            chain = 0;
+            chain    = 0;
             // next
             while(true) {
                 ++index;
@@ -118,7 +118,7 @@ template<typename T> bool Hashtable<T>::push(const T& in) {
 }
 
 template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
-    hash_t  hashed = util::Hash<T>(in);          // get hash
+    hash_t  hashed = util::Hash<T>(in);         // get hash
     Bucket* bucket = buckets + indexof(hashed); // get bucket
     Chain*  pos    = slot(hashed, in);          // get delete pos
     if(pos == nullptr) {
@@ -224,7 +224,7 @@ template<typename T> void Hashtable<T>::clear() noexcept {
 }
 
 template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<FWD> {
-    if(buckets == nullptr) { 
+    if(buckets == nullptr) {
         return end();
     }
 
@@ -349,7 +349,6 @@ template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed) {
     return true;
 }
 
-
 template<typename T> void Hashtable<T>::remove(Bucket* bucket, Chain* del) {
     // delete first data
     if(bucket == del) {
@@ -456,7 +455,7 @@ template<typename T> bool Hashtable<T>::expand(Bucket* in) {
     return true;
 }
 
-template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* { 
+template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* {
     if(in >= capacitor) {
         return nullptr; // exception
     }
@@ -464,7 +463,7 @@ template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> cons
 }
 
 template<typename T> auto Hashtable<T>::slot(hash_t in) noexcept -> Bucket* {
-    if (capacitor == 0) {
+    if(capacitor == 0) {
         rehash(log); // init
     }
     return bucket + indexof(in);

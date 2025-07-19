@@ -132,10 +132,10 @@ private:
     const Chain*  slot(hash_t, const T&) const noexcept; //!< get chain slot
 
 private:
-    size_t counter   = 0; //!< element counter
-    size_t capacitor = 0; //!< bucket counter
-    size_t factor    = 0; //!< load factor
-    size_t log       = 3; //!< log2(capacitor): default (1 << 3) == 8
+    size_t counter   = 0;                    //!< element counter
+    size_t capacitor = 0;                    //!< bucket counter
+    size_t factor    = 0;                    //!< load factor
+    size_t log       = config::CAPACITY_LOG; //!< log2(capacitor): default (1 << 3) == 8
 
 private:
     Bucket* buckets = nullptr;

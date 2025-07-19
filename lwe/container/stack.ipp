@@ -151,7 +151,7 @@ template<typename T, size_t SVO> template<typename Arg>
 bool Stack<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
     // full, bad alloc
     if(counter == capacitor) {
-        size_t n = capacitor ? (capacitor << 1) : config::ELEMENTCOUNT; // set default
+        size_t n = capacitor ? (capacitor << 1) : config::CAPACITY; // set default
         if(!reallocate(n)) {
             return false;
         }
@@ -205,7 +205,7 @@ template<typename Arg> bool Stack<T, SVO>::insert(index_t index, Arg&& in) {
 
     // full, bad alloc
     if(counter == capacitor) {
-        size_t n = capacitor ? (capacitor << 1) : config::ELEMENTCOUNT; // set default
+        size_t n = capacitor ? (capacitor << 1) : config::CAPACITY; // set default
         if(!reallocate(n)) {
             return false;
         }
@@ -429,10 +429,10 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, index
 template<typename T, size_t SVO>
 template<bool COPY> void Stack<T, SVO>::transfer(const T* in, T* out, index_t begin, size_t size) {
     // logic for cirulation ...
-    size_t  adjust    = size < capacitor ? size : capacitor;    // set for reduce
-    size_t  length    = size - begin;                           // begin ~ end
-    size_t  current   = adjust <= length ? adjust : length;     // begin ~ end size
-    size_t  remainder = adjust <= length ? 0 : adjust - length; // 0 ~ begin size
+    size_t adjust    = size < capacitor ? size : capacitor;    // set for reduce
+    size_t length    = size - begin;                           // begin ~ end
+    size_t current   = adjust <= length ? adjust : length;     // begin ~ end size
+    size_t remainder = adjust <= length ? 0 : adjust - length; // 0 ~ begin size
 
     for(size_t i = 0; i < current; ++i) {
         if constexpr(!COPY) {

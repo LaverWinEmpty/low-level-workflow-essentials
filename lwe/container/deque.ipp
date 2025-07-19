@@ -289,7 +289,6 @@ template<typename T, size_t SVO> bool Deque<T, SVO>::empty() const noexcept {
     return stack.counter == 0;
 }
 
-
 template<typename T, size_t SVO> T* Deque<T, SVO>::data() noexcept {
     return stack.container;
 }
@@ -381,10 +380,10 @@ template<typename T, size_t SVO>
 template<typename Arg> bool Deque<T, SVO>::emplace(index_t index, Arg&& in) {
     // full -> reallocate
     if(stack.counter == stack.capacitor) {
-        size_t newcap = config::ELEMENTCOUNT; // default
+        size_t newcap = config::CAPACITY; // default
 
         // has capacitor
-        if (stack.capacitor) {
+        if(stack.capacitor) {
             newcap = stack.capacitor << 1;
 
             index_t rel = index - head; // abs to rel (inversion -> (head + index) % cap)

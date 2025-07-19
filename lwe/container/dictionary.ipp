@@ -65,7 +65,7 @@ template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const
 }
 
 template<typename K, typename V> bool Dictionary<K, V>::erase(const Iterator<FWD>& in) {
-    if (in != end()) {
+    if(in != end()) {
         return set.pop(*in);
     }
     return false;
@@ -80,7 +80,6 @@ template<typename K, typename V>
 template<typename T, typename U> bool Dictionary<K, V>::insert(T&& k, U&& v) {
     return emplace(Entry{ std::forward<T>(k), std::forward<U>(v) });
 }
-
 
 template<typename K, typename V>
 auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
@@ -172,7 +171,7 @@ auto Dictionary<K, V>::slot(hash_t in) noexcept -> Bucket* {
 
 template<typename K, typename V>
 auto Dictionary<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
-    if (set.capacitor == 0) {
+    if(set.capacitor == 0) {
         set.rehash(set.log); // init
     }
     Bucket* bucket = set.buckets + (set.indexof(in));
