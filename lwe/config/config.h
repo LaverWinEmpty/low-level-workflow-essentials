@@ -11,6 +11,15 @@
 LWE_BEGIN
 namespace config {
 
+// array default allocate size (count)
+inline constexpr size_t
+#ifndef CONFIGDEF_ELEMENTCOUNT_SIZE
+    ELEMENTCOUNT = 8;
+#else
+    ELEMENTCOUNT = CONFIGDEF_ELEMENTCOUNT_SIZE;
+#endif
+
+
 // memory pool allocation unit
 inline constexpr size_t
 #ifndef CONFIGDEF_MEMORYPAGE_SIZE

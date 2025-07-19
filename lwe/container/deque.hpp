@@ -90,12 +90,14 @@ public:
 public:
     bool push(const T&);
     bool push(T&&);
+    bool push();
     bool pop(T* = nullptr);
     bool pop(T&);
 
 public:
     bool prepend(const T&);
     bool prepend(T&&);
+    bool prepend();
     bool pull(T* = nullptr);
     bool pull(T&);
 

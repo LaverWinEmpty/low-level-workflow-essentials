@@ -150,8 +150,11 @@ template<typename T, size_t SVO> template<size_t N> Stack<T, N>& Stack<T, SVO>::
 template<typename T, size_t SVO> template<typename Arg>
 bool Stack<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
     // full, bad alloc
-    if((counter == capacitor && !reallocate(capacitor << 1))) {
-        return false;
+    if(counter == capacitor) {
+        size_t n = capacitor ? (capacitor << 1) : config::ELEMENTCOUNT; // set default
+        if(!reallocate(n)) {
+            return false;
+        }
     }
 
     // construct
@@ -201,20 +204,25 @@ template<typename Arg> bool Stack<T, SVO>::insert(index_t index, Arg&& in) {
     else if(index >= counter) index = counter;
 
     // full, bad alloc
-    if((counter == capacitor && !reallocate(capacitor << 1))) {
-        return false;
+    if(counter == capacitor) {
+        size_t n = capacitor ? (capacitor << 1) : config::ELEMENTCOUNT; // set default
+        if(!reallocate(n)) {
+            return false;
+        }
     }
 
     index_t last = 0;
     if(counter) {
-        // swap and insert
         last = counter - 1;
+        // swap and insert
         if(index < last) {
-            new(container + last) T(std::move(container[index]));
+            new(container + last) T(std::move(container[index])); // move
         }
     }
 
-    emplace(index, in);
+    // construct
+    new(container + index) T(std::forward<Arg>(in)); // insert
+    ++counter;
     return true;
 }
 
@@ -234,11 +242,11 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t index, T* ou
     size_t last = counter - 1;
     if(index < last) {
         container[index] = std::move(container[last]); // move
-        container[last].~T();                        // destruct
+        container[last].~T();                          // destruct
     }
 
     else container[index].~T(); // destruct
-    --counter;       // count
+    --counter;                  // count
 }
 
 template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t idx, T& out) {
@@ -382,7 +390,6 @@ template<typename T, size_t SVO> const T* Stack<T, SVO>::bottom() const noexcept
 }
 
 template<typename T, size_t SVO> template<typename U> void Stack<T, SVO>::push_back(U&& in) {
-    // emplace(0, std::forward<U>(in));
     push(std::forward<U>(in));
 }
 
@@ -412,7 +419,7 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, index
 
     // release
     if(container != stack) {
-        free(container);
+        std::free(container);
     }
     container = newly;
     capacitor = in;

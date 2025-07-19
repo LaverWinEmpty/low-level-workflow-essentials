@@ -100,8 +100,7 @@ template<typename T, size_t SVO> const T& Deque<T, SVO>::operator[](size_t idx) 
     return const_cast<Deque*>(this)->operator[](idx);
 }
 
-template<typename T, size_t SVO>
-bool Deque<T, SVO>::push(const T& in) {
+template<typename T, size_t SVO> bool Deque<T, SVO>::push(const T& in) {
     if(!emplace(tail, in)) {
         return false;
     }
@@ -109,8 +108,7 @@ bool Deque<T, SVO>::push(const T& in) {
     return true;
 }
 
-template<typename T, size_t SVO>
-bool Deque<T, SVO>::push(T&& in) {
+template<typename T, size_t SVO> bool Deque<T, SVO>::push(T&& in) {
     if(!emplace(tail, std::move(in))) {
         return false;
     }
@@ -118,8 +116,11 @@ bool Deque<T, SVO>::push(T&& in) {
     return true;
 }
 
-template<typename T, size_t SVO>
-bool Deque<T, SVO>::pop(T* out) {
+template<typename T, size_t SVO> bool Deque<T, SVO>::push() {
+    return push(T{});
+}
+
+template<typename T, size_t SVO> bool Deque<T, SVO>::pop(T* out) {
     index_t prev = absidx(tail - 1); // befre
     if(!erase(prev, out)) {
         return false;
@@ -128,14 +129,12 @@ bool Deque<T, SVO>::pop(T* out) {
     return true;
 }
 
-template<typename T, size_t SVO>
-bool Deque<T, SVO>::pop(T& out) {
+template<typename T, size_t SVO> bool Deque<T, SVO>::pop(T& out) {
     return pop(&out);
 }
 
-template<typename T, size_t SVO>
-bool Deque<T, SVO>::prepend(const T& in) {
-    index_t next = absidx(head - 1); // before (head - 1) % cap
+template<typename T, size_t SVO> bool Deque<T, SVO>::prepend(const T& in) {
+    index_t next = stack.capacitor ? absidx(head - 1) : 0; // before (head - 1) % cap
     if(!emplace(next, in)) {
         return false;
     }
@@ -143,14 +142,17 @@ bool Deque<T, SVO>::prepend(const T& in) {
     return true;
 }
 
-template<typename T, size_t SVO>
-bool Deque<T, SVO>::prepend(T&& in) {
-    index_t next = absidx(head - 1); // before (head - 1) % cap
+template<typename T, size_t SVO> bool Deque<T, SVO>::prepend(T&& in) {
+    index_t next = stack.capacitor ? absidx(head - 1) : 0; // before (head - 1) % cap
     if(!emplace(next, std::move(in))) {
         return false;
     }
     head = next;
     return true;
+}
+
+template<typename T, size_t SVO> bool Deque<T, SVO>::prepend() {
+    return prepend(T{});
 }
 
 template<typename T, size_t SVO>
@@ -327,21 +329,70 @@ template<typename T, size_t SVO> auto Deque<T, SVO>::rbegin() noexcept -> Iterat
     return Iterator<BWD>(stack.container, last, stack.capacitor);
 }
 
-template<typename T, size_t SVO> auto Deque<T, SVO>::rend() noexcept -> Iterator<BWD> {
-    return Iterator<BWD>(stack.container, head - 1, stack.capacitor);
+template<typename T, size_t SVO> T* Deque<T, SVO>::front() noexcept {
+    return stack.front();
+}
+
+template<typename T, size_t SVO> T* Deque<T, SVO>::rear() noexcept {
+    return stack.rear();
+}
+
+template<typename T, size_t SVO> T* Deque<T, SVO>::top() noexcept {
+    return stack.top();
+}
+
+template<typename T, size_t SVO> T* Deque<T, SVO>::bottom() noexcept {
+    return stack.bottom();
+}
+
+template<typename T, size_t SVO> const T* Deque<T, SVO>::front() const noexcept {
+    return stack.front();
+}
+
+template<typename T, size_t SVO> const T* Deque<T, SVO>::rear() const noexcept {
+    return stack.rear();
+}
+
+template<typename T, size_t SVO> const T* Deque<T, SVO>::top() const noexcept {
+    return stack.top();
+}
+
+template<typename T, size_t SVO> const T* Deque<T, SVO>::bottom() const noexcept {
+    return stack.bottom();
+}
+
+template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_back(U&& in) {
+    push(std::forward<U>(in));
+}
+
+template<typename T, size_t SVO> void Deque<T, SVO>::pop_back() {
+    pop();
+}
+
+template<typename T, size_t SVO> template<typename U> void Deque<T, SVO>::push_front(U&& in) {
+    prepend(std::forward<U>(in));
+}
+
+template<typename T, size_t SVO> void Deque<T, SVO>::pop_front() {
+    pull();
 }
 
 template<typename T, size_t SVO>
 template<typename Arg> bool Deque<T, SVO>::emplace(index_t index, Arg&& in) {
     // full -> reallocate
     if(stack.counter == stack.capacitor) {
-        size_t newcap = stack.capacitor << 1;
+        size_t newcap = config::ELEMENTCOUNT; // default
 
-        index_t rel = index - head; // abs to rel (inversion -> (head + index) % cap)
-        if(rel == 0) {
-            rel = stack.capacitor; // adjust wrap-around (on full)
+        // has capacitor
+        if (stack.capacitor) {
+            newcap = stack.capacitor << 1;
+
+            index_t rel = index - head; // abs to rel (inversion -> (head + index) % cap)
+            if(rel == 0) {
+                rel = stack.capacitor; // adjust wrap-around (on full)
+            }
+            index = rel & (newcap - 1);
         }
-        index = rel & (newcap - 1);
 
         // head to 0
         if(!reallocate(newcap)) {

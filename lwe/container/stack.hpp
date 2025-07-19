@@ -35,13 +35,13 @@ LWE_BEGIN
 namespace container {
 
 //! @tparam N count of T, 0 is auto size (64 byte)
-template<typename T, size_t N = 0>
+template<typename T, size_t SVO = 0>
 class Stack {
     template<typename, size_t> friend class Stack; //!< for Stack<T, OTHER_SVO_SIZE>
     template<typename, size_t> friend class Deque; //!< for composition
 
 public:
-    CONTAINER_BODY(Stack, T, T, N);
+    CONTAINER_BODY(Stack, T, T, SVO);
 
 private:
     static constexpr size_t min() {
@@ -50,8 +50,7 @@ private:
     }
 
 public:
-    static constexpr size_t SVO = N;
-    static constexpr size_t MIN = SVO ? SVO : min();
+    static constexpr size_t MIN = SVO ? align(SVO) : min();
 
 public:
     Stack();
