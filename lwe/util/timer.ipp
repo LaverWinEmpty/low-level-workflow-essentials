@@ -11,7 +11,7 @@ float Timer::sec() const {
     return static_cast<float>(std::chrono::duration_cast<MS>(Clock::now() - last).count() * 0.001);
 }
 
-auto Timer::timestamp(bool flag) const -> StringProxy {
+auto Timer::timestamp(bool millisec) const -> StringProxy {
     StringProxy out;
 
     // get and limit
@@ -30,12 +30,12 @@ auto Timer::timestamp(bool flag) const -> StringProxy {
     int ms   = 0; // optional
 
     // get ms
-    if(flag) {
+    if(millisec) {
         ms = int((elapsed - seconds) * 100.f);
     }
 
     // branch
-    if(flag) {
+    if(millisec) {
         snprintf(out.data(), sizeof(StringProxy), "%03d:%02d:%02d.%02d", hour, min, sec, ms);
     }
     else snprintf(out.data(), sizeof(StringProxy), "%03d:%02d:%02d", hour, min, sec);

@@ -3,7 +3,9 @@
 
 namespace test {
 
-lwe::util::Timer timer; // init
+using namespace lwe::util;
+
+Timer timer; // init
 
 float delta = 0;
 float tick  = 0;
@@ -12,11 +14,11 @@ float pulse = 0; // time check
 void example_timer_loop() {
     pulse = timer.sec();
 
-    lwe::util::Tick::update(); // Tick Require initialize and update
+    Tick::update(); // Tick Require initialize and update
 
     // false == ignore time scale (defualt: true)
-    delta += lwe::util::Tick::dynamic(false); // dynamic delta time
-    tick  += lwe::util::Tick::fixed(false);   // fixed delta time
+    delta += Tick::dynamic(false); // dynamic delta time
+    tick  += Tick::fixed(false);   // fixed delta time
 
     // initialize fps == 60 / timestep 0.016
     // udapte gap: 0.234 sec
@@ -26,11 +28,11 @@ void example_timer_loop() {
     if(pulse >= 1) {
         // get system timestamp
         // param default: const char* = "%Y-%m-%d %H:%M:%S", bool utc = false
-        std::cout << "System: " << lwe::util::Timer::system() << "\n";
+        std::cout << "System: " << Timer::system() << "\n";
 
         // get process timestamp
         // param true == 24h -> 1d 00 (default: false)
-        std::cout << "Global: " << lwe::util::Timer::process().timestamp() << "\n";
+        std::cout << "Global: " << Timer::process().timestamp() << "\n";
 
         // get timestamp
         // param false == hide millisec (default: true)
@@ -41,9 +43,9 @@ void example_timer_loop() {
         std::cout << "Delta:  " << delta << " sec\n";
 
         // fixed() tick detail
-        std::cout << "Fixed Tick detail: " << " [FPS] " << lwe::util::Tick::fps() << // get fps
-            " [Tick] " << lwe::util::Tick::count() <<                                // get tick count
-            " [Step] " << lwe::util::Tick::step() <<                                 // get frame step
+        std::cout << "Fixed Tick detail: " << " [FPS] " << Tick::fps() << // get fps
+            " [Tick] " << Tick::count() <<                                // get tick count
+            " [Step] " << Tick::step() <<                                 // get frame step
             "\n\n";
 
         // Dispersible: fixed == count() * step()
@@ -53,14 +55,23 @@ void example_timer_loop() {
 }
 
 void example_timer() {
-    // default: 60 fps (timestep == 0.016)
-    lwe::util::Tick::initialize(100);
+    /* === QUICK START === */
+    const Timer& timer = Timer::process();              // program timer
+    const_cast<Timer&>(timer).reset();                  // reset (non-const)
+    float       sec = timer.sec();                      // get second
+    std::string ts  = std::string(timer.timestamp());   // get timestamp (char*), param: show ms (default: true)
+    std::cout << std::string(timer.system()) << "\n\n"; // get system time (char*), param: utc (default: false)
+
+    /* === DETAIL TEST === */
+
+    // default: 60 fps (timestep == 0.016 == 1 tick)
+    Tick::initialize(100);
 
     // set fps refrash sec
-    lwe::util::Tick::refresh(0.5);
+    Tick::refresh(0.5);
 
     // set time scale (default 1)
-    lwe::util::Tick::timescale(2);
+    Tick::timescale(2);
 
     for(int i = 0; i < 10; ++i) {
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Error induction.
