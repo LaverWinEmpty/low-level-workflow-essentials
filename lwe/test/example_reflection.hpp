@@ -1,181 +1,164 @@
 #pragma once
 
-#include "iostream"
 #include "../meta/meta.h"
 
-// for Test, Temp type
-#include "example_object.hpp"
+#include "iostream"
 
-/*
- * class reflection -> example_object.hpp
- */
 
+// SAMPLE
 namespace test {
+struct ReflTest: public LWE::meta::Object {
+    CLASS_BODY(Reflect, Object);
 
-enum class EnumTest : uint8_t {
-    FALSE,
-    TRUE,
-    WHAT
-};
-
-enum class EnumUnregistered : uint8_t {
-    A,
-    B
-};
-
-class MethodTest {
-    // private possible: Object derived class only
 public:
-    void print() const { std::cout << "Hello, world!\n"; }
-    int  sum(int a, int b) const { return a + b; }
-    int  sub(int a, int b) const { return a - b; }
+    void method() { std::cout << b << std::endl; }
+
+public:
+    int& getA() { return a; }
+
+private:
+    int a;
+    int b = 999;
 };
 
-using namespace LWE;
-using namespace meta;
+enum EnumTest : uint64_t {
+    A,
+    B,
+    C,
+};
 } // namespace test
 
-/* -Parameters: (ClassName, namespace) or (ClassName) for global namespace
- * -Limitation : Method overloading is NOT SUPPORTED
- * -Note : Registration macros must be used in global namespace only
- */
-REGISTER_METHOD_BEGIN(MethodTest, test) {
-    REGISTER_METHOD(print);
-    REGISTER_METHOD(sum);
+/* === QUICK START === */
+
+// REGISTER FIELD
+REGISTER_FIELD_BEGIN(ReflTest, test) {
+    REGISTER_FIELD(a);
+    // REGISTER_FIELD(a); ... PASS
 }
-REGISTER_METHOD_END;
-// enum
+REGISTER_FIELD_END
+
+// REGISTER METHOD
+REGISTER_METHOD_BEGIN(ReflTest, test) {
+    REGISTER_METHOD(method);
+}
+REGISTER_METHOD_END
+
+// REGISTER ENUM
 REGISTER_ENUM_BEGIN(EnumTest, test) {
-    REGISTER_ENUM(FALSE);
-    REGISTER_ENUM(TRUE);
+    REGISTER_ENUM(A);
+    REGISTER_ENUM(B);
 }
 REGISTER_ENUM_END;
 
 namespace test {
 
+using namespace lwe;
+using namespace lwe::meta;
+
 void example_reflection() {
-    /* Serialize format
-     * string:    " "
-     * container: [ ]
-     * class:     { }
-     * need "object.hpp"
-     */
+    ReflTest test;
 
-    /* Type info class (without RTTI) */ {
-        int variable;
+    // GET TYPE API
+    const meta::Type& type = typeof<ReflTest>();
 
-        Type a = typeof<int>();    // by template
-        Type b = typeof(variable); // by variable
+    // GET META ENUM API
+    meta::Enum* e = enumof<EnumTest>();
 
-        // * operator returns const char
-        printf("%s\n", *a); // print int
-        printf("%s\n", *b); // print int
+    // GET META CLASS API
+    meta::Class* cls = classof<ReflTest>(); // or test.meta(); (virtual)
 
-        Type c = typeof<Test>(); // registered class
-        Type d = typeof<Temp>(); // unregistered class
+    // GET METHOD API
+    auto method = methodof<ReflTest>("method");
+    method->invoke(&test, {}); // CALL
 
-        printf("%s\n", *c); // print Test
-        printf("%s\n", *d); // print class
+    /* === DETAIL === */
 
-        // composite type
-        Type e = typeof<const void**>();
-        Type f = typeof<void** const>();
-        Type g = typeof<const void** const>();
-        printf("%s\n", *e); // print const void**
-        printf("%s\n", *f); // print void** const
-        printf("%s\n", *g); // print const void** const
+    // TYPE METHODS
+    std::cout << std::endl;
+    std::cout << (uint)type.code();             // get main type Keyword (const int* const -> POINTER)
+    std::cout << type.hash() << std::endl;      // get hash
+    std::cout << type.stringify() << std::endl; // type name to string
+    std::cout << *type << std::endl;            // type name to string
+
+    // Internal API ---------------+
+    type.begin(); // keyword begin |
+    type.end();   // keyword end   |
+    type.count(); // keyword count |
+    //-----------------------------+
+
+    // OBJECT METHODS
+    meta::Object* obj = nullptr;
+    std::cout << obj->isof<ReflTest>() << "\n"; // obj (is / base of) ReflTest? (nullptr == false)
+    std::cout << test.isof<Object>() << "\n";   // test (is / base of) Object? (true)
+
+    // OBJECT SERIALIZE
+    test.getA() = 100;
+    std::cout << test.serialize() << "\n"; // only variable `a`
+    test.deserialize("{ 200 }");           // deserialize test
+    std::cout << test.getA() << "\n";      // output
+
+    // META CLASS METHODS
+    cls->base();           // get meta class of ReflTest::Base (Object)
+    cls->name();           // get class name (virtual)
+    cls->size();           // get class size (virtual)
+    cls->construct(&test); // Call default constructor (internal)
+
+    const meta::Structure& f = cls->fields(); // get filed list
+    f.begin();                                // get begin
+    f.end();                                  // get end
+    f.size();                                 // get parameter count
+    f[0];                                     // get parameter
+
+    // f.find is...
+    const meta::Structure& f0 = meta::Structure::find<ReflTest>(); // find
+    const meta::Structure& f1 = meta::Structure::find("ReflTest"); // find
+    const meta::Structure& f2 = meta::Structure::find(*cls);       // find
+
+    std::cout << std::endl;
+    const meta::Field& a = cls->field("a"); // find field, failed == empty
+    if(a) {
+        std::cout << "name:   " << a.name << "\n";   // name
+        std::cout << "offset: " << a.offset << "\n"; // offset
+        std::cout << "size:   " << a.size << "\n";   // size
+        std::cout << "type:   " << *a.type << "\n";  // type info
     }
 
-    /* get enum info */ {
-        Enum* info = nullptr;
+    std::cout << std::endl;
+    // META ENUM METHODS
+    std::cout << e->name() << "\n";              // get enum name
+    std::cout << e->size() << "\n";              // get enum size
+    const meta::Enumeration& enums = e->enums(); // like as Class::fields
 
-        // get by template
-        info = enumof<EnumTest>();
-        std::cout << info->name() << "\n"; // print name
+    // enum serialize / deserialize API -> WIP
 
-        EnumTest e;
-        info                 = enumof(e);     // get by variable
-        const Enumeration& a = info->enums(); // get enum values
-        std::cout << a[0].name << " ";        // print [0] enum name
+    // ENUM HELPER
+    Value<EnumTest> eVal = 10; // ENUM ONLY, unregistered enum allowed, but function is error
 
-        info                 = enumof("EnumTest"); // get by name
-        const Enumeration& b = info->enums();      // get enum values
-        std::cout << b[0].value << "\n";           // print [0] enum value
+    diag::Expected<Enumerator> except_0 = Value<EnumTest>::at(0);     // get by index
+    diag::Expected<Enumerator> except_1 = Value<EnumTest>::find("B"); // find by string
+    diag::Expected<Enumerator> except_2 = Value<EnumTest>::find(C);   // find by value
 
-        // unregistered == nullptr
-        info = enumof<EnumUnregistered>();
-        if(!info) {
-            printf("INFO IS NULL\n");
-        }
-    }
+    // error is not thorw
+    if(except_0) std::cout << except_0->name << "\n"; 
+    if(except_1) std::cout << except_1->name << "\n"; 
+    if(except_2) std::cout << except_2->name << "\n"; // unregistered
 
-    /* enum helper */ {
-        Value<EnumTest> value = 65;                         // Acts like an integer, but restricted to EnumTest values
-        std::cout << "value: " << value << "\n";            // print 'A'
-        std::cout << "value TO STRING: " << *value << "\n"; // to string (unregistered value = empty)
+    Enumerator enumerator = eVal.info(); // get except skip
+    enumerator.name;                     // get name
+    enumerator.value;                    // get value
 
-        value = EnumTest::TRUE;
-        std::cout << "value TO STRING: " << *value << "\n"; // print TRUE (Only registered value are allowed)
+    // SMART POINTER
+    RC<ReflTest> rc;
+    RC<ReflTest> weak = rc; // IS SAME AS `Ptr<T>` (example_ptr)
 
-        // Bit operation supported
-        std::cout << "value & TRUE == " << (int)(value & EnumTest::TRUE) << "\n"; // print 1
+    weak.clone(); // copy
+    weak.valid(); // check nullptr / dangling
+    weak.owned(); // check owner
+    weak.own();   // set owner
 
-        Value<EnumUnregistered> other = 100;
-        std::cout << "other TO STRING " << *other << "\n"; // unregistered enum -> empty string
-
-        // get value info (unregistered -> error)
-        diag::Expected<Enumerator> info = other.meta();
-        if(!info) {
-            std::cout << info.what() << std::endl;
-        }
-
-        // get value info (unregistered -> error)
-        info = Value<EnumTest>::find(2);
-        if(!info) {
-            std::cout << info.what() << std::endl;
-        }
-
-        // get value info by index (out of range)
-        info = Value<EnumTest>::get(2);
-        if(!info) {
-            std::cout << info.what() << std::endl;
-        }
-
-        // get enum info by name
-        info = Value<EnumTest>::find("TRUE");
-        if(!info) {
-            std::cout << info.what() << std::endl;
-        }
-        else std::cout << (*info).name << ", " << info->value << "\n"; // print TRUE, 1
-    }
-
-    /* method */ {
-        Method* m;
-
-        // Get by template + method name
-        m = methodof<MethodTest>("print");
-
-        // Param is std::vector<stl::Any>, `Any` is RTTI-free custom any
-        m->invoke(nullptr, {});
-
-        // Get by name + method name
-        m = methodof("MethodTest", "sum");
-
-        // Return `stl::Any`
-        stl::Any any = m->invoke(nullptr, { 1, 2 });
-
-        // Auto inference
-        int value = any;
-        std::cout << value << "\n";
-
-        // Or cast
-        std::cout << any.cast<int>() << "\n";
-
-        // Exist, but unregistered method
-        m = methodof<Method>("sub");
-        if(!m) {
-            printf("METHOD IS NULL\n");
-        }
+    // safe casting
+    if (weak.as<Object>()) {
+        std::cout << weak.as<Object>()->meta()->name() << "\n";
     }
 }
 
