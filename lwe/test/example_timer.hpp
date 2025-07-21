@@ -1,4 +1,4 @@
-#include "Windows.h" // Sleep()
+#include "iostream"
 #include "../util/timer.hpp"
 
 namespace test {
@@ -30,7 +30,7 @@ void example_timer_loop() {
 
         // get process timestamp
         // param true == 24h -> 1d 00 (default: false)
-        std::cout << "Global: " << lwe::util::Timer::process() << "\n";
+        std::cout << "Global: " << lwe::util::Timer::process().timestamp() << "\n";
 
         // get timestamp
         // param false == hide millisec (default: true)
@@ -63,13 +63,13 @@ void example_timer() {
     lwe::util::Tick::timescale(2);
 
     for(int i = 0; i < 10; ++i) {
-        Sleep(500); // Error induction.
+        std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Error induction.
         example_timer_loop();
     }
 
     for(int i = 0; i < 50; ++i) {
         // Dynamic time catches up with fixed time.
-        Sleep(50);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
         example_timer_loop();
     }
 }
