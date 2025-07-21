@@ -1,11 +1,5 @@
-#ifndef LWE_CONTAINER_DEQUE
-#define LWE_CONTAINER_DEQUE
-
-#include "stack.hpp"
-
 /*
-    Deque
-    - Ring buffer class
+    Ring buffer class
 
     API
     - push(T)    push back
@@ -62,26 +56,30 @@
     -1 -> 7 (255 % 8) | capacity == 8
 */
 
+#ifndef LWE_CONTAINER_DEQUE
+#define LWE_CONTAINER_DEQUE
+#include "linear_buffer.hpp"
+
 LWE_BEGIN
 namespace container {
-template<typename T, size_t SVO = 0> class Deque {
+template<typename T, size_t SVO = 0> class RingBuffer {
 
 public:
-    CONTAINER_BODY(Deque, T, T, SVO);
-    using Stack = Stack<T, SVO>;
+    CONTAINER_BODY(RingBuffer, T, T, SVO);
+    using Stack = LinearBuffer<T, SVO>;
 
 public:
-    Deque() = default;
-    Deque(const Deque&);
-    Deque(Deque&&) noexcept;
-    Deque& operator=(const Deque&);
-    Deque& operator=(Deque&&) noexcept;
+    RingBuffer() = default;
+    RingBuffer(const RingBuffer&);
+    RingBuffer(RingBuffer&&) noexcept;
+    RingBuffer& operator=(const RingBuffer&);
+    RingBuffer& operator=(RingBuffer&&) noexcept;
 
 public:
-    template<size_t X> Deque(const Deque<T, X>&);
-    template<size_t X> Deque(Deque<T, X>&&) noexcept;
-    template<size_t X> Deque& operator=(const Deque<T, X>&);
-    template<size_t X> Deque& operator=(Deque<T, X>&&) noexcept;
+    template<size_t X> RingBuffer(const RingBuffer<T, X>&);
+    template<size_t X> RingBuffer(RingBuffer<T, X>&&) noexcept;
+    template<size_t X> RingBuffer& operator=(const RingBuffer<T, X>&);
+    template<size_t X> RingBuffer& operator=(RingBuffer<T, X>&&) noexcept;
 
 public:
     T&       operator[](size_t);
@@ -171,5 +169,5 @@ private:
 
 } // namespace container
 LWE_END
-#include "deque.ipp"
+#include "ring_buffer.ipp"
 #endif

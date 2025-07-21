@@ -64,7 +64,7 @@ public:
     ~Registry();
 
 public:
-    using Table = container::Dictionary<String, container::Dictionary<String, Method*>>;
+    using Table = container::HashTable<String, container::HashTable<String, Method*>>;
 
 public:
     static void add(const char* cls, const char* name, Method* in);

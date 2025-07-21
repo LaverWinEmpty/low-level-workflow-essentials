@@ -2,7 +2,7 @@
 #define LWE_META_REGISTRY
 
 #include "../../base/base.h"
-#include "../../container/dictionary.hpp"
+#include "../../container/hash_table.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -17,7 +17,7 @@ template<typename T> class Registry {
     Registry() = default;
 
 public:
-    using Table = container::Dictionary<String, T*>;
+    using Table = container::HashTable<String, T*>;
 
 public:
     ~Registry();

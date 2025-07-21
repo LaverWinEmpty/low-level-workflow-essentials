@@ -1,10 +1,10 @@
 #include "../util/hash.hpp"
-#include "hashtable.hpp"
+#include "hashed_buffer.hpp"
 
 LWE_BEGIN
 namespace container {
 
-template<typename K, typename V> V& Dictionary<K, V>::operator[](const K& in) {
+template<typename K, typename V> V& HashTable<K, V>::operator[](const K& in) {
     hash_t hashed = util::Hash<K>(in);
 
     Chain* pos = slot(hashed, in);
@@ -19,35 +19,35 @@ template<typename K, typename V> V& Dictionary<K, V>::operator[](const K& in) {
     else return pos->data.second;
 }
 
-template<typename K, typename V> const V& Dictionary<K, V>::operator[](const K& in) const {
-    return const_cast<Dictionary*>(this)->operator[](in);
+template<typename K, typename V> const V& HashTable<K, V>::operator[](const K& in) const {
+    return const_cast<HashTable*>(this)->operator[](in);
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::push(Entry&& in) {
+template<typename K, typename V> bool HashTable<K, V>::push(Entry&& in) {
     return insert(std::move(in));
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::push(const Entry& in) {
+template<typename K, typename V> bool HashTable<K, V>::push(const Entry& in) {
     return insert(in);
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::push(const K& K, const V& V) {
+template<typename K, typename V> bool HashTable<K, V>::push(const K& K, const V& V) {
     return insert(Entry{ K, V });
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::push(K&& K, V&& V) {
+template<typename K, typename V> bool HashTable<K, V>::push(K&& K, V&& V) {
     return insert(Entry{ std::move(K), std::move(V) });
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::push(const K& K, V&& V) {
+template<typename K, typename V> bool HashTable<K, V>::push(const K& K, V&& V) {
     return insert(Entry{ K, std::move(V) });
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::push(K&& K, const V& V) {
+template<typename K, typename V> bool HashTable<K, V>::push(K&& K, const V& V) {
     return insert(Entry{ std::move(K), V });
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
+template<typename K, typename V> bool HashTable<K, V>::pop(const K& in) {
     hash_t  hashed = util::Hash<K>(in);
     Bucket* bucket = slot(hashed);
     Chain*  pos    = slot(hashed, in);
@@ -60,11 +60,11 @@ template<typename K, typename V> bool Dictionary<K, V>::pop(const K& in) {
     return true;
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::exist(const K& in) const noexcept {
+template<typename K, typename V> bool HashTable<K, V>::exist(const K& in) const noexcept {
     return slot(util::Hash<K>(in), in) != nullptr;
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::erase(const Iterator<FWD>& in) {
+template<typename K, typename V> bool HashTable<K, V>::erase(const Iterator<FWD>& in) {
     if(in != end()) {
         return set.pop(*in);
     }
@@ -72,17 +72,17 @@ template<typename K, typename V> bool Dictionary<K, V>::erase(const Iterator<FWD
 }
 
 template<typename K, typename V>
-template<typename T> bool Dictionary<K, V>::insert(T&& in) {
+template<typename T> bool HashTable<K, V>::insert(T&& in) {
     return emplace(std::forward<T>(in));
 }
 
 template<typename K, typename V>
-template<typename T, typename U> bool Dictionary<K, V>::insert(T&& k, U&& v) {
+template<typename T, typename U> bool HashTable<K, V>::insert(T&& k, U&& v) {
     return emplace(Entry{ std::forward<T>(k), std::forward<U>(v) });
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
+auto HashTable<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
     if(set.buckets == nullptr) {
         return end();
     }
@@ -111,66 +111,66 @@ auto Dictionary<K, V>::find(const K& in) noexcept -> Iterator<FWD> {
     return set.end(); // not found
 }
 
-template<typename K, typename V> auto Dictionary<K, V>::at(size_t in) noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto HashTable<K, V>::at(size_t in) noexcept -> Iterator<FWD> {
     return set.at(in);
 }
 
-template<typename K, typename V> auto Dictionary<K, V>::begin() noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto HashTable<K, V>::begin() noexcept -> Iterator<FWD> {
     return set.begin();
 }
 
-template<typename K, typename V> auto Dictionary<K, V>::end() noexcept -> Iterator<FWD> {
+template<typename K, typename V> auto HashTable<K, V>::end() noexcept -> Iterator<FWD> {
     return set.end();
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::find(const K& in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Dictionary*>(this)->find(in);
+auto HashTable<K, V>::find(const K& in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashTable*>(this)->find(in);
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Dictionary*>(this)->at(in);
+auto HashTable<K, V>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashTable*>(this)->at(in);
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::begin() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Dictionary*>(this)->begin();
+auto HashTable<K, V>::begin() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashTable*>(this)->begin();
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::end() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Dictionary*>(this)->end();
+auto HashTable<K, V>::end() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashTable*>(this)->end();
 }
 
-template<typename K, typename V> size_t Dictionary<K, V>::indexof(hash_t in) const noexcept {
+template<typename K, typename V> size_t HashTable<K, V>::indexof(hash_t in) const noexcept {
     return set.indexof(in);
 }
 
-template<typename K, typename V> size_t Dictionary<K, V>::size() const noexcept {
+template<typename K, typename V> size_t HashTable<K, V>::size() const noexcept {
     return set.counter;
 }
 
-template<typename K, typename V> size_t Dictionary<K, V>::capacity() const noexcept {
+template<typename K, typename V> size_t HashTable<K, V>::capacity() const noexcept {
     return set.capacitor;
 }
 
-template<typename K, typename V> bool Dictionary<K, V>::reserve(size_t in) noexcept {
+template<typename K, typename V> bool HashTable<K, V>::reserve(size_t in) noexcept {
     return set.reserve(in);
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::bucket(size_t in) const noexcept -> const Bucket* {
+auto HashTable<K, V>::bucket(size_t in) const noexcept -> const Bucket* {
     return set.bucket(in);
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::slot(hash_t in) noexcept -> Bucket* {
+auto HashTable<K, V>::slot(hash_t in) noexcept -> Bucket* {
     return set.slot(in);
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
+auto HashTable<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
     if(set.capacitor == 0) {
         set.rehash(set.log); // init
     }
@@ -189,17 +189,17 @@ auto Dictionary<K, V>::slot(hash_t in, const K& data) noexcept -> Chain* {
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::slot(hash_t in) const noexcept -> const Bucket* {
-    return const_cast<Dictionary*>(this)->slot(in);
+auto HashTable<K, V>::slot(hash_t in) const noexcept -> const Bucket* {
+    return const_cast<HashTable*>(this)->slot(in);
 }
 
 template<typename K, typename V>
-auto Dictionary<K, V>::slot(hash_t in, const K& data) const noexcept -> const Chain* {
-    return const_cast<Dictionary*>(this)->slot(in, data);
+auto HashTable<K, V>::slot(hash_t in, const K& data) const noexcept -> const Chain* {
+    return const_cast<HashTable*>(this)->slot(in, data);
 }
 
 template<typename K, typename V>
-template<typename T> bool Dictionary<K, V>::emplace(T&& in) {
+template<typename T> bool HashTable<K, V>::emplace(T&& in) {
     hash_t hashed = util::Hash<K>(in.first); // first only
 
     // check collide

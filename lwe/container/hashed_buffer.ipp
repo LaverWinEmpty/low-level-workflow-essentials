@@ -3,15 +3,19 @@ namespace container {
 /**************************************************************************************************
  * Iterator
  **************************************************************************************************/
-REGISTER_CONST_ITERATOR((typename T), FWD, Hashtable, T);
+REGISTER_CONST_ITERATOR((typename T), FWD, HashedBuffer, T);
 
-template<typename T> class Iterator<FWD, Hashtable<T>> {
-    ITERATOR_BODY(FWD, Hashtable, T);
-    using Bucket = typename Hashtable::Bucket;
+template<typename T> class Iterator<FWD, HashedBuffer<T>> {
+    ITERATOR_BODY(FWD, HashedBuffer, T);
+    using Bucket = typename HashedBuffer::Bucket;
 
 public:
-    Iterator(Hashtable* self, size_t index): self(self), index(index), chain(0), chaining(false) { }
-    Iterator(Hashtable* self, size_t index, uint16_t chain): self(self), index(index), chain(chain), chaining(true) { }
+    Iterator(HashedBuffer* self, size_t index): self(self), index(index), chain(0), chaining(false) { }
+    Iterator(HashedBuffer* self, size_t index, uint16_t chain):
+        self(self),
+        index(index),
+        chain(chain),
+        chaining(true) { }
 
 public:
     Iterator& operator++() {
@@ -88,36 +92,36 @@ public:
     bool operator!=(const Iterator& in) const { return !operator==(in); }
 
 private:
-    Hashtable* self;
-    size_t     index;
-    uint16_t   chain;
-    bool       chaining; // false == index, true == chain
+    HashedBuffer* self;
+    size_t        index;
+    uint16_t      chain;
+    bool          chaining; // false == index, true == chain
 };
 
 /**************************************************************************************************
- * Hashtable
+ * HashedBuffer
  **************************************************************************************************/
 
-template<typename T> Hashtable<T>::Hashtable(float factor, Grower grower): LOAD_FACTOR(factor), grower(grower) { }
+template<typename T> HashedBuffer<T>::HashedBuffer(float factor, Grower grower): LOAD_FACTOR(factor), grower(grower) { }
 
-template<typename T> Hashtable<T>::Hashtable(Grower grower): Hashtable(config::LOADFACTOR, grower) { }
+template<typename T> HashedBuffer<T>::HashedBuffer(Grower grower): HashedBuffer(config::LOADFACTOR, grower) { }
 
-template<typename T> Hashtable<T>::~Hashtable() {
+template<typename T> HashedBuffer<T>::~HashedBuffer() {
     if(buckets) {
         clear();
         std::free(buckets);
     }
 }
 
-template<typename T> bool Hashtable<T>::push(T&& in) {
+template<typename T> bool HashedBuffer<T>::push(T&& in) {
     return insert(std::move(in));
 }
 
-template<typename T> bool Hashtable<T>::push(const T& in) {
+template<typename T> bool HashedBuffer<T>::push(const T& in) {
     return insert(in);
 }
 
-template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
+template<typename T> bool HashedBuffer<T>::pop(const T& in) noexcept {
     hash_t  hashed = util::Hash<T>(in);         // get hash
     Bucket* bucket = buckets + indexof(hashed); // get bucket
     Chain*  pos    = slot(hashed, in);          // get delete pos
@@ -128,12 +132,12 @@ template<typename T> bool Hashtable<T>::pop(const T& in) noexcept {
     return true;
 }
 
-template<typename T> bool Hashtable<T>::exist(const T& in) noexcept {
+template<typename T> bool HashedBuffer<T>::exist(const T& in) noexcept {
     return slot(in, util::Hash<T>(in)) != nullptr;
 }
 
 template<typename T>
-template<typename U> bool Hashtable<T>::insert(U&& in) {
+template<typename U> bool HashedBuffer<T>::insert(U&& in) {
     hash_t hashed = util::Hash<T>(in);
     // check
     if(slot(hashed, in) != nullptr) {
@@ -148,7 +152,7 @@ template<typename U> bool Hashtable<T>::insert(U&& in) {
     return emplace(std::forward<U>(in), hashed);
 }
 
-template<typename T> bool Hashtable<T>::erase(const Iterator<FWD>& in) noexcept {
+template<typename T> bool HashedBuffer<T>::erase(const Iterator<FWD>& in) noexcept {
     Bucket* bucket = buckets[in.index]; // get bucket
     if(in.self != this || in.chain >= bucket->capacity) {
         return false; // exception
@@ -158,7 +162,7 @@ template<typename T> bool Hashtable<T>::erase(const Iterator<FWD>& in) noexcept 
     return true;
 }
 
-template<typename T> size_t Hashtable<T>::indexof(hash_t in) const noexcept {
+template<typename T> size_t HashedBuffer<T>::indexof(hash_t in) const noexcept {
     static constexpr size_t FIBONACCI_PRIME = []() {
         if constexpr(sizeof(size_t) == 8) {
             return 11'400'714'819'323'198'485ull;
@@ -168,15 +172,15 @@ template<typename T> size_t Hashtable<T>::indexof(hash_t in) const noexcept {
     return (in * FIBONACCI_PRIME) >> ((sizeof(size_t) << 3) - log);
 }
 
-template<typename T> size_t Hashtable<T>::size() const noexcept {
+template<typename T> size_t HashedBuffer<T>::size() const noexcept {
     return counter;
 }
 
-template<typename T> size_t Hashtable<T>::capacity() const noexcept {
+template<typename T> size_t HashedBuffer<T>::capacity() const noexcept {
     return capacitor;
 }
 
-template<typename T> bool Hashtable<T>::reserve(size_t in) noexcept {
+template<typename T> bool HashedBuffer<T>::reserve(size_t in) noexcept {
     // algin to power of 2
     in = core::align(in);
     if(in <= capacitor) {
@@ -197,7 +201,7 @@ template<typename T> bool Hashtable<T>::reserve(size_t in) noexcept {
     return true;
 }
 
-template<typename T> void Hashtable<T>::clear() noexcept {
+template<typename T> void HashedBuffer<T>::clear() noexcept {
     if(capacitor != 0) {
         return;
     }
@@ -223,7 +227,7 @@ template<typename T> void Hashtable<T>::clear() noexcept {
     factor  = 0;
 }
 
-template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<FWD> {
+template<typename T> auto HashedBuffer<T>::find(const T& in) noexcept -> Iterator<FWD> {
     if(buckets == nullptr) {
         return end();
     }
@@ -249,7 +253,7 @@ template<typename T> auto Hashtable<T>::find(const T& in) noexcept -> Iterator<F
     return end(); // not found
 }
 
-template<typename T> auto Hashtable<T>::at(size_t index) noexcept -> Iterator<FWD> {
+template<typename T> auto HashedBuffer<T>::at(size_t index) noexcept -> Iterator<FWD> {
     size_t pass = 0;
     // out of range
     if(index >= counter) {
@@ -292,7 +296,7 @@ template<typename T> auto Hashtable<T>::at(size_t index) noexcept -> Iterator<FW
     return end();
 }
 
-template<typename T> auto Hashtable<T>::begin() noexcept -> Iterator<FWD> {
+template<typename T> auto HashedBuffer<T>::begin() noexcept -> Iterator<FWD> {
     size_t index = 0;
     for(; index < capacitor; ++index) {
         if(buckets[index].used == true) {
@@ -302,28 +306,28 @@ template<typename T> auto Hashtable<T>::begin() noexcept -> Iterator<FWD> {
     return Iterator<FWD>(this, index);
 }
 
-template<typename T> auto Hashtable<T>::end() noexcept -> Iterator<FWD> {
+template<typename T> auto HashedBuffer<T>::end() noexcept -> Iterator<FWD> {
     return Iterator<FWD>(this, capacitor);
 }
 
-template<typename T> auto Hashtable<T>::find(const T& in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Hashtable*>(this)->find(in);
+template<typename T> auto HashedBuffer<T>::find(const T& in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashedBuffer*>(this)->find(in);
 }
 
-template<typename T> auto Hashtable<T>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Hashtable*>(this)->at(in);
+template<typename T> auto HashedBuffer<T>::at(size_t in) const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashedBuffer*>(this)->at(in);
 }
 
-template<typename T> auto Hashtable<T>::begin() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Hashtable*>(this)->begin();
+template<typename T> auto HashedBuffer<T>::begin() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashedBuffer*>(this)->begin();
 }
 
-template<typename T> auto Hashtable<T>::end() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Hashtable*>(this)->end();
+template<typename T> auto HashedBuffer<T>::end() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<HashedBuffer*>(this)->end();
 }
 
 template<typename T>
-template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed) {
+template<typename U> bool HashedBuffer<T>::emplace(U&& in, hash_t hashed) {
     Bucket* bucket = buckets + (indexof(hashed));
     Chain*  pos    = nullptr;
     if(!bucket) throw diag::error(diag::INVALID_DATA);
@@ -349,7 +353,7 @@ template<typename U> bool Hashtable<T>::emplace(U&& in, hash_t hashed) {
     return true;
 }
 
-template<typename T> void Hashtable<T>::remove(Bucket* bucket, Chain* del) {
+template<typename T> void HashedBuffer<T>::remove(Bucket* bucket, Chain* del) {
     // delete first data
     if(bucket == del) {
         // has chain, swap and delete
@@ -382,7 +386,7 @@ template<typename T> void Hashtable<T>::remove(Bucket* bucket, Chain* del) {
     --counter; // total count
 }
 
-template<typename T> bool Hashtable<T>::rehash(uint64_t caplog) {
+template<typename T> bool HashedBuffer<T>::rehash(uint64_t caplog) {
     size_t size = (size_t(1) << caplog);
     if(size <= capacitor) {
         return false; // shrink not allow
@@ -435,7 +439,7 @@ template<typename T> bool Hashtable<T>::rehash(uint64_t caplog) {
     return true;
 }
 
-template<typename T> bool Hashtable<T>::expand(Bucket* in) {
+template<typename T> bool HashedBuffer<T>::expand(Bucket* in) {
     uint16_t cap   = grower(in->capacity);
     Chain*   newly = static_cast<Chain*>(std::malloc(sizeof(Chain) * cap));
     if(!newly) {
@@ -455,21 +459,21 @@ template<typename T> bool Hashtable<T>::expand(Bucket* in) {
     return true;
 }
 
-template<typename T> auto Hashtable<T>::bucket(size_t in) const noexcept -> const Bucket* {
+template<typename T> auto HashedBuffer<T>::bucket(size_t in) const noexcept -> const Bucket* {
     if(in >= capacitor) {
         return nullptr; // exception
     }
     return buckets + in;
 }
 
-template<typename T> auto Hashtable<T>::slot(hash_t in) noexcept -> Bucket* {
+template<typename T> auto HashedBuffer<T>::slot(hash_t in) noexcept -> Bucket* {
     if(capacitor == 0) {
         rehash(log); // init
     }
     return bucket + indexof(in);
 }
 
-template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) noexcept -> Chain* {
+template<typename T> auto HashedBuffer<T>::slot(hash_t in, const T& data) noexcept -> Chain* {
     if(capacitor == 0) {
         rehash(log); // init
     }
@@ -487,12 +491,12 @@ template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) noexcept 
     return nullptr;
 }
 
-template<typename T> auto Hashtable<T>::slot(hash_t in) const noexcept -> const Bucket* {
-    return const_cast<Hashtable*>(this)->slot(in);
+template<typename T> auto HashedBuffer<T>::slot(hash_t in) const noexcept -> const Bucket* {
+    return const_cast<HashedBuffer*>(this)->slot(in);
 }
 
-template<typename T> auto Hashtable<T>::slot(hash_t in, const T& data) const noexcept -> const Chain* {
-    return const_cast<Hashtable*>(this)->slot(in, data);
+template<typename T> auto HashedBuffer<T>::slot(hash_t in, const T& data) const noexcept -> const Chain* {
+    return const_cast<HashedBuffer*>(this)->slot(in, data);
 }
 
 } // namespace container

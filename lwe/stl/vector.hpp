@@ -1,13 +1,13 @@
-#ifndef LWE_CONTAINER_DEQUE
-#define LWE_CONTAINER_DEQUE
+#ifndef LWE_STL_VECTOR
+#define LWE_STL_VECTOR
 
 #include "../meta/meta.h"
-#include "../container/deque.hpp"
+#include "../container/ring_buffer.hpp"
 
 LWE_BEGIN
 namespace stl {
 
-DECLARE_CONTAINER((typename T, size_t SVO = 0), Vector, LWE::container::Deque, T, SVO);
+DECLARE_CONTAINER((typename T, size_t SVO = 0), Vector, LWE::container::RingBuffer, T, SVO);
 REGISTER_CONTAINER((typename T, size_t SVO), Vector, Keyword::STL_VECTOR, T, SVO);
 
 } // namespace stl

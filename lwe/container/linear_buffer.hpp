@@ -1,5 +1,5 @@
 /*
-    vector,
+    Linear buffer class
 
     API
     - push(T)
@@ -24,8 +24,8 @@
     +-----------------+
 */
 
-#ifndef LWE_CONTAINER_STACK
-#define LWE_CONTAINER_STACK
+#ifndef LWE_CONTAINER_LINEAR_BUFFER
+#define LWE_CONTAINER_LINEAR_BUFFER
 
 #include "../config/config.h"
 #include "../mem/block.hpp"
@@ -36,12 +36,12 @@ namespace container {
 
 //! @tparam N count of T, 0 is auto size (64 byte)
 template<typename T, size_t SVO = 0>
-class Stack {
-    template<typename, size_t> friend class Stack; //!< for Stack<T, OTHER_SVO_SIZE>
-    template<typename, size_t> friend class Deque; //!< for composition
+class LinearBuffer {
+    template<typename, size_t> friend class LinearBuffer; //!< for LinearBuffer<T, OTHER_SVO_SIZE>
+    template<typename, size_t> friend class RingBuffer;   //!< for composition
 
 public:
-    CONTAINER_BODY(Stack, T, T, SVO);
+    CONTAINER_BODY(LinearBuffer, T, T, SVO);
 
 private:
     static constexpr size_t min() {
@@ -53,18 +53,18 @@ public:
     static constexpr size_t MIN = SVO ? align(SVO) : min();
 
 public:
-    Stack();
-    Stack(const Stack&);
-    Stack(Stack&&) noexcept;
-    Stack& operator=(const Stack&);
-    Stack& operator=(Stack&&) noexcept;
-    ~Stack();
+    LinearBuffer();
+    LinearBuffer(const LinearBuffer&);
+    LinearBuffer(LinearBuffer&&) noexcept;
+    LinearBuffer& operator=(const LinearBuffer&);
+    LinearBuffer& operator=(LinearBuffer&&) noexcept;
+    ~LinearBuffer();
 
 public:
-    template<size_t N> Stack(const Stack<T, N>&);
-    template<size_t N> Stack(Stack<T, N>&&) noexcept;
-    template<size_t N> Stack<T, N>& operator=(const Stack<T, N>&);
-    template<size_t N> Stack<T, N>& operator=(Stack<T, N>&&) noexcept;
+    template<size_t N> LinearBuffer(const LinearBuffer<T, N>&);
+    template<size_t N> LinearBuffer(LinearBuffer<T, N>&&) noexcept;
+    template<size_t N> LinearBuffer<T, N>& operator=(const LinearBuffer<T, N>&);
+    template<size_t N> LinearBuffer<T, N>& operator=(LinearBuffer<T, N>&&) noexcept;
 
 public:
     T& operator[](index_t) noexcept;             //!<
@@ -136,7 +136,8 @@ private:
 
 
 private:
-    template<size_t X, bool COPY> using Other = std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&&>;
+    template<size_t X, bool COPY> using Other =
+        std::conditional_t<COPY, const LinearBuffer<T, X>&, LinearBuffer<T, X>&&>;
     template<size_t X, bool COPY> bool ctor(Other<X, COPY>, index_t = 0);           //!< copy / move delegator
     template<bool> void                transfer(const T*, T*, index_t, size_t = 0); //!< true: copy, false: move
     bool                               reallocate(size_t, index_t = 0);             //!< call realloc (size, begin)
@@ -155,5 +156,5 @@ protected:
 
 } // namespace container
 LWE_END
-#include "stack.ipp"
+#include "linear_buffer.ipp"
 #endif

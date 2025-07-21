@@ -7,7 +7,7 @@
 LWE_BEGIN
 namespace container {
 
-template<typename> class Hashtable;
+template<typename> class HashedBuffer;
 
 template<typename K, typename V>
 struct Record: public std::pair<K, V> {
@@ -17,15 +17,15 @@ struct Record: public std::pair<K, V> {
     bool operator!=(const std::pair<K, V>& in) const { return this->first != in.first; }
 };
 
-template<typename K, typename V> class Dictionary {
+template<typename K, typename V> class HashTable {
 public:
     using Entry = Record<K, V>;
 public:
-    CONTAINER_BODY(Hashtable, Entry, Entry);
+    CONTAINER_BODY(HashedBuffer, Entry, Entry);
 private:
-    using Hashtable = Hashtable<Entry>;
-    using Bucket    = typename Hashtable::Bucket;
-    using Chain     = typename Hashtable::Chain;
+    using HashedBuffer = HashedBuffer<Entry>;
+    using Bucket       = typename HashedBuffer::Bucket;
+    using Chain        = typename HashedBuffer::Chain;
 
 public:
     V&       operator[](const K&);
@@ -77,10 +77,10 @@ private:
     template<typename T> bool emplace(T&&);
 
 public:
-    Hashtable set;
+    HashedBuffer set;
 };
 
 } // namespace container
 LWE_END
-#include "dictionary.ipp"
+#include "hash_table.ipp"
 #endif

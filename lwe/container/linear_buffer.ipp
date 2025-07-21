@@ -5,8 +5,8 @@ namespace container {
  * Iterator Specialization
  **************************************************************************************************/
 
-template<typename T, size_t SVO> class Iterator<FWD, Stack<T, SVO>> {
-    ITERATOR_BODY(FWD, Stack, T, SVO);
+template<typename T, size_t SVO> class Iterator<FWD, LinearBuffer<T, SVO>> {
+    ITERATOR_BODY(FWD, LinearBuffer, T, SVO);
 public:
     Iterator(T* in) noexcept: ptr(in) { }
     Iterator(const Reverse& in) noexcept: ptr(in.it.ptr) { }
@@ -28,22 +28,23 @@ private:
 };
 
 // reverse iterator
-template<typename T, size_t SVO> class Iterator<BWD, Stack<T, SVO>> {
-    ITERATOR_BODY_REVERSE(Stack, T, SVO);
+template<typename T, size_t SVO> class Iterator<BWD, LinearBuffer<T, SVO>> {
+    ITERATOR_BODY_REVERSE(LinearBuffer, T, SVO);
 public:
     Iterator(T* in) noexcept: it(in) { }
 };
 
-REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, Stack, T, SVO);
-REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, Stack, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, LinearBuffer, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, LinearBuffer, T, SVO);
 
 /**************************************************************************************************
- * Stack
+ * LinearBuffer
  **************************************************************************************************/
 
 template<typename T, size_t N>
 template<size_t X, bool COPY>
-bool Stack<T, N>::ctor(std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&&> in, index_t begin) {
+bool LinearBuffer<T, N>::ctor(std::conditional_t<COPY, const LinearBuffer<T, X>&, LinearBuffer<T, X>&&> in,
+                              index_t                                                                   begin) {
     // reset data
     if(counter != 0) {
         clear();
@@ -86,61 +87,64 @@ bool Stack<T, N>::ctor(std::conditional_t<COPY, const Stack<T, X>&, Stack<T, X>&
     return true;
 }
 
-template<typename T, size_t SVO> Stack<T, SVO>::Stack(): container(stack) { }
+template<typename T, size_t SVO> LinearBuffer<T, SVO>::LinearBuffer(): container(stack) { }
 
-template<typename T, size_t SVO> Stack<T, SVO>::~Stack() {
+template<typename T, size_t SVO> LinearBuffer<T, SVO>::~LinearBuffer() {
     clear();
     if(container != stack) {
         free(container);
     }
 }
 
-template<typename T, size_t SVO> Stack<T, SVO>::Stack(const Stack& in) {
+template<typename T, size_t SVO> LinearBuffer<T, SVO>::LinearBuffer(const LinearBuffer& in) {
     ctor<SVO, true>(in, 0);
 }
 
-template<typename T, size_t SVO> Stack<T, SVO>::Stack(Stack&& in) noexcept {
+template<typename T, size_t SVO> LinearBuffer<T, SVO>::LinearBuffer(LinearBuffer&& in) noexcept {
     ctor<SVO, false>(std::move(in), 0);
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::operator=(const Stack& in) -> Stack& {
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::operator=(const LinearBuffer& in) -> LinearBuffer& {
     if(this != &in) {
         ctor<SVO, true>(in, 0);
     }
     return *this;
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::operator=(Stack&& in) noexcept -> Stack& {
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::operator=(LinearBuffer&& in) noexcept -> LinearBuffer& {
     if(this != &in) {
         ctor<SVO, false>(std::move(in), 0);
     }
     return *this;
 }
 
-template<typename T, size_t SVO> T& Stack<T, SVO>::operator[](index_t index) noexcept {
+template<typename T, size_t SVO> T& LinearBuffer<T, SVO>::operator[](index_t index) noexcept {
     return container[index];
 }
 
-template<typename T, size_t SVO> const T& Stack<T, SVO>::operator[](index_t index) const noexcept {
+template<typename T, size_t SVO> const T& LinearBuffer<T, SVO>::operator[](index_t index) const noexcept {
     return container[index];
 }
 
-template<typename T, size_t SVO> template<size_t N> Stack<T, SVO>::Stack(const Stack<T, N>& in) {
+template<typename T, size_t SVO> template<size_t N> LinearBuffer<T, SVO>::LinearBuffer(const LinearBuffer<T, N>& in) {
     ctor<N, true>(in, 0);
 }
 
-template<typename T, size_t SVO> template<size_t N> Stack<T, SVO>::Stack(Stack<T, N>&& in) noexcept {
+template<typename T, size_t SVO> template<size_t N> LinearBuffer<T, SVO>::LinearBuffer(
+    LinearBuffer<T, N>&& in) noexcept {
     ctor<N, false>(std::move(in), 0);
 }
 
-template<typename T, size_t SVO> template<size_t N> Stack<T, N>& Stack<T, SVO>::operator=(const Stack<T, N>& in) {
+template<typename T, size_t SVO> template<size_t N> LinearBuffer<T, N>&
+LinearBuffer<T, SVO>::operator=(const LinearBuffer<T, N>& in) {
     if(this != &in) {
         ctor<N, true>(in, 0);
     }
     return *this;
 }
 
-template<typename T, size_t SVO> template<size_t N> Stack<T, N>& Stack<T, SVO>::operator=(Stack<T, N>&& in) noexcept {
+template<typename T, size_t SVO> template<size_t N> LinearBuffer<T, N>&
+LinearBuffer<T, SVO>::operator=(LinearBuffer<T, N>&& in) noexcept {
     if(this == &in) {
         ctor<N, false>(std::move(in), 0);
     }
@@ -148,7 +152,7 @@ template<typename T, size_t SVO> template<size_t N> Stack<T, N>& Stack<T, SVO>::
 }
 
 template<typename T, size_t SVO> template<typename Arg>
-bool Stack<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
+bool LinearBuffer<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
     // full, bad alloc
     if(counter == capacitor) {
         size_t n = capacitor ? (capacitor << 1) : config::CAPACITY; // set default
@@ -164,7 +168,7 @@ bool Stack<T, SVO>::emplace(index_t index, Arg&& in) noexcept {
     return true;
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::erase(index_t index, T* out) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::erase(index_t index, T* out) noexcept {
     if(index < 0 || index >= counter) {
         return false;
     }
@@ -178,28 +182,28 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::erase(index_t index, T* out
     return true;
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::push() noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::push() noexcept {
     return emplace(counter, T{});
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::push(T&& in) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::push(T&& in) noexcept {
     return emplace(counter, std::move(in));
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::push(const T& in) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::push(const T& in) noexcept {
     return emplace(counter, in);
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::pop(T* out) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::pop(T* out) noexcept {
     return erase(counter - 1, out);
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::pop(T& out) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::pop(T& out) noexcept {
     return erase(counter - 1, &out);
 }
 
 template<typename T, size_t SVO>
-template<typename Arg> bool Stack<T, SVO>::insert(index_t index, Arg&& in) {
+template<typename Arg> bool LinearBuffer<T, SVO>::insert(index_t index, Arg&& in) {
     if(index < 0) index = 0;
     else if(index >= counter) index = counter;
 
@@ -226,7 +230,7 @@ template<typename Arg> bool Stack<T, SVO>::insert(index_t index, Arg&& in) {
     return true;
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t index, T* out) {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::remove(index_t index, T* out) {
     if(counter == 0) {
         return false;
     }
@@ -249,11 +253,11 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t index, T* ou
     --counter;                  // count
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::remove(index_t idx, T& out) {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::remove(index_t idx, T& out) {
     remove(idx, &out);
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::resize(size_t in) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::resize(size_t in) noexcept {
     // reallocate
     if(in > capacitor) {
         if(!reallocate(in)) {
@@ -272,132 +276,132 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::resize(size_t in) noexcept 
     return true;
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::reserve(size_t in) noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::reserve(size_t in) noexcept {
     if(in < capacitor) {
         return true;
     }
     return reallocate(in);
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::compact() noexcept {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::compact() noexcept {
     return reallocate(counter);
 }
 
-template<typename T, size_t SVO> void Stack<T, SVO>::clear() noexcept {
+template<typename T, size_t SVO> void LinearBuffer<T, SVO>::clear() noexcept {
     for(index_t i = 0; i < counter; ++i) {
         container[i].~T();
     }
     counter = 0;
 }
 
-template<typename T, size_t SVO> size_t Stack<T, SVO>::size() const noexcept {
+template<typename T, size_t SVO> size_t LinearBuffer<T, SVO>::size() const noexcept {
     return counter;
 }
 
-template<typename T, size_t SVO> size_t Stack<T, SVO>::capacity() const noexcept {
+template<typename T, size_t SVO> size_t LinearBuffer<T, SVO>::capacity() const noexcept {
     return capacitor;
 }
 
-template<typename T, size_t SVO> inline bool Stack<T, SVO>::full() const noexcept {
+template<typename T, size_t SVO> inline bool LinearBuffer<T, SVO>::full() const noexcept {
     return counter == capacitor;
 }
 
-template<typename T, size_t SVO> inline bool Stack<T, SVO>::empty() const noexcept {
+template<typename T, size_t SVO> inline bool LinearBuffer<T, SVO>::empty() const noexcept {
     return counter == 0;
 }
 
-template<typename T, size_t SVO> T* Stack<T, SVO>::data() noexcept {
+template<typename T, size_t SVO> T* LinearBuffer<T, SVO>::data() noexcept {
     return container;
 }
 
-template<typename T, size_t SVO> const T* Stack<T, SVO>::data() const noexcept {
-    return const_cast<Stack*>(this)->data();
+template<typename T, size_t SVO> const T* LinearBuffer<T, SVO>::data() const noexcept {
+    return const_cast<LinearBuffer*>(this)->data();
 }
 
-template<typename T, size_t SVO> T& Stack<T, SVO>::at(index_t in) {
+template<typename T, size_t SVO> T& LinearBuffer<T, SVO>::at(index_t in) {
     if(in < 0 || in >= counter) {
         throw diag::error(diag::OUT_OF_RANGE);
     }
     return container[in];
 }
 
-template<typename T, size_t SVO> const T& Stack<T, SVO>::at(index_t in) const {
-    return const_cast<Stack*>(this)->at(in);
+template<typename T, size_t SVO> const T& LinearBuffer<T, SVO>::at(index_t in) const {
+    return const_cast<LinearBuffer*>(this)->at(in);
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::begin() noexcept -> Iterator<FWD> {
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::begin() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ container };
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::end() noexcept -> Iterator<FWD> {
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::end() noexcept -> Iterator<FWD> {
     return Iterator<FWD | VIEW>{ container + counter }; // overflow safe: bitwise
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::rbegin() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ container + counter - 1 }; // overflow safe: bitwise
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::rend() noexcept -> Iterator<BWD> {
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::rend() noexcept -> Iterator<BWD> {
     return Iterator<BWD | VIEW>{ container - 1 };
 }
 
-template<typename T, size_t SVO> T* Stack<T, SVO>::front() noexcept {
+template<typename T, size_t SVO> T* LinearBuffer<T, SVO>::front() noexcept {
     return Iterator<FWD | VIEW>{ begin() };
 }
 
-template<typename T, size_t SVO> T* Stack<T, SVO>::rear() noexcept {
+template<typename T, size_t SVO> T* LinearBuffer<T, SVO>::rear() noexcept {
     return Iterator<BWD | VIEW>{ rbegin() };
 }
 
-template<typename T, size_t SVO> T* Stack<T, SVO>::top() noexcept {
+template<typename T, size_t SVO> T* LinearBuffer<T, SVO>::top() noexcept {
     return Iterator<BWD | VIEW>{ rbegin() };
 }
 
-template<typename T, size_t SVO> T* Stack<T, SVO>::bottom() noexcept {
+template<typename T, size_t SVO> T* LinearBuffer<T, SVO>::bottom() noexcept {
     return Iterator<FWD | VIEW>{ begin() };
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Stack*>(this)->begin();
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::begin() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<LinearBuffer*>(this)->begin();
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
-    return const_cast<Stack*>(this)->end();
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
+    return const_cast<LinearBuffer*>(this)->end();
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
-    return const_cast<Stack*>(this)->rbegin();
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<LinearBuffer*>(this)->rbegin();
 }
 
-template<typename T, size_t SVO> auto Stack<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
-    return const_cast<Stack*>(this)->rend();
+template<typename T, size_t SVO> auto LinearBuffer<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
+    return const_cast<LinearBuffer*>(this)->rend();
 }
 
-template<typename T, size_t SVO> const T* Stack<T, SVO>::front() const noexcept {
-    return const_cast<Stack*>(this)->front();
+template<typename T, size_t SVO> const T* LinearBuffer<T, SVO>::front() const noexcept {
+    return const_cast<LinearBuffer*>(this)->front();
 }
 
-template<typename T, size_t SVO> const T* Stack<T, SVO>::rear() const noexcept {
-    return const_cast<Stack*>(this)->rear();
+template<typename T, size_t SVO> const T* LinearBuffer<T, SVO>::rear() const noexcept {
+    return const_cast<LinearBuffer*>(this)->rear();
 }
 
-template<typename T, size_t SVO> const T* Stack<T, SVO>::top() const noexcept {
-    return const_cast<Stack*>(this)->top();
+template<typename T, size_t SVO> const T* LinearBuffer<T, SVO>::top() const noexcept {
+    return const_cast<LinearBuffer*>(this)->top();
 }
 
-template<typename T, size_t SVO> const T* Stack<T, SVO>::bottom() const noexcept {
-    return const_cast<Stack*>(this)->bottom();
+template<typename T, size_t SVO> const T* LinearBuffer<T, SVO>::bottom() const noexcept {
+    return const_cast<LinearBuffer*>(this)->bottom();
 }
 
-template<typename T, size_t SVO> template<typename U> void Stack<T, SVO>::push_back(U&& in) {
+template<typename T, size_t SVO> template<typename U> void LinearBuffer<T, SVO>::push_back(U&& in) {
     push(std::forward<U>(in));
 }
 
-template<typename T, size_t SVO> void Stack<T, SVO>::pop_back() {
+template<typename T, size_t SVO> void LinearBuffer<T, SVO>::pop_back() {
     pop();
 }
 
-template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, index_t begin) {
+template<typename T, size_t SVO> bool LinearBuffer<T, SVO>::reallocate(size_t in, index_t begin) {
     // adjust and check
     if(in < MIN) in = MIN; // set MIN
     else if((in = align(in)) > INT64_MAX) {
@@ -427,7 +431,7 @@ template<typename T, size_t SVO> bool Stack<T, SVO>::reallocate(size_t in, index
 }
 
 template<typename T, size_t SVO>
-template<bool COPY> void Stack<T, SVO>::transfer(const T* in, T* out, index_t begin, size_t size) {
+template<bool COPY> void LinearBuffer<T, SVO>::transfer(const T* in, T* out, index_t begin, size_t size) {
     // logic for cirulation ...
     size_t adjust    = size < capacitor ? size : capacitor;    // set for reduce
     size_t length    = size - begin;                           // begin ~ end
@@ -448,7 +452,7 @@ template<bool COPY> void Stack<T, SVO>::transfer(const T* in, T* out, index_t be
     }
 }
 
-template<typename T, size_t SVO> void Stack<T, SVO>::clear(size_t begin) {
+template<typename T, size_t SVO> void LinearBuffer<T, SVO>::clear(size_t begin) {
     if(begin == 0) {
         clear();
         return;

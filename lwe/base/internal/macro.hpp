@@ -188,13 +188,13 @@ public:                                                                         
  /*
   * @breif register class field (Type Name, Scope Name)
   */
-#define REGISTER_CLASS_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
-        Macro__register_class_begin_scoped,\
-        Macro__register_class_begin_global \
+#define REGISTER_FIELD_BEGIN(...) GET_MACRO_2(__VA_ARGS__,\
+        Macro__register_field_begin_scoped,\
+        Macro__register_field_begin_global \
     )(__VA_ARGS__)
-#define Macro__register_class_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, ::)
-#define Macro__register_class_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::)
-#define Macro__register_class_begin_detail(TYPE, SCOPE)                                                                \
+#define Macro__register_field_begin_global(TYPE)         Macro__register_field_begin_detail(TYPE, ::)
+#define Macro__register_field_begin_scoped(TYPE, SCOPE ) Macro__register_field_begin_detail(TYPE, SCOPE::)
+#define Macro__register_field_begin_detail(TYPE, SCOPE)                                                                \
     template<> LWE::meta::Class* LWE::meta::classof<SCOPE TYPE>() {                                                    \
         static LWE::meta::Class* META = nullptr;                                                                       \
         if(!META) META = LWE::meta::Registry<LWE::meta::Class>::find(#TYPE);                                           \
@@ -250,7 +250,7 @@ public:                                                                         
         	return result->second;                                                                                     \
         }                                                                                                              \
         LWE::meta::Structure INFO; // {
-#define CLASS_FIELD(FIELD)                                                                                             \
+#define REGISTER_FIELD(FIELD)                                                                                          \
         INFO.push(                                                                                                     \
                 LWE::meta::Field {                                                                                     \
                     typeof<decltype(CLASS::FIELD)>(),                                                                  \
@@ -259,7 +259,7 @@ public:                                                                         
                     offsetof(CLASS, FIELD)                                                                             \
                 }                                                                                                      \
             ) // }
-#define REGISTER_CLASS_END                                                                                             \
+#define REGISTER_FIELD_END                                                                                             \
         INFO.shrink();                                                                                                 \
         map().push({ NAME, INFO });                                                                                    \
         return map()[NAME];                                                                                            \

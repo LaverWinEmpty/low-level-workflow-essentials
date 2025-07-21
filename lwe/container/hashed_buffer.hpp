@@ -31,8 +31,8 @@
  *  bucket.size >= 0     -> chaining
  **************************************************************************************************/
 
-#ifndef LWE_CONTAINER_HASHTABLE
-#define LWE_CONTAINER_HASHTABLE
+#ifndef LWE_CONTAINER_HASH_BUFFER
+#define LWE_CONTAINER_HASH_BUFFER
 
 #include "../base/base.h"
 #include "../config/config.h"
@@ -42,12 +42,12 @@
 LWE_BEGIN
 namespace container {
 
-template<typename T> class Hashtable {
+template<typename T> class HashedBuffer {
 public:
-    template<typename, typename> friend class Dictionary; //!< for composition
+    template<typename, typename> friend class HashTable; //!< for composition
 
 public:
-    CONTAINER_BODY(Hashtable, T, T);
+    CONTAINER_BODY(HashedBuffer, T, T);
 
 private:
     struct Chain {
@@ -72,16 +72,16 @@ public:
     //! @brief constructor
     //! @param [in] factor: load factor
     //! @param [in] grower: chain array grow strategy
-    Hashtable(float factor = config::LOADFACTOR, Grower grower = [](uint16_t in) { return uint16_t(in + 1); });
+    HashedBuffer(float factor = config::LOADFACTOR, Grower grower = [](uint16_t in) { return uint16_t(in + 1); });
 
 public:
     //! @brief constructor, load factor is default
     //! @param [in] grower: chain array grow strategy
-    Hashtable(Grower grower);
+    HashedBuffer(Grower grower);
 
 public:
     //! @brief free
-    ~Hashtable();
+    ~HashedBuffer();
 
 public:
     bool push(T&&);                //!< push
@@ -147,5 +147,5 @@ public:
 
 } // namespace container
 LWE_END
-#include "hashtable.ipp"
+#include "hashed_buffer.ipp"
 #endif

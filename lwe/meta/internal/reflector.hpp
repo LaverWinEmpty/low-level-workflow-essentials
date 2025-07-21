@@ -2,7 +2,7 @@
 #define LWE_META_REFLECTOR
 
 #include "../../base/base.h"
-#include "../../container/dictionary.hpp"
+#include "../../container/hash_table.hpp"
 
 LWE_BEGIN
 namespace meta {
@@ -14,7 +14,7 @@ struct Field;
 //! @note  Relfector<MyClass> == MyClass reflector class
 //! @tparam T Field or Enumerator
 template<typename T> class Reflector {
-    using Table = container::Dictionary<String, Reflector<T>>;
+    using Table = container::HashTable<String, Reflector<T>>;
 
 public:
     //! @tparam C constructor: type info to create

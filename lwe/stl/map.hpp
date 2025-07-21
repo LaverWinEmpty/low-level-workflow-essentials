@@ -2,12 +2,12 @@
 #define LWE_STL_MAP
 
 #include "../meta/meta.h"
-#include "../container/dictionary.hpp"
+#include "../container/hash_table.hpp"
 
 LWE_BEGIN
 namespace stl {
 
-DECLARE_CONTAINER((typename K, typename V), Map, LWE::container::Dictionary, K, V);
+DECLARE_CONTAINER((typename K, typename V), Map, LWE::container::HashTable, K, V);
 REGISTER_CONTAINER((typename K, typename V), Map, Keyword::STL_MAP, K, V);
 
 } // namespace stl

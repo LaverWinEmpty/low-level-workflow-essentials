@@ -4,8 +4,7 @@
 #include "../base/base.h"
 #include "../config/config.h"
 #include "../async/lock.hpp"
-// #include "../stl/deque.hpp"
-#include "../container/hashtable.hpp"
+#include "../container/hashed_buffer.hpp"
 
 /*******************************************************************************
  * pool structure
@@ -117,7 +116,7 @@ protected:
     const size_t SRC;   //!< chunk origianl size
 
 protected:
-    container::Hashtable<Block*> all; //!<  generated blocks
+    container::HashedBuffer<Block*> all; //!<  generated blocks
 };
 
 struct Pool::Block {
