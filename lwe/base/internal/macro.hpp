@@ -282,7 +282,7 @@ public:                                                                         
     LWE::meta::Registered TYPE##_METHOD_REGISTERED = LWE::meta::registmethod<SCOPE TYPE>();                            \
     template<> LWE::meta::Registered LWE::meta::registmethod<SCOPE TYPE>() {                                           \
         using TYPE_NAME = SCOPE TYPE;                                                                                  \
-        static const string CLASS_NAME = { #TYPE }; // {
+        static const LWE::String CLASS_NAME = { #TYPE }; // {
 #define REGISTER_METHOD(NAME)                                                                                          \
             Registry<LWE::meta::Method>::add(CLASS_NAME, #NAME, Method::lambdaize(&TYPE_NAME::NAME)) // ; }
 #define REGISTER_METHOD_END                                                                                            \
@@ -353,7 +353,7 @@ public:                                                                         
         virtual std::string serialize() const override {                \
             return LWE::meta::Codec::encode<CLASS<__VA_ARGS__>>(*this); \
         }                                                               \
-        virtual void deserialize(const std::string_view in) override {  \
+        virtual void deserialize(const LWE::StringView in) override {   \
             lwe::meta::Codec::decode<CLASS<__VA_ARGS__>>(this, in);     \
         }                                                               \
     }
