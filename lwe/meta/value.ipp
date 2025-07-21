@@ -26,7 +26,7 @@ template<typename E, typename Enable> diag::Expected<Enumerator> Value<E, Enable
     const Enumeration& data = cache->enums();
     // find same value
     for(auto& e : data) {
-        if(strcmp(e.name, in) == 0) {
+        if(strcmp(e.name, in.data()) == 0) {
             return e; // found
         }
     }

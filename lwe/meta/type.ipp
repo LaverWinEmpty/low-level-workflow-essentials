@@ -69,7 +69,7 @@ template<typename T> static const Type& Type::reflect() {
 
                 reflect<T>(&buf);
                 buf.shrink();
-                buf.hashed = util::Hash(buf.begin(), buf.count());
+                buf.hashed = util::Hash<void>::fnv1a(buf.begin(), buf.count());
 
                 // to string and caching
                 stringify(&str, buf, 0);
@@ -305,6 +305,10 @@ Keyword Type::code() const {
         return stack[0] == Keyword::CONST ? stack[1] : stack[0];
     }
     return heap[0] == Keyword::CONST ? heap[1] : heap[0];
+}
+
+const char* Type::stringify() const {
+    return str;
 }
 
 const char* Type::operator*() const {

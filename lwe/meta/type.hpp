@@ -31,13 +31,13 @@ public:
     const Keyword& operator[](size_t) const;
     const Keyword* begin() const;
     const Keyword* end() const;
-    size_t         count() const; //!< type code count
-    hash_t         hash() const;  //!< hashed data
-    Keyword        code() const;  //!< get first type code, exclude const
+    size_t         count() const;     //!< type code count
+    hash_t         hash() const;      //!< hashed data
+    Keyword        code() const;      //!< get first type code, exclude const
+    const char*    stringify() const; //!< to string
 
 public:
-    //! @brief IS TO String NOT DEREFERENCE
-    const char* operator*() const;
+    const char* operator*() const; //!< IT IS TO STRING OPERATOR, IS NOT DEREFERENCE OPERATOR
 
 public:
     bool operator==(const Type&) const;
@@ -105,11 +105,11 @@ struct Signature {
 class Object;
 //! @brief class metadata
 struct Class {
-    virtual const char*      name() const             = 0; //! get name
-    virtual size_t           size() const             = 0; //! get size
-    virtual const Structure& fields() const           = 0; //! get field list
-    virtual const Class*     base() const             = 0; //! get base class meta
-    virtual const Object*    statics() const          = 0; //! get static instance
+    virtual const char*      name() const             = 0; //!< get name
+    virtual size_t           size() const             = 0; //!< get size
+    virtual const Structure& fields() const           = 0; //!< get field list
+    virtual const Class*     base() const             = 0; //!< get base class meta
+    virtual const Object*    statics() const          = 0; //!< get static instance
     virtual Object*          construct(Object*) const = 0; //!< constructor lambda
 
 public:
@@ -122,6 +122,9 @@ struct Enum {
     virtual const char*        name() const  = 0;
     virtual size_t             size() const  = 0;
     virtual const Enumeration& enums() const = 0;
+
+public:
+    
 
 public:
     template<typename E> static const char* serialize(E);

@@ -3,12 +3,8 @@ namespace meta {
 
 // ctor: default
 template<typename T> RC<T>::RC():
-    ptr(static_cast<Object*>(Object::constructor<T>()),
-        // custom deallocator
-        [](void* in) {
-            Object::destructor(static_cast<Object*>(in));
-        } // end lambda
-        ) // end ptr()
+    ptr(static_cast<Object*>(Object::constructor<T>()),                   // custom allocator
+        [](Object* in) { Object::destructor(static_cast<Object*>(in)); }) // custom deallocator
 { }
 
 // copy: shallow
@@ -103,12 +99,20 @@ template<typename T> const T* RC<T>::get() const {
     return const_cast<RC<T>*>(this)->get();
 }
 
-template<typename T> RC<T>::operator T*() {
-    return get();
+template<typename T> bool RC<T>::valid() const {
+    return ptr.valid();
 }
 
-template<typename T> RC<T>::operator const T*() const {
-    return const_cast<RC<T>*>(this)->get();
+template<typename T> bool RC<T>::owned() const {
+    return ptr.owned();
+}
+
+template<typename T> bool RC<T>::own() {
+    return ptr.own();
+}
+
+template<typename T> RC<T>::operator bool() const{
+    return valid();
 }
 
 } // namespace meta

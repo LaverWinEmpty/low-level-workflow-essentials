@@ -36,14 +36,18 @@ public:
     const T*                get() const; //!< get RCerence const
 
 public:
+    bool valid() const; //!< check nullptr or dangling
+    bool owned() const; //!< check owner
+    bool own();         //!< set owner
+
+public:
     T*       operator->() { return reinterpret_cast<T*>(&*ptr); }
     const T* operator->() const { return reinterpret_cast<const T*>(&*ptr); }
     T&       operator*() { return reinterpret_cast<T*>(*ptr); }
     const T& operator*() const { return reinterpret_cast<const T*>(*ptr); }
 
 public:
-    operator T*();
-    operator const T*() const;
+    explicit operator bool() const;
 
 private:
     mem::Ptr<Object> ptr;
