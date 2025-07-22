@@ -83,6 +83,7 @@ using meta::Enum;      //!< meta enum
 using meta::Object;    //!< object class
 using meta::Type;      //!< field type info
 using meta::Value;     //!< enum helper
+using meta::RC;        //!< object smart pointer
 
 /**************************************************************************************************
  * external exposure (fucntion)
