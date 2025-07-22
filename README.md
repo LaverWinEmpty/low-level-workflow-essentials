@@ -1,93 +1,123 @@
 # Low-level Workflow Essentials
-**Low-level Workflow Essentials** (LWE) is a lightweight, modular C++ utility library focused on compile-time reflection, essential utilities, and performance.
-> Project by [LaverWinEmpty](https://github.com/LaverWinEmpty)
 
----
+**Low-level Workflow Essentials** (LWE) is **header only** utility library for **C++17** without **RTTI**
 
-## 🔍 Overview
-LWE is a comprehensive utility library providing RTTI-free reflection, smart pointers, containers, and other essential C++ utilities.  
-The reflection system is implemented using compile-time macros, achieving near-complete functionality without runtime type information overhead.  
-This library aims to be minimal, efficient, and practical for modern C++ development.
+## 🎯 Purpose
 
----
+### Why was this created?
 
-## 🛠️ Tech Stack
+Originally developed as foundational infrastructure for a personal game engine project. While initially focused on my specific engine needs, the project has evolved to serve broader engine development scenarios.
 
-- **Language:** C++17
+### What does it provide?
 
----
+This experimental project implements RTTI-free reflection with the primary goal of data serialization and supporting utilities.
 
-## 💡 Platform
+**Components:**
 
-> Tested exclusively on **Windows** with **MSVC** (`/Zc:preprocessor`).
-> 
-> **Note:** However, this project targets cross-platform support.
+-   **Utilities**: Essential features for reflection system and basic engine functionality.
+-   **Memory Pool**: Originally planned as separate library, integrated as foundational infrastructure
+-   **Containers**: Initially built for serialization purposes, refactored to adapter pattern during development. Now maintained as high-performance alternatives to STL.
 
----
+## 🛠️ How to use
 
-## 📁 Project Structure
+### Environment
+
+Tested exclusively on **Windows** and **MSVC** with _/Zc:preprocessor_
+
+> **NOTE**: However, this project targets cross-platform support.
+
+### Build
+
+This is a header-only library, so simply include the files you need.
+
+**File Structure Guidelines:**
+
+-   `.hpp` files: Individual modules - include these
+-   `.ipp` files: Source implementation - do NOT include directly
+-   `.h` files: Aggregated headers with helper APIs for integrated module usage
+
+**Usage Examples:**
+
+```cpp
+#include "dir/module.hpp" // Individual module
+#include "dir/dir.h"      // Integrated namespace usage
+```
+
+### Quick Start
+
+```cpp
+#include "meta/meta.h"  // Adjust path based on your project structure
+
+using namespace LWE;
+
+// sample class
+class MyClass: public Object {
+    CLASS_BODY(MyClass, Object);
+public:
+    void set(int in) {
+        std::cout << meta()->name() << "::" << "set(" << in << ")\n";
+        std::cout << meta()->fields()[0].name << " = " << in << "\n";
+        value = in;
+    }
+private:
+    int value = 0;
+};
+
+// register class and field (REQUIRED)
+REGISTER_FIELD_BEGIN(MyClass) {
+    REGISTER_FIELD(value);
+}
+REGISTER_FIELD_END
+
+// register class (method)
+REGISTER_METHOD_BEGIN(MyClass) {
+    REGISTER_METHOD(set);
+}
+REGISTER_METHOD_END;
+
+// sample code
+int main() {
+    RC<MyClass> rc;
+    auto        fn = methodof<MyClass>("set");
+    if(fn) {
+        fn->invoke(rc.get(), {100});
+    }
+    return 0;
+}
+```
+
+**output**
 
 ```
-root/
-├─ namespace/               # Mirrors C++ namespaces
-│  ├─ internal/             # Internal details (not recommended to include directly)
-│  ├─ module.hpp            # Main public interface
-│  ├─ module.ipp            # Inline implementation (acts like .cpp)
-│  └─ namespace.h           # Aggregated public headers
-└─ ...
+MyClass::set(100)
+value = 100
 ```
 
-- To use only reflection:
-  ```cpp
-  #include "root/meta/meta.h"
-  ```
-- General module usage:
-  ```cpp
-  #include "module.hpp"
-  ```
+**Additional Resources:**
 
----
+-   Executable examples in `test/example/` (`.hpp` files - just include and call)
+-   Performance benchmarks in `test/bench/` (results in `docs/benchmark/`)
 
-## 🧪 Usage Examples
+## 📋 Other
 
-> Usage examples are available in the test/ directory.
+### development state
 
-- Each example is defined in a header file:
-  ```
-  test/
-  └─ example_name.hpp
-  ```
+**Core Features** ✅
 
-- To run an example, simply include the header and call:
-  ```
-  test::example_name();
-  ```
+-   RTTI-free Reflection system
+-   Utility Components (Custom Any, Smart pointers, Memory pool, etc...)
+-   Container system with adapter pattern
 
-⚠️ Examples are work-in-progress and may change as the library evolves.
+**Work in Progress** ⚠️
 
----
+-   Smart pointer register and serialization
+-   Enum serialization (structure complete, needs refactoring)
+-   Logging system (serializable Object logging)
 
+### License
 
-## 📋 Development Status
+MIT - see LICENSE file
 
-**Core Features**
-- ✅ RTTI-free Reflection system
-  - ✅ Type reflection and serialization
-  - ✅ Enum reflection and serialization
-  - ✅ Object reflection and serialization 
-  - ✅ Method reflection and invocation
-- ✅ Utility Components
-  - ✅ Custom Any type (RTTI-free)
-  - ✅ Smart pointers
-  - ✅ ID/UUID system
-  - ✅ Memory pool
-- ⚠️ Container system
-  - ✅ Container reflection framework
-  - ✅ Deque implementation (reference)
-  - ❌ Other container types (planned)
-- ⚠️ Smart pointer systme
-  - ✅ Custom smart pointer with unique/weak pointer semantics
-  - ❌ Smart pointer serialization (planned)
-  - ❌ Raw pointer handling (not supported by design)
+### Contributing
 
----
+Issues and pull requests are welcome.
