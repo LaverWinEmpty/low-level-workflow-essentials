@@ -36,6 +36,18 @@ This is a header-only library, so simply include the files you need.
 -   `.ipp` files: Source implementation - do NOT include directly
 -   `.h` files: Aggregated headers with helper APIs for integrated module usage
 
+```
+Reference: structure
+
+root/
+├─ namespace/     # Mirrors C++ namespaces
+│  ├─ internal/   # Internal details (not recommended to include directly)
+│  ├─ module.hpp  # Main public interface
+│  ├─ module.ipp  # Inline implementation (acts like .cpp)
+│  └─ namespace.h # Aggregated public headers
+└─ ...
+```
+
 **Usage Examples:**
 
 ```cpp
