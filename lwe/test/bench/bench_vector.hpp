@@ -1,7 +1,7 @@
 #include "iostream"
 
 #include "vector"
-#include "C:\.workspace\git\low-level-workflow-essesntials\lwe\container\stack.hpp"
+#include "C:\.workspace\git\low-level-workflow-essesntials\lwe\container\linear_buffer.hpp"
 #include "C:\.workspace\git\low-level-workflow-essesntials\lwe\test\bench\internal\bench.hpp"
 
 #define RING_BUFFER
@@ -17,17 +17,19 @@ template<size_t N> struct Buffer {
     char buffer[N - sizeof(n)] = { 0 };
 };
 
-static constexpr size_t SIZE  = 8;
+static constexpr size_t SIZE  = 128;
 static constexpr size_t COUNT = lwe::core::align(0x7f'ff'ff'ff / SIZE) >> 1;
 
 using Std    = std::vector<Buffer<SIZE>>;
-using Lwe    = lwe::container::Stack<Buffer<SIZE>>;
-using LweSVO = lwe::container::Stack<Buffer<SIZE>, COUNT>;
+using Lwe    = lwe::container::LinearBuffer<Buffer<SIZE>>;
+using LweSVO = lwe::container::LinearBuffer<Buffer<SIZE>, COUNT>;
 
 // SVO: slower iteration for 128-byte elements, equivalent for 8-byte, cause unknown
 LweSVO lwesvo;
 
 int main() {
+    Bench::introduce();
+
     Bench b, std_push, std_pop, lwe_push, lwe_pop, svo_push, svo_pop;
 
     std::cout << "ELEMENT SIZE:  " << SIZE << "\n"
@@ -39,7 +41,7 @@ int main() {
      * PUSH TEST (NO CACHED)
      ***********************************************************************************************/
 
-    for(int i = 0; i < Bench<>::TRY; ++i) {
+    for(int i = 0; i < Bench::TRY; ++i) {
         Std stdvec;
         Lwe lwevec;
 

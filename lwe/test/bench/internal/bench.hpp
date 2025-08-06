@@ -5,9 +5,45 @@
 #include "../../../util/timer.hpp"
 #include <functional>
 
-template<int TRY = 5> class Bench {
+class Bench {
 public:
-    static constexpr int TRY = TRY;
+    static constexpr int TRY = 5;
+
+public:
+    static void introduce() {
+        std::string os = "Windows 11 "
+#if _WIN64
+                         "x64";
+#else
+                         "x32";
+#endif
+
+        std::string compiler = "MSVC 2022 v143 "
+#ifdef NDEBUG
+                               "Release (/O2)";
+#else
+                               "Debug";
+#endif
+
+        std::string language = "C++ "
+#if (__cplusplus == 199711L)
+                               "98/03";
+#elif (__cplusplus == 201402L)
+                               "14";
+#elif (__cplusplus == 201703L)
+                                "17";
+#elif (__cplusplus >= 202002L)
+                                "20 or later";
+#endif
+
+        std::cout <<
+            "Version:  " << language << "\n"
+            "Compiler: " << compiler << "\n"
+            "OS:       " << os << "\n"
+            "CPU:      Ryzen R7-3700x\n"
+            "RAM:      DDR4-3200 / 8GB x 2\n";
+        std::cout << std::endl;
+    }
 
 public:
     void loop(const std::function<void()>& fn) { while(once(fn)); }
@@ -33,7 +69,7 @@ public:
                     float temp  = (arr[i] - avg);
                     rsd        += temp * temp;
                 }
-                rsd = (std::sqrtf(rsd) / avg) * 100;
+                rsd = (std::sqrtf(rsd / TRY) / avg) * 100;
             }
             return false;
         }
@@ -72,7 +108,7 @@ public:
     void from(float sec) const {
         line(true);
         if(check(avg, sec)) {
-            result((1 - avg / sec) * 100);
+            result((1 - sec / avg) * -100); // minus (faster) to plus
         }
         line();
         std::cout << std::endl;
@@ -81,7 +117,7 @@ public:
     void to(float sec) const {
         line(true);
         if(check(sec, avg)) {
-            result((avg / sec - 1) * 100);
+            result((sec / avg - 1) * -100); // minus (faster) to plus
         }
         line();
         std::cout << std::endl;

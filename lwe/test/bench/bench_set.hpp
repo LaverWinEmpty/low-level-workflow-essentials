@@ -76,20 +76,8 @@ int main() {
 }
 
 template<size_t N, int INSERT> void test_main() {
-    std::cout << "Version:  C++17\n"
-                 "Arch:     x64\n"
-                 "CPU:      Ryzen R7-3700x\n"
-                 "RAM:      DDR4-3200 / 8GB x 2\n"
-                 "OS:       Windows 11\n"
-                 "Compiler: MSVC 2022 v143\n"
-                 "Option:   ";
-
-#ifdef NDEBUG
-    std::cout << "Release (/O2)\n\n";
-#else
-    std::cout << "Debug\n\n";
-#endif
-
+    Bench b;
+    b.introduce();
 
     auto seed = time(nullptr);
 
@@ -101,7 +89,6 @@ template<size_t N, int INSERT> void test_main() {
     std::cout << std::endl;
 
     lwe::util::Random::instance(seed);
-    Bench b;
 
     std::cout << "HASH INSERT / ITERATE / CLEAR TEST\n"; // summary
     b.line();                                            // line
@@ -164,7 +151,7 @@ template<size_t SIZE, int COUNT> void test_insert() {
     lweset.clear();                                  // clear
 
     // insert / clear loop 2 for average
-    for(int i = 0; i < Bench<>::TRY; ++i) {
+    for(int i = 0; i < Bench::TRY; ++i) {
         // std insert
         std_in.once([&]() {
             for(int i = 0; i < COUNT; ++i) stdset.insert(i);

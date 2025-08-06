@@ -3,9 +3,7 @@
 #include "internal/bench.hpp"
 
 #include "deque"
-#include "../../container/deque.hpp"
-
-#define RING_BUFFER
+#include "../../container/ring_buffer.hpp"
 
 using namespace lwe::container;
 
@@ -22,12 +20,14 @@ static constexpr size_t SIZE  = 128;
 static constexpr size_t COUNT = 5'000'000;
 
 using Std    = std::deque<Buffer<SIZE>>;
-using Lwe    = lwe::container::Deque<Buffer<SIZE>>;
-using LweSVO = lwe::container::Deque<Buffer<SIZE>, COUNT>;
+using Lwe    = lwe::container::RingBuffer<Buffer<SIZE>>;
+using LweSVO = lwe::container::RingBuffer<Buffer<SIZE>, COUNT>;
 
 LweSVO lwesvo;
 
 int main() {
+    Bench::introduce();
+
     Bench b, std_push, std_pop, lwe_push, lwe_pop, svo_push, svo_pop;
 
     std::cout << "ELEMENT SIZE:  " << SIZE << "\n"
@@ -39,7 +39,7 @@ int main() {
      * PUSH TEST (NO CACHED)
      ***********************************************************************************************/
 
-    for(int i = 0; i < Bench<>::TRY; ++i) {
+    for(int i = 0; i < Bench::TRY; ++i) {
         Std stdvec;
         Lwe lwevec;
 
