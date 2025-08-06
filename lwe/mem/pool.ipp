@@ -124,7 +124,7 @@ template<typename T> bool Pool::deallocate(T* in) noexcept {
     if(COUNT <= 1) {
         if(!in) return false;
         if constexpr(!std::is_void_v<T>) {
-            in.~T();
+            in->~T();
         }
         core::memfree(in);
         return true;
