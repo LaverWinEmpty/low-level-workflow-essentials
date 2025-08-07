@@ -470,7 +470,7 @@ template<typename T> auto HashedBuffer<T>::slot(hash_t in) noexcept -> Bucket* {
     if(capacitor == 0) {
         rehash(log); // init
     }
-    return bucket + indexof(in);
+    return buckets + indexof(in);
 }
 
 template<typename T> auto HashedBuffer<T>::slot(hash_t in, const T& data) noexcept -> Chain* {
