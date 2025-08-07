@@ -33,7 +33,8 @@ enum class Keyword : uint8_t {
     REFERENCE,
     STD_STRING,
     STD_PAIR,
-    STL_VECTOR,
+    STL_STACK,
+    STL_DEQUE,
     STL_SET,
     STL_MAP,
     STL_ANY,
@@ -42,10 +43,11 @@ enum class Keyword : uint8_t {
 
 constexpr bool storable(Keyword in) {
     switch(in) {
-        case lwe::meta::Keyword::STL_VECTOR: return true;
-        case lwe::meta::Keyword::STL_SET:    return true;
-        case lwe::meta::Keyword::STL_MAP:    return true;
-        default:                             return false;
+        case lwe::meta::Keyword::STL_STACK: return true;
+        case lwe::meta::Keyword::STL_DEQUE: return true;
+        case lwe::meta::Keyword::STL_SET:   return true;
+        case lwe::meta::Keyword::STL_MAP:   return true;
+        default:                            return false;
     }
 }
 

@@ -109,7 +109,7 @@ template<typename T> T Codec::to(const StringView in) {
         }
         return "";
     }
-    
+
     // primitive
     else if constexpr(std::is_arithmetic_v<T>) {
         // string to primitive type
@@ -118,7 +118,7 @@ template<typename T> T Codec::to(const StringView in) {
             throw diag::error(diag::INVALID_DATA);
         }
         const StringView str = decoder.get();
-        
+
         T result;
 
         if constexpr(std::is_same_v<int8_t, T> || std::is_same_v<uint8_t, T>) {
@@ -480,7 +480,8 @@ void Codec::encode(std::string* out, const void* in, Keyword type) {
             break;
 
         case Keyword::STD_STRING: from<String>(out, in); break;
-        case Keyword::STL_VECTOR: from<Encoder>(out, in); break;
+        case Keyword::STL_STACK:  from<Encoder>(out, in); break;
+        case Keyword::STL_DEQUE:  from<Encoder>(out, in); break;
         case Keyword::STL_MAP:    from<Encoder>(out, in); break;
         case Keyword::STL_SET:    from<Encoder>(out, in); break;
 
@@ -524,7 +525,8 @@ void Codec::decode(void* out, const StringView in, Keyword type) {
             break;
 
         case Keyword::STD_STRING: *static_cast<String*>(out) = to<String>(in); break;
-        case Keyword::STL_VECTOR: static_cast<Encoder*>(out)->deserialize(in); break;
+        case Keyword::STL_STACK:  static_cast<Encoder*>(out)->deserialize(in); break;
+        case Keyword::STL_DEQUE:  static_cast<Encoder*>(out)->deserialize(in); break;
         case Keyword::STL_MAP:    static_cast<Encoder*>(out)->deserialize(in); break;
         case Keyword::STL_SET:    static_cast<Encoder*>(out)->deserialize(in); break;
 

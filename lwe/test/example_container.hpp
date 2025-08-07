@@ -6,9 +6,10 @@
 #include "../container/hash_table.hpp"    // default container
 
 #include "example_reflection.hpp" // Test class reuse
-#include "../stl/vector.hpp"      // include meta.h
-#include "../stl/set.hpp"         // include meta.h
-#include "../stl/map.hpp"         // include meta.h
+#include "../stl/stack.hpp"       // included meta.h
+#include "../stl/deque.hpp"       // included meta.h
+#include "../stl/set.hpp"         // included meta.h
+#include "../stl/map.hpp"         // included meta.h
 
 // REGISTER OTHER CONTAINER
 template<typename T> struct StdVectorAdapter : std::vector<T> {
@@ -30,8 +31,9 @@ void example_container() {
     v.deserialize("[ 1, 2, 3 ]"); // std::vector serializable
     std::cout << v.serialize();   // test [ 1, 2, 3 ]
 
-    /* === DETAIL === */
-    Vector<int>   lwevec; // vector, deque (ring buffer)
+    ///* === DETAIL === */
+    Stack<int>    lwevec; // vector, deque (ring buffer)
+    Deque<int>    lwedeq; // vector, deque (ring buffer)
     Set<int>      lweset; // unordered_set
     Map<int, int> lwemap; // unordered_map
 

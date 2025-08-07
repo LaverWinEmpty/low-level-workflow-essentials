@@ -31,6 +31,9 @@ public:
     Iterator(T* container, index_t index, size_t capacity) noexcept: it(container, index, capacity) { }
 };
 
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), FWD, RingBuffer, T, SVO);
+REGISTER_CONST_ITERATOR((typename T, size_t SVO), BWD, RingBuffer, T, SVO);
+
 template<typename T, size_t SVO> index_t RingBuffer<T, SVO>::absidx(index_t in) const noexcept {
     return (in) & (stack.capacitor - 1);
 }
@@ -336,18 +339,17 @@ template<typename T, size_t SVO> auto RingBuffer<T, SVO>::begin() const noexcept
     return const_cast<RingBuffer*>(this)->begin();
 }
 
-template<typename T, size_t SVO> auto RingBuffer<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> { 
+template<typename T, size_t SVO> auto RingBuffer<T, SVO>::end() const noexcept -> Iterator<FWD | VIEW> {
     return const_cast<RingBuffer*>(this)->end();
 }
 
-template<typename T, size_t SVO> auto RingBuffer<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> { 
+template<typename T, size_t SVO> auto RingBuffer<T, SVO>::rbegin() const noexcept -> Iterator<BWD | VIEW> {
     return const_cast<RingBuffer*>(this)->rbegin();
 }
 
-template<typename T, size_t SVO> auto RingBuffer<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> { 
+template<typename T, size_t SVO> auto RingBuffer<T, SVO>::rend() const noexcept -> Iterator<BWD | VIEW> {
     return const_cast<RingBuffer*>(this)->rend();
 }
-
 
 template<typename T, size_t SVO> T* RingBuffer<T, SVO>::front() noexcept {
     return stack.front();
