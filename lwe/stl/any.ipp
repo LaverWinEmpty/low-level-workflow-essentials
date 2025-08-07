@@ -126,55 +126,55 @@ template<typename T> void Any::set(T&& in) {
     // - new std::byte -> has deconstructor
     //
     // clang-format off
-    if constexpr(std::is_same_v<T, char>) {
+    if constexpr(std::is_same_v<Typename, char>) {
         data.c = in;
     }
-    else if constexpr(std::is_same_v<T, signed char>) {
+    else if constexpr(std::is_same_v<Typename, signed char>) {
         data.sc = in;
     }
-    else if constexpr(std::is_same_v<T, signed int>) {
+    else if constexpr(std::is_same_v<Typename, signed int>) {
         data.si = in;
     }
-    else if constexpr(std::is_same_v<T, signed long>) {
+    else if constexpr(std::is_same_v<Typename, signed long>) {
         data.sl = in;
     }
-    else if constexpr(std::is_same_v<T, signed short>) {
+    else if constexpr(std::is_same_v<Typename, signed short>) {
         data.ss = in;
     }
-    else if constexpr(std::is_same_v<T, signed long long>) {
+    else if constexpr(std::is_same_v<Typename, signed long long>) {
         data.sll = in;
     }
-    else if constexpr(std::is_same_v<T, unsigned char>) {
+    else if constexpr(std::is_same_v<Typename, unsigned char>) {
         data.uc = in;
     }
-    else if constexpr(std::is_same_v<T, unsigned int>) {
+    else if constexpr(std::is_same_v<Typename, unsigned int>) {
         data.ui = in;
     }
-    else if constexpr(std::is_same_v<T, unsigned long>) {
+    else if constexpr(std::is_same_v<Typename, unsigned long>) {
         data.ul = in;
     }
-    else if constexpr(std::is_same_v<T, unsigned short>) {
+    else if constexpr(std::is_same_v<Typename, unsigned short>) {
         data.us = in;
     }
-    else if constexpr(std::is_same_v<T, unsigned long long>) {
+    else if constexpr(std::is_same_v<Typename, unsigned long long>) {
         data.ull = in;
     }
-    else if constexpr(std::is_same_v<T, bool>) {
+    else if constexpr(std::is_same_v<Typename, bool>) {
         data.b = in;
     }
-    else if constexpr(std::is_same_v<T, float>) {
+    else if constexpr(std::is_same_v<Typename, float>) {
         data.f = in;
     }
-    else if constexpr(std::is_same_v<T, double>) {
+    else if constexpr(std::is_same_v<Typename, double>) {
         data.d = in;
     }
-    else if constexpr(std::is_same_v<T, long double>) {
+    else if constexpr(std::is_same_v<Typename, long double>) {
         data.ld = in;
     }
-    else if constexpr(std::is_enum_v<T>) {
+    else if constexpr(std::is_enum_v<Typename>) {
         data.ull = static_cast<uint64_t>(in);
     } // expand
-    else if constexpr(std::is_pointer_v<T>) {
+    else if constexpr(std::is_pointer_v<Typename>) {
         data.ptr = reinterpret_cast<void*>(in);
     }
     // clang-format on
