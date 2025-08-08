@@ -527,5 +527,29 @@ Object* statics(const char* in) {
     return statics(String{ in });
 }
 
+/***************************************************************************************************
+ * primitive types register
+ ***************************************************************************************************/
+static Registered PRIMITIVE_REGISTERED = []() {
+    typeof<signed int>();          // -+- signed
+    typeof<signed char>();         //  |
+    typeof<signed short>();        //  |
+    typeof<signed long>();         //  |
+    typeof<signed long long>();    // -+
+    typeof<unsigned int>();        // -+- unsigned
+    typeof<unsigned char>();       //  |
+    typeof<unsigned short>();      //  |
+    typeof<unsigned long>();       //  |
+    typeof<unsigned long long>();  // -+
+    typeof<float>();               // -+- floating
+    typeof<double>();              //  |
+    typeof<long double>();         // -+
+    typeof<char>();                // -+- other
+    typeof<bool>();                //  |
+    typeof<String>();              // -+
+    return Registered::REGISTERED; // pre-reigster for thread safety
+}();
+
+
 } // namespace meta
 LWE_END
