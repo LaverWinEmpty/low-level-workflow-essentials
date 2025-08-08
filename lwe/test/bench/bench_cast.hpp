@@ -51,6 +51,7 @@ DECLARE(28, 29);
 DECLARE(29, 30);
 DECLARE(30, 31);
 
+
 int main() {
     Bench b;
     b.introduce();
@@ -59,13 +60,14 @@ int main() {
 
     static constexpr int LOOP = 1'000'000;
     
-    Object* test = new Inheritance31;
+    LWE::RC<Inheritance31> obj;
+    Object*                test = obj.get();
 
     volatile bool    flag;
     volatile Object* ptr;
 
-    b.loop([&]() { 
-        for (int i = 0; i < LOOP; ++i) {
+    auto cppcast = [&]() {
+        for(int i = 0; i < LOOP; ++i) {
             ptr = dynamic_cast<Inheritance0*>(test);
             ptr = dynamic_cast<Inheritance1*>(test);
             ptr = dynamic_cast<Inheritance2*>(test);
@@ -99,46 +101,54 @@ int main() {
             ptr = dynamic_cast<Inheritance30*>(test);
             ptr = dynamic_cast<Inheritance31*>(test);
         }
-    });
+    };
+
+    auto lwecast = [&]() {
+        for(int i = 0; i < LOOP; ++i) {
+            ptr = (Object*)obj.cast<Inheritance0*>();
+            ptr = (Object*)obj.cast<Inheritance1*>();
+            ptr = (Object*)obj.cast<Inheritance2*>();
+            ptr = (Object*)obj.cast<Inheritance3*>();
+            ptr = (Object*)obj.cast<Inheritance4*>();
+            ptr = (Object*)obj.cast<Inheritance5*>();
+            ptr = (Object*)obj.cast<Inheritance6*>();
+            ptr = (Object*)obj.cast<Inheritance7*>();
+            ptr = (Object*)obj.cast<Inheritance8*>();
+            ptr = (Object*)obj.cast<Inheritance9*>();
+            ptr = (Object*)obj.cast<Inheritance10*>();
+            ptr = (Object*)obj.cast<Inheritance11*>();
+            ptr = (Object*)obj.cast<Inheritance12*>();
+            ptr = (Object*)obj.cast<Inheritance13*>();
+            ptr = (Object*)obj.cast<Inheritance14*>();
+            ptr = (Object*)obj.cast<Inheritance15*>();
+            ptr = (Object*)obj.cast<Inheritance16*>();
+            ptr = (Object*)obj.cast<Inheritance17*>();
+            ptr = (Object*)obj.cast<Inheritance18*>();
+            ptr = (Object*)obj.cast<Inheritance19*>();
+            ptr = (Object*)obj.cast<Inheritance20*>();
+            ptr = (Object*)obj.cast<Inheritance21*>();
+            ptr = (Object*)obj.cast<Inheritance22*>();
+            ptr = (Object*)obj.cast<Inheritance23*>();
+            ptr = (Object*)obj.cast<Inheritance24*>();
+            ptr = (Object*)obj.cast<Inheritance25*>();
+            ptr = (Object*)obj.cast<Inheritance26*>();
+            ptr = (Object*)obj.cast<Inheritance27*>();
+            ptr = (Object*)obj.cast<Inheritance28*>();
+            ptr = (Object*)obj.cast<Inheritance29*>();
+            ptr = (Object*)obj.cast<Inheritance30*>();
+            ptr = (Object*)obj.cast<Inheritance31*>();
+        }
+    };
+
+    // warm-up
+    cppcast();
+    b.loop(cppcast);
     b.output("DYNAMIC CAST RESULT");
     float temp = b.average();
 
-    b.loop([&]() {
-        for(int i = 0; i < LOOP; ++i) {
-            flag = test->isof<Inheritance0*>();
-            flag = test->isof<Inheritance1*>();
-            flag = test->isof<Inheritance2*>();
-            flag = test->isof<Inheritance3*>();
-            flag = test->isof<Inheritance4*>();
-            flag = test->isof<Inheritance5*>();
-            flag = test->isof<Inheritance6*>();
-            flag = test->isof<Inheritance7*>();
-            flag = test->isof<Inheritance8*>();
-            flag = test->isof<Inheritance9*>();
-            flag = test->isof<Inheritance10*>();
-            flag = test->isof<Inheritance11*>();
-            flag = test->isof<Inheritance12*>();
-            flag = test->isof<Inheritance13*>();
-            flag = test->isof<Inheritance14*>();
-            flag = test->isof<Inheritance15*>();
-            flag = test->isof<Inheritance16*>();
-            flag = test->isof<Inheritance17*>();
-            flag = test->isof<Inheritance18*>();
-            flag = test->isof<Inheritance19*>();
-            flag = test->isof<Inheritance20*>();
-            flag = test->isof<Inheritance21*>();
-            flag = test->isof<Inheritance22*>();
-            flag = test->isof<Inheritance23*>();
-            flag = test->isof<Inheritance24*>();
-            flag = test->isof<Inheritance25*>();
-            flag = test->isof<Inheritance26*>();
-            flag = test->isof<Inheritance27*>();
-            flag = test->isof<Inheritance28*>();
-            flag = test->isof<Inheritance29*>();
-            flag = test->isof<Inheritance30*>();
-            flag = test->isof<Inheritance31*>();
-        }
-    });
+    // warm-up
+    lwecast();
+    b.loop(lwecast);
     b.output("Object::isof RESULT");
     b.from(temp);
 
