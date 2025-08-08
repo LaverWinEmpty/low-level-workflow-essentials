@@ -71,7 +71,7 @@ template<typename T> template<typename U> U* RC<T>::cast() {
 
     // checked
     if(ptr->isof<U>()) {
-        return RC<U>(*this);
+        return ptr.as<U>();
     }
     return nullptr;
 }
