@@ -24,7 +24,7 @@ template<typename T> bool Object::isof() const {
         return false;
     }
 
-    const Class* cls = classof<T>();
+    static const Class* cls = classof<T>();
     if(cls) {
         const Class* self = meta();
         while(self) {
