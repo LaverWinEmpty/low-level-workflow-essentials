@@ -32,10 +32,11 @@ public:
     void trim(int);
 
 private:
-    template<typename T> static constexpr bool isstr() { 
-        return std::is_same_v<String, T>;
-    }
+    template<typename T> static constexpr bool isstr() { return std::is_same_v<String, T>; }
     template<typename T> static constexpr bool iscont() {
+        if constexpr(std::is_same_v<T, Container>) {
+            return true;
+        }
         constexpr Keyword keyword = TypeEraser<T>::KEYWORD;
         return storable(keyword);
     }
