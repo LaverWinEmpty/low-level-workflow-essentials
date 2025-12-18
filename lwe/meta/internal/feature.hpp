@@ -78,11 +78,6 @@ class Container: public Encoder { };
 //    virtual void   deserialize(const StringView) = 0;
 //};
 
-//! @brief get container type code structur
-template<typename T> struct ContainerCode {
-    static constexpr Keyword VALUE = Keyword::UNREGISTERED;
-};
-
 //! @brief type eraser default
 template<typename T, typename = void>
 struct TypeEraser {

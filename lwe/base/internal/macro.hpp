@@ -346,10 +346,11 @@ public:                                                                         
 //! NOTE: need push()
 #define DECLARE_CONTAINER(TEMPLATE, CLASS, BASE, ...)                   \
     template<WRAP TEMPLATE> class CLASS: public BASE<__VA_ARGS__>,      \
-                                       public LWE::meta::Container {    \
+                                         public LWE::meta::Container {  \
         using Base = BASE<__VA_ARGS__>;                                 \
     public:                                                             \
         using Base::Base;                                               \
+        using value_type = typename Base::value_type;                   \
         virtual std::string serialize() const override {                \
             return LWE::meta::Codec::encode<CLASS<__VA_ARGS__>>(*this); \
         }                                                               \
@@ -359,10 +360,10 @@ public:                                                                         
     }
 
 //! register container code
-#define REGISTER_CONTAINER(TEMPLATE, CLASS, CODE, ...)                            \
-    template<WRAP TEMPLATE> struct LWE::meta::ContainerCode<CLASS<__VA_ARGS__>> { \
+#define REGISTER_CONTAINER(TEMPLATE, CLASS, CODE, ...)                                    \
+    template<WRAP TEMPLATE> struct LWE::meta::TypeEraser<CLASS<__VA_ARGS__>> {            \
         static constexpr meta::Keyword KEYWORD = static_cast<LWE::meta::Keyword>(CODE);   \
-    }
+    }   
 
 /**
  * @brief default container serializer and deserializer override

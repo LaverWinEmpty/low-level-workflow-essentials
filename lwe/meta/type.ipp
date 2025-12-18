@@ -94,14 +94,14 @@ template<typename T> static void Type::reflect(Type* out) {
     else if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
         out->push(TypeEraser<T>::KEYWORD);
         // map
-        if constexpr(TypeEraser<T>::VALUE == Keyword::STL_MAP) {
+        if constexpr(TypeEraser<T>::KEYWORD == Keyword::STL_MAP) {
             reflect<typename T::value_type::first_type>(out);
             reflect<typename T::value_type::second_type>(out);
         }
         // pair
-        if constexpr(TypeEraser<T>::VALUE == Keyword::STD_PAIR) {
-            reflect<typename T::value_type::first_type>(out);
-            reflect<typename T::value_type::second_type>(out);
+        if constexpr(TypeEraser<T>::KEYWORD == Keyword::STD_PAIR) {
+            reflect<typename T::first_type>(out);
+            reflect<typename T::second_type>(out);
         }
         else reflect<typename T::value_type>(out);
     }

@@ -8,7 +8,7 @@ template<typename T> constexpr Keyword typecode() {
     // if constexpr(isKVP<T>())                                 return Keyword::STL_PAIR;
     // if constexpr(isSTL<T>())                                 return ContainerCode<T>::VALUE;
 
-    if constexpr (TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
+    if constexpr(TypeEraser<T>::KEYWORD != Keyword::UNREGISTERED) {
         return TypeEraser<T>::KEYWORD;
     }
     if constexpr(std::is_enum_v<T>)                          return Keyword::ENUM;
