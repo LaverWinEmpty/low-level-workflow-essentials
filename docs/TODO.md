@@ -25,3 +25,30 @@
 -   [x] File system abstraction layer -> No need
 -   [x] Logging system interface
 -   [ ] External log viewer / visualization tool
+
+---
+
+## Roadmap
+
+### Memory Management
+
+-   [ ] Replace current allocation logic with a memory pool–based approach  
+         (reference: https://github.com/LaverWinEmpty/cpp_mem_pool)
+
+### Serialization
+
+-   [ ] Add `serialize()` support to `RC<T>` and `Ptr<T>`
+
+### Language & Undefined Behavior
+
+-   [ ] Remove union-based type punning and unsafe casts  
+         to prevent strict-aliasing–related UB
+
+### API & Semantics
+
+-   [ ] Add a generic field access method (based on `Any<T>`)
+-   [ ] Clarify pointer-serialization ambiguity by explicitly ignoring pointers
+
+### Extensibility
+
+-   [ ] Improve the design to make it easier to register and support new types
